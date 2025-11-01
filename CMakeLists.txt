@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 4.00)
 
 project(ts_store)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 17)
 
 # Needed for Compiler not to complain about GTL
 # Pin the interference size to 64—bye, warnings
