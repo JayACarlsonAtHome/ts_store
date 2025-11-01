@@ -1,0 +1,14 @@
+cmake_minimum_required(VERSION 4.00)
+
+project(ts_store)
+
+set(CMAKE_CXX_STANDARD 23)
+
+# Needed for Compiler not to complain about GTL
+# Pin the interference size to 64—bye, warnings
+add_compile_options(--param destructive-interference-size=64)
+
+add_executable(ts_store_base       ts_store_base/ts_store_base.cpp             ts_store.hpp)
+add_executable(ts_store_concurrent ts_store_concurrent/ts_store_concurrent.cpp ts_store.hpp)
+add_executable(ts_store_sample     ts_store_sample/ts_store_sample.cpp         ts_store.hpp)
+add_executable(ts_store_stress     ts_store_stress/ts_store_stress.cpp         ts_store.hpp)
