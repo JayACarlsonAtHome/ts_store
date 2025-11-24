@@ -6,12 +6,19 @@ A lightweight, thread-safe key-value store for C++ with auto-incrementing IDs, b
 Concurrent storage is a pain: races, lost inserts, hard debugging. ts_store hides it all—serialize writes safely, reads, auto-track IDs for sorting (by ID/tid/time/value). Timestamps make tricky problems (e.g., "why did thread 42 lag?") a breeze to trace.
 
 ## Features
-Auto-Sequential IDs: Atomic uint64_t generation—no collisions, no manual keys.
-Bundled Payloads: Each entry packs thread_id + fixed-char value + optional timestamp (default 80-byte char buffer; customizable).
+Auto-Sequential IDs: Atomic uint64_t generation—no collisions, no manual keys.</br>
+Bundled Payloads: Each entry packs </br>
+     thread_id </br>
+     fixed-char (default 80-byte char buffer; customizable) value </br>
+     optional timestamp .
 Runtime TS Toggle: Enable/disable timestamps at init (no perf penalty when off).
-Pair<bool, T> Returns: Simple success flag + result/error (fast, zero-alloc on success; int error codes like 1=NotFound, 2=TooLong).
+Pair<bool, T> Returns: Simple success flag + result/error </br>
+   (fast, zero-alloc on success; int error codes like 1=NotFound, 2=TooLong).
 Pre-Reserve: reserve(n) avoids rehashing in high-volume workloads.
-Auto-ID Tracking with Sort Modes: Capture claimed IDs; sort by insertion, TID (thread Id), timestamp, or value 
+Auto-ID Tracking with Sort Modes: 
+   Thread IDs,</br>
+   timestamp,</br> 
+   or value </br>
 
 ## Installation
 1. Clone: `git clone --recursive https://github.com/JayACarlsonAtHome/ts_store.git` (GTL submodule).
