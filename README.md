@@ -1,17 +1,17 @@
 # ts_store
 
-A lightweight, thread-safe key-value store for C++ with auto-incrementing IDs, bundled thread IDs, and optional timestamps. Built for ease of use in concurrent apps like task queues or event logging—no locks, no races, just claim and select. Scales to 100k ops at 1k threads (~6μs/op) with zero losses.
+A lightweight, thread-safe key-value store for C++ with auto-incrementing IDs, bundled thread IDs, and optional timestamps. Built for ease of use in concurrent apps like task queues or event logging, no data races, just claim and select. Scales to 100k ops at 1k threads (~6μs/op) with zero losses.
 
 ## Why ts_store?
-Concurrent storage is a pain: races, lost inserts, hard debugging. ts_store hides it all—serialize writes safely, lock-free reads, auto-track IDs for sorting (by ID/tid/time/value). Timestamps make tricky problems (e.g., "why did thread 42 lag?") a breeze to trace.
+Concurrent storage is a pain: races, lost inserts, hard debugging. ts_store hides it all—serialize writes safely, reads, auto-track IDs for sorting (by ID/tid/time/value). Timestamps make tricky problems (e.g., "why did thread 42 lag?") a breeze to trace.
 
 ## Features
-Auto-Sequential IDs: Atomic uint64_t generation—no collisions, no manual keys.</br>
-Bundled Payloads: Each entry packs thread_id + fixed-char value + optional timestamp (default 80-byte buffer; customizable).</br>
-Runtime TS Toggle: Enable/disable timestamps at init (no perf penalty when off).</br>
-Pair<bool, T> Returns: Simple success flag + result/error (fast, zero-alloc on success; int error codes like 1=NotFound, 2=TooLong).</br>
-Pre-Reserve: reserve(n) avoids rehashing in high-volume workloads.</br>
-Auto-ID Tracking with Sort Modes: Capture claimed IDs; sort by insertion, TID (thread Id), timestamp, or value (debug/audit gold).</br>
+Auto-Sequential IDs: Atomic uint64_t generation—no collisions, no manual keys.
+Bundled Payloads: Each entry packs thread_id + fixed-char value + optional timestamp (default 80-byte char buffer; customizable).
+Runtime TS Toggle: Enable/disable timestamps at init (no perf penalty when off).
+Pair<bool, T> Returns: Simple success flag + result/error (fast, zero-alloc on success; int error codes like 1=NotFound, 2=TooLong).
+Pre-Reserve: reserve(n) avoids rehashing in high-volume workloads.
+Auto-ID Tracking with Sort Modes: Capture claimed IDs; sort by insertion, TID (thread Id), timestamp, or value 
 
 ## Installation
 1. Clone: `git clone --recursive https://github.com/JayACarlsonAtHome/ts_store.git` (GTL submodule).
@@ -61,7 +61,7 @@ int main() {  // Standalone compile
         std::cout << "Timestamp age: " << duration << " us" << std::endl;
     }
 
-    // Duration summary (now >0)
+    // Duration summary 
     store.show_duration("Store");
     return 0;
 }
