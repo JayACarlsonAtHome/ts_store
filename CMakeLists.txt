@@ -13,7 +13,7 @@ add_executable(ts_store_base          ts_store_base/ts_store_base.cpp           
 add_executable(ts_store_concurrent    ts_store_concurrent/ts_store_concurrent.cpp          ts_store.hpp)
 add_executable(ts_store_sample        ts_store_sample/ts_store_sample.cpp                  ts_store.hpp)
 add_executable(ts_store_stress        ts_store_stress/ts_store_stress.cpp                  ts_store.hpp)
-add_executable(ts_store_nuclear_test  ts_store_nuclear_test/ts_store_nuclear_test.cpp      ts_store.hpp)
+add_executable(ts_store_big_test      ts_store_big_test/ts_store_big_test.cpp              ts_store.hpp)
 add_executable(final_massive_test     ts_store_final_massive_test/final_massive_test.cpp   ts_store.hpp)
 
 

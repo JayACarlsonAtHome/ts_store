@@ -58,7 +58,7 @@ int main() {
     auto write_us = std::chrono::duration_cast<std::chrono::microseconds>(mid - start).count();
     auto read_us  = std::chrono::duration_cast<std::chrono::microseconds>(end - mid).count();
 
-    std::cout << "APOCALYPSE TEST PASSED\n";
+    std::cout << "Massive Test Passed\n";
     std::cout << "1,000,000 writes in " << write_us << " µs → "
               << (1'000'000 * 1'000'000.0 / write_us) << " ops/sec\n";
     std::cout << "1,000,000 sequential reads in " << read_us << " µs\n";
