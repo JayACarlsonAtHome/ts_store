@@ -9,7 +9,10 @@ set(CMAKE_CXX_STANDARD 17)
 add_compile_options(--param destructive-interference-size=64)
 #The above line is not needed in RHEL
 
-add_executable(ts_store_base       ts_store_base/ts_store_base.cpp             ts_store.hpp)
-add_executable(ts_store_concurrent ts_store_concurrent/ts_store_concurrent.cpp ts_store.hpp)
-add_executable(ts_store_sample     ts_store_sample/ts_store_sample.cpp         ts_store.hpp)
-add_executable(ts_store_stress     ts_store_stress/ts_store_stress.cpp         ts_store.hpp)
+add_executable(ts_store_base          ts_store_base/ts_store_base.cpp                   ts_store.hpp)
+add_executable(ts_store_concurrent    ts_store_concurrent/ts_store_concurrent.cpp       ts_store.hpp)
+add_executable(ts_store_sample        ts_store_sample/ts_store_sample.cpp               ts_store.hpp)
+add_executable(ts_store_stress        ts_store_stress/ts_store_stress.cpp               ts_store.hpp)
+add_executable(ts_store_nuclear_test  ts_store_nuclear_test/ts_store_nuclear_test.cpp   ts_store.hpp)
+
+
