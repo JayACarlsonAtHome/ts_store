@@ -31,3 +31,18 @@ log.reserve(2'000'000);
 
 auto [ok, id] = log.claim(thread_id, "something happened");
 // id is unique, entry is globally ordered, zero heap alloc
+```
+
+### When to use it
+
+Lock contention diagnostics</br>
+Real-time telemetry / tracing</br>
+Game engine event logs</br>
+Fuzzing replay buffers</br>
+Anything that must be correct first, fast second</br>
+
+### When NOT to use it
+
+Persistence</br>
+Trillions of events</br>
+Dynamic string lengths</br>
