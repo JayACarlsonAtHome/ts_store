@@ -1,10 +1,4 @@
 
-Tested on Red Hat Enterprise Linux 10.1  
-Intel Core Ultra 7 265 (8 threads exposed in VM)  
-31 GiB RAM · 7200 RPM secondary disk
-
-Bare-metal (20 cores) expected: **2.8–3.4 million ops/sec**
-
 ### Why this exists
 You needed an event buffer that:
 - never drops or corrupts data
