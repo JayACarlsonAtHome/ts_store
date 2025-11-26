@@ -20,11 +20,19 @@ This one doesn’t.
 
 ### Usage
 ```cpp
-ts_store<80> log(true);           // timestamps on
-log.reserve(2'000'000);
+#include "../ts_store.hpp" // Uses BufferSize=80 default, pair<bool,...> returns
 
-auto [ok, id] = log.claim(thread_id, "something happened");
-// id is unique, entry is globally ordered, zero heap alloc
+int main() {
+    constexpr int Threads = 10;
+    constexpr int WorkersPerThread = 10;
+    constexpr int BufferSize = 100;
+    constexpr bool UseTimeStamps = true;
+
+    ts_store<Threads, WorkersPerThread, BufferSize, UseTimeStamps > store;
+    store.test_run();  // When using this method:  UseTimeStamps = True, Debug = True (Set automatically)
+    store.print();
+}
+
 ```
 
 ### When to use it
