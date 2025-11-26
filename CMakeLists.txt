@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 4.00)
+cmake_minimum_required(VERSION 3.26)
 
 project(ts_store)
 
 set(CMAKE_CXX_STANDARD 17)
 
 # Needed for Compiler not to complain about GTL
-# Pin the interference size to 64—bye, warnings
+#g++ Pin the interference size to 64—bye, warnings
 add_compile_options(--param destructive-interference-size=64)
 #The above line is not needed in RHEL
 

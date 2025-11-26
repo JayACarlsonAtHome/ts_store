@@ -27,7 +27,7 @@ int main() {  // Standalone compile
     }
 
     // Timestamp (if enabled) - first
-    auto [ts_ok, ts] = store.get_timestamp(id1);  // steady_clock::time_point
+    auto [ts_ok, ts] = store.get_timestamp_us(id1);  // steady_clock::time_point
     if (ts_ok) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now - ts).count();
         std::cout << "Timestamp age: " << duration << " us" << std::endl;
