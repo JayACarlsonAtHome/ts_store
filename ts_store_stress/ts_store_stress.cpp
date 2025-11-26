@@ -1,4 +1,4 @@
-// ts_safe_single_file.cpp - All-in-one: ts_safe + test (250 threads, 25000 ops)
+// ts_store_stress.cpp
 #include <atomic>
 #include <chrono>
 #include <iomanip>
@@ -11,20 +11,19 @@
 
 int main() {
     std::string fileName = "ts_store_stress"; // UPDATED: Match current file
-    const int NUM_THREADS = 250; // UPDATED: To match comment (250 threads)
-    const int NUM_WORKERS = 100; // UPDATED: 250*100=25000 ops
-    constexpr int Expected_Count = NUM_THREADS * NUM_WORKERS;
+    constexpr int THREADS = 250; // UPDATED: To match comment (250 threads)
+    constexpr int WORKERS = 100; // UPDATED: 250*100=25000 ops
+    constexpr int PAYLOAD_LENGTH = 100;
+    constexpr int Expected_Count = THREADS * WORKERS;
 
-    bool use_ts = true; // Enable timestamps
+    constexpr bool UseTS = true;
     auto start_time = std::chrono::steady_clock::now();
 
-    ts_store<80> safepay(use_ts); // FIXED: <80> for fixed buffer (no T=string)
-    ts_store<80> results(use_ts); // Outputs
+    ts_store<THREADS, WORKERS, PAYLOAD_LENGTH, UseTS> safepay;
+    ts_store<THREADS, WORKERS, PAYLOAD_LENGTH, UseTS> results; // Outputs
 
     safepay.clear_claimed_ids(); // Reset for test
     results.clear_claimed_ids(); // Reset for test
-    safepay.reserve(Expected_Count); // Pre-alloc for NUM_THREADS*NUM_WORKERS ops
-    results.reserve(NUM_THREADS); // Pre-alloc 1 per thread
 
     std::vector<std::thread> threads;
     std::atomic<int> total_successes{ 0 };
@@ -34,7 +33,7 @@ int main() {
     auto worker = [&](int tid) {
         int local_successes = 0;
         int local_nulls = 0; // NEW: Per-thread nulls
-        for (int i = 0; i < NUM_WORKERS; ++i) {
+        for (int i = 0; i < WORKERS; ++i) {
             auto payload_str = std::string("payload-") + std::to_string(tid) + "-" + std::to_string(i); // Build string first
             std::string_view payload(payload_str); // View for claim
             auto claim_pair = safepay.claim(tid, payload); // FIXED: Assign to var (no structured binding)
@@ -70,7 +69,7 @@ int main() {
             total_successes.fetch_sub(1); // Atomic adjust
         }
         };
-    for (int t = 0; t < NUM_THREADS; ++t) {
+    for (int t = 0; t < THREADS; ++t) {
         threads.emplace_back(worker, t);
     }
     for (auto& th : threads) th.join();
@@ -99,7 +98,7 @@ int main() {
     std::cout << " Final results from " << fileName << "\n";
     std::cout << header_line << "\n";
     std::cout << std::left << std::setw(8) << "ID" << std::setw(12) << "TID" << std::setw(12) << "SUCCESS" << std::setw(12) << "NULLS"; // UPDATED: Add NULLS col
-    if (use_ts) {
+    if (UseTS) {
         std::cout << std::setw(12) << "TIMESTAMP (us)" << "\n";
     }
     else {
@@ -131,13 +130,14 @@ int main() {
                     }
                 }
             }
-            auto ts_pair = results.get_timestamp(rid); // FIXED: Assign to var
-            bool ts_ok = ts_pair.first; // FIXED: Extract bool
-            auto ts = ts_pair.second;
-            long long rel_us = 0; // Init; use long long for us
-            if (ts_ok) { // FIXED: Use extracted bool
-                rel_us = std::chrono::duration_cast<std::chrono::microseconds>(ts - start_time).count(); // Direct on ts
+            auto ts_pair = results.get_timestamp_us(rid);
+            bool ts_ok = ts_pair.first;
+            uint64_t ts_us = ts_pair.second;
+            long long rel_us = -1;
+            if (ts_ok && ts_us != 0) {
+                rel_us = static_cast<long long>(ts_us);
             }
+
             std::cout << std::left << std::setw(8) << ("ID " + std::to_string(rid))
                 << std::setw(12) << ("tid:" + std::to_string(tid))
                 << std::setw(12) << ("succ:" + std::to_string(succ))
@@ -151,5 +151,10 @@ int main() {
     }
     // Final padded footer
     std::cout << header_line << "\n";
+
+    safepay.print();
+    safepay.show_duration();
+
+
     return 0;
 }

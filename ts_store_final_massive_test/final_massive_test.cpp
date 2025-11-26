@@ -1,6 +1,6 @@
-// ts_store_final_apocalypse.cpp
-// If this passes, we are done for the rest of our lives.
-
+//
+// final_massive_test.cpp
+//
 #include "../ts_store.hpp" // Uses BufferSize=80 default, pair<bool,...> returns
 #include <thread>
 #include <vector>
@@ -10,11 +10,10 @@
 
 int main() {
     constexpr int THREADS = 250;
-    constexpr int OPS_PER_THREAD = 4000;        // 1,000,000 total events
-    constexpr int TOTAL = THREADS * OPS_PER_THREAD;
+    constexpr int WORKERS_PER_THREAD = 4000;        // 1,000,000 total events
+    constexpr int TOTAL = THREADS * WORKERS_PER_THREAD;
 
-    ts_store<80> store(true);
-    store.reserve(TOTAL + 1000);                // plenty of headroom
+    ts_store<THREADS,WORKERS_PER_THREAD, 80, true> store;
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -24,7 +23,7 @@ int main() {
             std::mt19937 rng(t);
             std::string payload = "payload-" + std::to_string(t) + "-";
 
-            for (int i = 0; i < OPS_PER_THREAD; ++i) {
+            for (int i = 0; i < WORKERS_PER_THREAD; ++i) {
                 std::string s = payload + std::to_string(i);
                 auto [ok, id] = store.claim(t, s);
                 if (!ok || id >= 1ull << 50) {          // impossible unless broken

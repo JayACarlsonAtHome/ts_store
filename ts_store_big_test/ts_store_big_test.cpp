@@ -1,12 +1,11 @@
-// ts_store_nuclear_test.cpp
+// ts_store_big_test.cpp
 #include "../ts_store.hpp" // Uses BufferSize=80 default, pair<bool,...> returns
 #include <thread>
 #include <vector>
 #include <iostream>
 
 int main() {
-    ts_store<80> store(true);
-    store.reserve(250000);
+    ts_store<1000,1000, 80, true> store;
 
     std::vector<std::thread> threads;
     constexpr int N = 250;
@@ -37,5 +36,5 @@ int main() {
         }
     }
 
-    std::cout << "NUCLEAR TEST PASSED: " << ids.size() << " entries perfect\n";
+    std::cout << "Big Test Passed: " << ids.size() << " entries perfect\n";
 }

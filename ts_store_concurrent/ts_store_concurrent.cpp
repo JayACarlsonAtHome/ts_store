@@ -17,9 +17,8 @@ int main() {
     const int NUM_OPS = 1000;
     constexpr int Expected_Writes = NUM_WRITER_THREADS * NUM_OPS;
     constexpr int Expected_Reads = NUM_READER_THREADS * NUM_OPS;
-    bool use_ts = true;
-    ts_store<80> store(use_ts);  // FIXED: <80> for fixed buffer
-    store.reserve(Expected_Writes);
+    //bool use_ts = true;
+    ts_store<50,50,80,true> store;  // FIXED: <80> for fixed buffer
     store.clear_claimed_ids();
     std::atomic<int> total_writes{ 0 };
     std::atomic<int> total_reads_concurrent{ 0 };  // FIXED: Rename for concurrent phase
