@@ -1,4 +1,9 @@
 
+This is not in a stable state right now.
+I will work on in a few days.
+I was one commit from a total master piece when it all fell apart.
+Sometimes life sucks, but there is tomorrow...
+
 ### Why this exists
 You needed an event buffer that:
 - never drops or corrupts data
