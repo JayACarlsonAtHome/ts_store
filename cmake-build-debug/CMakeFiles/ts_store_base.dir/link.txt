@@ -1,1 +1,0 @@
-/opt/rh/gcc-toolset-15/root/usr/bin/c++ -g CMakeFiles/ts_store_base.dir/ts_store_base/ts_store_base.cpp.o -o ts_store_base 

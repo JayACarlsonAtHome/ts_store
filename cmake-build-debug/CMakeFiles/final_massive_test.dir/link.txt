@@ -1,1 +1,0 @@
-/opt/rh/gcc-toolset-15/root/usr/bin/c++ -g CMakeFiles/final_massive_test.dir/ts_store_final_massive_test/final_massive_test.cpp.o -o final_massive_test 

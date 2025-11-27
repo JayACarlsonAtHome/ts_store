@@ -217,7 +217,8 @@ public:
                << "  " << payload << std::endl;
         }
 
-        os << std::string(BufferSize+bufferOffset, '=') << "\n\n";
+        os << std::string(BufferSize+bufferOffset, '=') << "\n\n" << std::endl;
+
     }
 
     void show_duration(const std::string& prefix = "Store") const {

@@ -1,1 +1,0 @@
-/opt/rh/gcc-toolset-15/root/usr/bin/c++ -g CMakeFiles/ts_store_big_test.dir/ts_store_big_test/ts_store_big_test.cpp.o -o ts_store_big_test 
