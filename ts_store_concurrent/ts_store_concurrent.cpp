@@ -6,37 +6,44 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include <mutex>
 #include <iomanip>
+#include <array>
 
 using namespace std::chrono;
 using Clock = steady_clock;
 
+// ──────────────────────────────────────────────────────────────
+// Global, inline variables (C++17) – no reallocation, no crash
+// ──────────────────────────────────────────────────────────────
+alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
+constexpr int    WRITER_THREADS = 500;
+constexpr int    OPS_PER_THREAD = 10000;
+constexpr size_t MAX_ENTRIES = WRITER_THREADS * OPS_PER_THREAD + 1000;
+constexpr size_t BUFFER_SIZE        = 100;
+constexpr bool   USE_TIMESTAMPS     = true;
+inline std::array<uint64_t, MAX_ENTRIES> log_stream_array{};
+
+inline std::vector<std::thread> writers;
+inline std::atomic<size_t> total_written{0};
+// ──────────────────────────────────────────────────────────────
+
 int main() {
-    constexpr int    NUM_WRITER_THREADS = 50;
-    constexpr int    OPS_PER_THREAD     = 100;
-    constexpr size_t BUFFER_SIZE        = 100;
-    constexpr bool   USE_TIMESTAMPS     = true;
 
-    ts_store<NUM_WRITER_THREADS, OPS_PER_THREAD, BUFFER_SIZE, USE_TIMESTAMPS> store;
 
-    static std::vector<std::thread> writers;
-    static std::vector<uint64_t>    log_stream;
-    static std::mutex               stream_mutex;
-    static std::atomic<size_t>      total_written{0};
+    ts_store<WRITER_THREADS, OPS_PER_THREAD, BUFFER_SIZE, USE_TIMESTAMPS> store;
 
     auto writer_start = Clock::now();
     auto start_us = duration_cast<microseconds>(writer_start.time_since_epoch()).count();
     std::cout << "Writer start time : " << std::right << std::setw(14) << start_us << " µs\n";
 
-    for (int t = 0; t < NUM_WRITER_THREADS; ++t) {
+    for (int t = 0; t < WRITER_THREADS; ++t) {
         writers.emplace_back([&, t]() {
             for (int i = 0; i < OPS_PER_THREAD; ++i) {
                 auto payload = "t" + std::to_string(t) + "-op" + std::to_string(i);
                 auto [ok, id] = store.claim(t, payload, true);
                 if (ok) {
-                    std::lock_guard<std::mutex> lk(stream_mutex);
-                    log_stream.push_back(id);
+                    size_t pos = log_stream_write_pos.fetch_add(1, std::memory_order_relaxed);
+                    log_stream_array[pos] = id;
                     total_written.fetch_add(1, std::memory_order_release);
                 }
             }
@@ -56,42 +63,39 @@ int main() {
 
     std::thread tail_reader([&]() {
         size_t last_read = 0;
-        const size_t total_expected = NUM_WRITER_THREADS * OPS_PER_THREAD;
 
-        while (total_written.load(std::memory_order_acquire) < total_expected ||
-               last_read < log_stream.size()) {
+        while (total_written.load(std::memory_order_acquire) < WRITER_THREADS * OPS_PER_THREAD ||
+               last_read < log_stream_write_pos.load(std::memory_order_acquire)) {
 
-            size_t current_end;
-            {
-                std::lock_guard<std::mutex> lk(stream_mutex);
-                current_end = log_stream.size();
-            }
+            size_t current_end = log_stream_write_pos.load(std::memory_order_acquire);
 
             while (last_read < current_end) {
-                auto [ok, _] = store.select(log_stream[last_read++]);
-                (ok ? hits : misses)++;
+                uint64_t id = log_stream_array[last_read++];
+                auto [ok, _] = store.select(id);
+                (ok ? hits : misses).fetch_add(1, std::memory_order_relaxed);
             }
 
             if (last_read >= current_end)
-                std::this_thread::sleep_for(std::chrono::microseconds(50));
+                std::this_thread::sleep_for(microseconds(50));
         }
     });
 
     for (auto& w : writers) w.join();
+
     auto writer_stop = Clock::now();
     auto writer_stop_us = duration_cast<microseconds>(writer_stop.time_since_epoch()).count();
     std::cout << "Writer stop time  : " << std::right << std::setw(14) << writer_stop_us << " µs\n";
 
     tail_reader.join();
+
     auto reader_stop = Clock::now();
     auto reader_stop_us = duration_cast<microseconds>(reader_stop.time_since_epoch()).count();
     auto finish_lag = reader_stop_us - writer_stop_us;
 
     std::cout << "Reader stop time  : " << std::right << std::setw(14) << reader_stop_us << " µs\n";
-    std::cout << "Reader finish lag : " << std::right << std::setw(14) << finish_lag << " µs\n";
+    std::cout << "Reader finish lag : " << std::right << std::setw(14) << finish_lag << " µs\n\n";
 
-    std::cout << "\n";
-    std::cout << "Aggressive reader: " << hits << " hits, " << misses << " misses (should be 0)\n";
+    std::cout << "Aggressive tail-reader: " << hits << " hits, " << misses << " misses (should be 0)\n";
 
     auto all_ids = store.get_claimed_ids_sorted(0);
     int final_ok = 0;
@@ -100,13 +104,10 @@ int main() {
 
     std::cout << "Final post-write check: " << final_ok << "/" << all_ids.size() << "\n";
     store.show_duration("Store");
-    std::cout << "\n";
+    std::cout << "\nPress Enter to display the full sorted trace...\n";
+    std::cin.get();
 
-    // — YOUR REQUEST: Pause before the beautiful dump —
-    std::cout << "Press Enter to display the full sorted trace...\n";
-    std::cin.get();  // waits for Enter key
-
-    store.print(std::cout, 2);
+    store.print(std::cout, 2,MAX_ENTRIES);
 
     return 0;
 }
