@@ -7,7 +7,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "../ts_store.hpp" // Uses BufferSize=80 default, pair<bool,...> returns
+#include "../ts_store_headers/ts_store.hpp"
 
 int main() {
     std::string fileName = "ts_store_stress"; // UPDATED: Match current file

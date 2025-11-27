@@ -1,5 +1,5 @@
 // ts_store_big_test.cpp
-#include "../ts_store.hpp" // Uses BufferSize=80 default, pair<bool,...> returns
+#include "../ts_store_headers/ts_store.hpp"
 #include <thread>
 #include <vector>
 #include <iostream>

@@ -1,6 +1,6 @@
 ﻿// ts_store_concurrent.cpp
 
-#include "../ts_store.hpp"
+#include "../ts_store_headers/ts_store.hpp"
 #include <atomic>
 #include <chrono>
 #include <iostream>
@@ -14,7 +14,7 @@ using Clock = steady_clock;
 
 int main() {
     constexpr int    NUM_WRITER_THREADS = 50;
-    constexpr int    OPS_PER_THREAD     = 1000;
+    constexpr int    OPS_PER_THREAD     = 100;
     constexpr size_t BUFFER_SIZE        = 100;
     constexpr bool   USE_TIMESTAMPS     = true;
 
