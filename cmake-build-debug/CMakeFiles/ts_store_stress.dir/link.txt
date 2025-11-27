@@ -1,0 +1,1 @@
+/opt/rh/gcc-toolset-15/root/usr/bin/c++ -g CMakeFiles/ts_store_stress.dir/ts_store_stress/ts_store_stress.cpp.o -o ts_store_stress 

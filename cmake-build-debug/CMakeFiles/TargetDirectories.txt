@@ -1,0 +1,7 @@
+/home/jay/git/ts_store/cmake-build-debug/CMakeFiles/ts_store_base.dir
+/home/jay/git/ts_store/cmake-build-debug/CMakeFiles/ts_store_concurrent.dir
+/home/jay/git/ts_store/cmake-build-debug/CMakeFiles/ts_store_stress.dir
+/home/jay/git/ts_store/cmake-build-debug/CMakeFiles/ts_store_big_test.dir
+/home/jay/git/ts_store/cmake-build-debug/CMakeFiles/final_massive_test.dir
+/home/jay/git/ts_store/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/jay/git/ts_store/cmake-build-debug/CMakeFiles/rebuild_cache.dir

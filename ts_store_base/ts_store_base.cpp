@@ -7,8 +7,8 @@
 
 int main() {
 
-    constexpr int Threads = 10;
-    constexpr int WorkersPerThread = 10;
+    constexpr int Threads = 50;
+    constexpr int WorkersPerThread = 50;
     constexpr int BufferSize = 100;
     constexpr bool UseTimeStamps = true;
 

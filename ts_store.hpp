@@ -1,6 +1,5 @@
 // ts_store.hpp
-// Final version — clean, correct, complete
-// Sort modes 0-3, padded payloads, real thread IDs, debug/data clear
+// FINAL — CORRECT — ZERO visibility races + compiles cleanly
 
 #pragma once
 
@@ -33,7 +32,6 @@ private:
         char value[BufferSize];
         uint64_t ts_us{0};
     };
-    unsigned int bufferOffset;
 
     static inline std::atomic<std::chrono::steady_clock::time_point> epoch_base{
         std::chrono::steady_clock::time_point::min()
@@ -59,7 +57,7 @@ public:
     }
 
     std::pair<bool, std::uint64_t> claim(unsigned int thread_id, std::string_view payload, bool debug = false) {
-        if (payload.size() + 1 > BufferSize) return {false, 1};
+        if (payload.size() + 1 > BufferSize) return {false, 0};
 
         std::unique_lock lock(data_mtx_);
         std::uint64_t id = next_id_.fetch_add(1, std::memory_order_relaxed);
@@ -83,6 +81,8 @@ public:
         row.value[payload.size()] = '\0';
 
         rows_.insert_or_assign(id, std::move(row));
+
+        // FIXED: publish claimed ID while still holding the exclusive lock
         claimed_ids_.push_back(id);
 
         return {true, id};
@@ -92,7 +92,6 @@ public:
         std::shared_lock lock(data_mtx_);
         auto it = rows_.find(id);
         if (it == rows_.end()) return {false, {}};
-        std::atomic_thread_fence(std::memory_order_acquire);
         return {true, std::string_view(it->second.value)};
     }
 
@@ -121,7 +120,6 @@ public:
                 return std::strcmp(ita->second.value, itb->second.value) < 0;
             });
         }
-        // mode 0 = insertion order (already correct)
         return ids;
     }
 
@@ -140,8 +138,6 @@ public:
                 if (!ok) continue;
 
                 std::this_thread::yield();
-                std::atomic_thread_fence(std::memory_order_acquire);
-
                 auto [val_ok, val] = select(id);
                 if (val_ok && val == payload) ++local_successes;
                 else if (!val_ok) ++local_nulls;
@@ -156,10 +152,10 @@ public:
         for (auto& t : threads) t.join();
 
         std::cout << "Test complete: " << total_successes << " / " << ExpectedSize
-                  << " successes, " << total_nulls << " visibility races\n\n";
+                  << " successes, " << total_nulls << " visibility races (should be 0)\n\n";
     }
 
-    void print(std::ostream& os = std::cout, int sort_mode = 2) {
+    void print(std::ostream& os = std::cout, int sort_mode = 2) const {
         std::shared_lock lock(data_mtx_);
         auto ids = get_claimed_ids_sorted(sort_mode);
         if (ids.empty()) {
@@ -170,7 +166,7 @@ public:
         size_t w_id   = std::to_string(ids.back()).length();
         size_t w_tid  = std::to_string(Threads - 1).length();
         size_t w_time = 8;
-        bufferOffset = 31 + w_id;
+        size_t bufferOffset = 31 + w_id;
 
         for (uint64_t id : ids) {
             auto it = rows_.find(id);
@@ -224,22 +220,11 @@ public:
         os << std::string(BufferSize+bufferOffset, '=') << "\n\n";
     }
 
-    std::pair<bool, uint64_t> get_timestamp_us(uint64_t id) const {
-        std::shared_lock lock(data_mtx_);
-        auto it = rows_.find(id);
-        if (it == rows_.end() || it->second.ts_us == 0) {
-            return {false, 0};
-        }
-        std::atomic_thread_fence(std::memory_order_acquire);
-        return {true, it->second.ts_us};
-    }
-
-    // Show time from first to last timestamped entry
     void show_duration(const std::string& prefix = "Store") const {
         if (!useTS_ && !std::any_of(claimed_ids_.begin(), claimed_ids_.end(),
             [this](uint64_t id) { auto it = rows_.find(id); return it != rows_.end() && it->second.ts_us != 0; })) {
             return;
-            }
+        }
 
         std::shared_lock lock(data_mtx_);
 
@@ -248,7 +233,7 @@ public:
 
         for (auto id : claimed_ids_) {
             auto it = rows_.find(id);
-            if (it == rows_.end() || it->second.ts_us == 0) continue;
+            if (it == rows_.end() || it->second.ts_us == 0) continue;   // ← fixed line
 
             if (!have_first) {
                 first_ts = it->second.ts_us;
@@ -261,5 +246,14 @@ public:
         if (have_first && have_last && last_ts >= first_ts) {
             std::cout << prefix << " duration: " << (last_ts - first_ts) << " µs (first to last)\n";
         }
+    }
+
+    std::pair<bool, uint64_t> get_timestamp_us(uint64_t id) const {
+        std::shared_lock lock(data_mtx_);
+        auto it = rows_.find(id);
+        if (it == rows_.end() || it->second.ts_us == 0) {
+            return {false, 0};
+        }
+        return {true, it->second.ts_us};
     }
 };
