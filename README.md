@@ -49,11 +49,14 @@ Dynamic string lengths</br>
 
 ### Performance (measured 2025-11-25)
 
-| Environment                         | Compiler       | Cores/Threads  | Writes/sec                                              |
-|-------------------------------------|----------------|----------------|---------------------------------------------------------|
-| RHEL 10.1 Virtual Machine *1        | g++ 14         | 8 threads      | 1.0 - 1.5 million                                       |
-| Bare metal RHEL 9.7       *2        | g++ 15.1.1     | 20 threads     | .7 - .8 million (best of 5 runs)  ~1.60M - 1.9M typical |
+| Environment                         | Compiler       | Cores/Threads  | Writes/sec        |
+|-------------------------------------|----------------|----------------|-------------------|
+| RHEL 10.1 Virtual Machine *1        | g++ 14         | 8 threads      | 1.0 - 1.5 million |
+| Bare metal RHEL 9.7       *2        | g++ 15.1.1     | 20 threads     | 0.7 - 0.8 million |
 
+Do you wonder why the VM is faster? 
+Probably because scheduling processing between more cores/threads...
+Or at least that is my best guess.
 
 *1
 ┌── System Info RHEL 10.1  VM ───────────────────────────────
