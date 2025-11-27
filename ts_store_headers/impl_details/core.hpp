@@ -3,8 +3,6 @@
 // File Path: ts_store/ts_store_headers/impl_details/core.hpp
 //
 
-explicit ts_store() = default;
-
 size_t size() const {
     std::shared_lock lock(data_mtx_);
     return rows_.size();

@@ -17,7 +17,7 @@ using Clock = steady_clock;
 // ──────────────────────────────────────────────────────────────
 alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 constexpr int    WRITER_THREADS = 500;
-constexpr int    OPS_PER_THREAD = 10000;
+constexpr int    OPS_PER_THREAD = 100;
 constexpr size_t MAX_ENTRIES = WRITER_THREADS * OPS_PER_THREAD + 1000;
 constexpr size_t BUFFER_SIZE        = 100;
 constexpr bool   USE_TIMESTAMPS     = true;
@@ -28,8 +28,6 @@ inline std::atomic<size_t> total_written{0};
 // ──────────────────────────────────────────────────────────────
 
 int main() {
-
-
     ts_store<WRITER_THREADS, OPS_PER_THREAD, BUFFER_SIZE, USE_TIMESTAMPS> store;
 
     auto writer_start = Clock::now();

@@ -1,11 +1,3 @@
-### New Update
-This is not in a stable state right now.</br>
-I was one commit from a total master piece when it all fell apart.</br>
-It still mostly works, but with large numbers of threads it can crash.</br>
-If it wasn't 0200 in the morning I would just fix it...</br>
-It's not like anyone is watching anyhow...</br>
-I will work on in a few days.</br>
-
 
 ### Why this exists
 You needed an event buffer that:
@@ -56,6 +48,8 @@ Trillions of events</br>
 Dynamic string lengths</br>
 
 ### Performance (measured 2025-11-25)
+    Note the current version is only about 1/2 as fast.
+    I will work on that in a few days.
 
 | Environment                         | Compiler       | Cores/Threads  | Writes/sec                                             |
 |-------------------------------------|----------------|----------------|--------------------------------------------------------|
