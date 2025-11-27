@@ -43,7 +43,7 @@ Fuzzing replay buffers</br>
 Anything that must be correct first, fast second</br>
 
 ### When NOT to use it
-Persistence</br>
+Persistence -- (coming soon)</br>
 Trillions of events</br>
 Dynamic string lengths</br>
 
