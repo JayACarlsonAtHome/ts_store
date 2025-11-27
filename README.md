@@ -54,9 +54,9 @@ Dynamic string lengths</br>
 | RHEL 10.1 Virtual Machine *1        | g++ 14         | 8 threads      | 1.0 - 1.5 million |
 | Bare metal RHEL 9.7       *2        | g++ 15.1.1     | 20 threads     | 0.7 - 0.8 million |
 
-Do you wonder why the VM is faster? 
-Probably because scheduling processing between more cores/threads...
-Or at least that is my best guess.
+Do you wonder why the VM is faster?</br> 
+Because scheduling processing between more cores/threads takes time.</br>.
+Or at least that is my best guess.</br>
 
 *1
 ┌── System Info RHEL 10.1  VM ───────────────────────────────
