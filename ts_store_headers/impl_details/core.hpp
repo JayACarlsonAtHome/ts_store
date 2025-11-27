@@ -53,3 +53,12 @@ std::pair<bool, std::string_view> select(std::uint64_t id) const {
     if (it == rows_.end()) return {false, {}};
     return {true, std::string_view(it->second.value)};
 }
+
+std::pair<bool, uint64_t> get_timestamp_us(uint64_t id) const {
+    std::shared_lock lock(data_mtx_);
+    auto it = rows_.find(id);
+    if (it == rows_.end() || it->second.ts_us == 0) {
+        return {false, 0};
+    }
+    return {true, it->second.ts_us};
+}

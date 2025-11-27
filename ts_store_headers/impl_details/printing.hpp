@@ -3,68 +3,69 @@
 // File Path: ts_store/ts_store_headers/impl_details/printing.hpp
 //
 
-    void print(std::ostream& os = std::cout, int sort_mode = 2) const {
+void print(std::ostream& os = std::cout, int sort_mode = 0, size_t max_rows = 10'000) const
+    {
         std::shared_lock lock(data_mtx_);
-        auto ids = get_claimed_ids_sorted(sort_mode);
+        auto ids = claimed_ids_;
+
+        if (ids.size() > 100'000 && sort_mode != 0) {
+            os << "[Sorting disabled: " << ids.size() << " entries — using insertion order]\n";
+        } else if (sort_mode != 0) {
+            ids = get_claimed_ids_sorted(sort_mode);
+        }
+
+        if (max_rows > 0 && ids.size() > max_rows) {
+            os << "[Truncating output: showing first " << max_rows
+               << " of " << claimed_ids_.size() << " entries]\n\n";
+            ids.resize(max_rows);
+        }
+
         if (ids.empty()) {
-            os << "ts_store<" << Threads << "," << WorkersPerThread << "," << BufferSize << "> is empty.\n\n";
+            os << "ts_store<" << Threads << "," << WorkersPerThread
+               << "," << BufferSize << "> is empty.\n\n";
             return;
         }
 
-        size_t w_id   = std::to_string(ids.back()).length();
-        size_t w_tid  = std::to_string(Threads - 1).length();
-        size_t w_time = 8;
-        size_t bufferOffset = 31 + w_id;
+        constexpr int W_ID           = 10;
+        constexpr int W_TIME         = 12;
+        constexpr int W_TYPE         = 8;
+        constexpr int W_THREAD       = 8;
+        constexpr int PAD_ID_TO_TIME = 8;
 
-        for (uint64_t id : ids) {
-            auto it = rows_.find(id);
-            if (it == rows_.end()) continue;
-            w_tid = std::max(w_tid, std::to_string(it->second.thread_id).length());
-            if (it->second.ts_us != 0)
-                w_time = std::max(w_time, std::to_string(it->second.ts_us).length());
-        }
-
-        w_id = std::max(w_id, size_t(3));
-        w_tid = std::max(w_tid, size_t(6));
+        const int total_width = W_ID + PAD_ID_TO_TIME + W_TIME + 1 + W_TYPE + 1 + W_THREAD + 2 + (BufferSize - 1);
 
         os << "ts_store<" << Threads << "," << WorkersPerThread << "," << BufferSize << ">\n";
-        os << std::string(BufferSize+bufferOffset, '=') << "\n";
+        os << std::string(total_width, '=') << "\n";
 
-        os << std::right
-           << std::setw(w_id)       << "ID"
-           << std::setw(w_time + 4) << "TIME"
-           << std::left
-           << std::setw(8)          << " TYPE"
-           << std::right
-           << std::setw(w_tid + 4)  << "THREAD"
-           << "  PAYLOAD (padded to " << (BufferSize - 1) << " chars)\n";
-        os << std::string(BufferSize+bufferOffset, '-') << "\n";
+        os << std::right << std::setw(W_ID) << "ID"
+           << std::string(PAD_ID_TO_TIME, ' ')
+           << std::left  << std::setw(W_TIME)   << "TIME (µs)"
+           << " " << std::setw(W_TYPE)   << "TYPE"
+           << " " << std::right << std::setw(W_THREAD) << "THREAD"
+           << "  PAYLOAD\n";
 
-        for (uint64_t id : ids) {
+        os << std::string(total_width, '-') << "\n";
+
+        for (auto id : ids) {
             auto it = rows_.find(id);
             if (it == rows_.end()) {
-                os << std::right << std::setw(w_id) << id << " <missing>\n";
+                os << std::right << std::setw(W_ID) << id << "  <missing>\n";
                 continue;
             }
             const auto& r = it->second;
-            std::string ts_str = (r.ts_us != 0) ? std::to_string(r.ts_us) : "-";
+
+            std::string ts_str   = r.ts_us ? std::to_string(r.ts_us) : "-";
             std::string type_str = r.is_debug ? "Debug" : "Data";
+            std::string payload  = r.value;
+            payload.resize(BufferSize - 1, '.');
 
-            std::string payload = r.value;
-            if (payload.length() < BufferSize - 1) {
-                payload += std::string((BufferSize - 1) - payload.length(), '.');
-            }
-
-            os << std::right
-               << std::setw(w_id)       << id
-               << std::setw(w_time + 4) << ts_str
-               << std::left
-               << std::setw(8)          << (" " + type_str)
-               << std::right
-               << std::setw(w_tid + 4)  << r.thread_id
-               << "  " << payload << std::endl;
+            os << std::right << std::setw(W_ID) << id
+               << std::string(PAD_ID_TO_TIME, ' ')
+               << std::left  << std::setw(W_TIME)   << ts_str
+               << " " << std::setw(W_TYPE)   << type_str
+               << " " << std::right << std::setw(W_THREAD) << r.thread_id
+               << "  " << payload << "\n";
         }
 
-        os << std::string(BufferSize+bufferOffset, '=') << "\n\n" << std::endl;
-
+        os << std::string(total_width, '=') << "\n\n";
     }
