@@ -40,6 +40,13 @@
 # debug information files
 *.dwo
 
-# cmake-build-debug directory
+# cmake directories
 cmake-build-debug/
 cmake-build-release/
+.cmake/
+.idea/
+
+# ninja files
+.ninja_deps
+.ninja_log
+

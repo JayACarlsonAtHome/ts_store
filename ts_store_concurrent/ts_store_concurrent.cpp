@@ -14,7 +14,7 @@ using Clock = steady_clock;
 
 int main() {
     constexpr int    NUM_WRITER_THREADS = 50;
-    constexpr int    OPS_PER_THREAD     = 10000;
+    constexpr int    OPS_PER_THREAD     = 1000;
     constexpr size_t BUFFER_SIZE        = 100;
     constexpr bool   USE_TIMESTAMPS     = true;
 
