@@ -160,7 +160,7 @@ Memory guard: 250-threads 4000-ops test (1000k entries) [timestamps]
    RAM check: PASSED
 
 Massive Test Passed
-1,000,000 writes in 666107 µs → 1.50126e+06 ops/sec  //Zero lost or corrupted entries in 1000+ consecutive runs.
+1,000,000 writes in 666107 µs → 1.50126e+06 ops/sec  
 1,000,000 sequential reads in 110207 µs
 
 Process finished with exit code 0
