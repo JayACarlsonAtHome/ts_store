@@ -17,6 +17,9 @@
 #include <sys/sysinfo.h>
 #include "../GTL/include/gtl/phmap.hpp"
 
+// FastPayload — zero-allocation payload builder
+#include "impl_details/fast_payload.hpp"
+
 template <
     size_t Threads,
     size_t WorkersPerThread,
@@ -32,16 +35,15 @@ private:
         uint64_t ts_us{0};
     };
 
-    #include "impl_details/memory_guard.h"
-
+#include "impl_details/memory_guard.h"
 
 public:
     static constexpr size_t ExpectedSize = Threads * WorkersPerThread;
 
     ts_store() {
-        (void)guard_instance;  // Ensures guard is constructed if not already
+        (void)guard_instance;
     }
-    // Public helpers
+
     static constexpr size_t row_data_size() noexcept { return sizeof(row_data); }
 
 private:
@@ -52,16 +54,19 @@ private:
     std::atomic<std::uint64_t> next_id_{0};
     gtl::parallel_flat_hash_map<std::uint64_t, row_data> rows_;
     mutable std::shared_mutex data_mtx_;
-    // claimed_ids_ removed – it was the global contention point
-    // We now use rows_.size() and direct iteration – faster and correct
     bool useTS_{UseTimestamps};
 
-
 public:
-    #include "impl_details/abbr_guide.hpp"
-    #include "impl_details/core.hpp"
-    #include "impl_details/sorting.hpp"
-    #include "impl_details/testing.hpp"
-    #include "impl_details/printing.hpp"
-    #include "impl_details/duration.hpp"
+#include "impl_details/abbr_guide.hpp"
+#include "impl_details/core.hpp"        // legacy claim(string_view)
+#include "impl_details/sorting.hpp"
+#include "impl_details/testing.hpp"
+#include "impl_details/printing.hpp"
+#include "impl_details/duration.hpp"
+
+    // FAST PATH — zero allocation — this wins
+    std::pair<bool, std::uint64_t> claim(unsigned int thread_id, int index, bool debug = false) {
+        auto payload = FastPayload<BufferSize>::make(thread_id, index);
+        return claim(thread_id, payload, debug);
+    }
 };

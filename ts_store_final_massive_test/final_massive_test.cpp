@@ -10,23 +10,22 @@
 
 int main() {
     constexpr int THREADS = 250;
-    constexpr int WORKERS_PER_THREAD = 4000;        // 1,000,000 total events
+    constexpr int WORKERS_PER_THREAD = 4000;
     constexpr int TOTAL = THREADS * WORKERS_PER_THREAD;
+    constexpr size_t BUFFER_SIZE = 100;
 
-    ts_store<THREADS,WORKERS_PER_THREAD, 80, true> store;
+    ts_store<THREADS, WORKERS_PER_THREAD, 80, true> store;
 
     auto start = std::chrono::high_resolution_clock::now();
 
     std::vector<std::thread> threads;
     for (int t = 0; t < THREADS; ++t) {
         threads.emplace_back([t, &store]() {
-            std::mt19937 rng(t);
-            std::string payload = "payload-" + std::to_string(t) + "-";
-
             for (int i = 0; i < WORKERS_PER_THREAD; ++i) {
-                std::string s = payload + std::to_string(i);
-                auto [ok, id] = store.claim(t, s);
-                if (!ok || id >= 1ull << 50) {          // impossible unless broken
+                // Zero-allocation payload — the real win
+                auto payload = FastPayload<BUFFER_SIZE>::make(t, i);
+                auto [ok, id] = store.claim(t, i);  // calls FastPayload overload
+                if (!ok || id >= 1ull << 50) {
                     std::cerr << "CLAIM FAILED AT " << t << "/" << i << "\n";
                     std::abort();
                 }
@@ -37,10 +36,8 @@ int main() {
 
     auto mid = std::chrono::high_resolution_clock::now();
 
-    // Every single ID must be present and correct
     auto ids = store.get_all_ids();
     std::sort(ids.begin(), ids.end());
-
 
     if (ids.size() != TOTAL) {
         std::cout << "LOST " << TOTAL - ids.size() << " ENTRIES\n";

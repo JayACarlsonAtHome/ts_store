@@ -7,18 +7,16 @@ size_t size() const {
     return rows_.size();
 }
 
-// Returns all stored IDs in undefined order (fast)
-// Use only for verification or debugging – not hot path
 std::vector<std::uint64_t> get_all_ids() const {
     std::shared_lock lock(data_mtx_);
     std::vector<std::uint64_t> ids;
     ids.reserve(rows_.size());
-    for (const auto& pair : rows_) {
+    for (const auto& pair : rows_)
         ids.push_back(pair.first);
-    }
     return ids;
 }
 
+// Legacy path — kept for compatibility (rarely used)
 std::pair<bool, std::uint64_t> claim(unsigned int thread_id, std::string_view payload, bool debug = false) {
     if (payload.size() + 1 > BufferSize) return {false, 0};
 
@@ -45,12 +43,6 @@ std::pair<bool, std::uint64_t> claim(unsigned int thread_id, std::string_view pa
 
     rows_.insert_or_assign(id, std::move(row));
 
-    // ----------------------------------------------------------------------
-    // STEP 1: Remove the global contention point
-    // Old (contended) code – kept for instant revert if needed:
-    // claimed_ids_.push_back(id);
-    // ----------------------------------------------------------------------
-
     return {true, id};
 }
 
@@ -64,8 +56,7 @@ std::pair<bool, std::string_view> select(std::uint64_t id) const {
 std::pair<bool, uint64_t> get_timestamp_us(uint64_t id) const {
     std::shared_lock lock(data_mtx_);
     auto it = rows_.find(id);
-    if (it == rows_.end() || it->second.ts_us == 0) {
+    if (it == rows_.end() || it->second.ts_us == 0)
         return {false, 0};
-    }
     return {true, it->second.ts_us};
 }
