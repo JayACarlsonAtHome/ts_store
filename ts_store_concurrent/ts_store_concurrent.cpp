@@ -105,7 +105,7 @@ int main() {
     std::cout << "\nPress Enter to display the full sorted trace...\n";
     std::cin.get();
 
-    store.print(std::cout, 2,MAX_ENTRIES);
+    store.print(std::cout, 0,MAX_ENTRIES);
 
     return 0;
 }
