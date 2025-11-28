@@ -10,8 +10,8 @@
 
 template <std::size_t PayloadSize>
 struct FastPayload {
+    static const int debug = 0;
     static_assert(PayloadSize >= 64, "PayloadSize too small for FastPayload");
-
     thread_local inline static char buffer[PayloadSize]{};
     thread_local inline static char* pos = buffer;
 
@@ -28,24 +28,6 @@ struct FastPayload {
         *pos++ = '\0';
 
         size_t len = static_cast<std::size_t>(pos - buffer - 1);
-        if (1==0)
-        {
-            std::cout << "\n=== FASTPAYLOAD DEBUG ===\n";
-            std::cout << "Thread ID : " << tid << "\n";
-            std::cout << "Index     : " << index << "\n";
-            std::cout << "BufferSize: " << PayloadSize << "\n";
-            std::cout << "Payload   : '" << std::string_view(buffer, len) << "'\n";
-            std::cout << "Length    : " << len << " (max allowed: " << PayloadSize - 1 << ")\n";
-            std::cout << "Status    : ";
-            if (len + 1 > PayloadSize) {
-                std::cout << "OVERFLOW!\n";
-            } else {
-                std::cout << "OK\n";
-            }
-            std::cout << "========================\n";
-            std::cout << "Press Enter to continue...";
-            std::cin.get();  // ← PAUSES HERE
-        }
         return {buffer, len};
     }
 
