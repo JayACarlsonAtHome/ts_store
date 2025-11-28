@@ -20,7 +20,7 @@ This one doesn’t.
 - Five independent stress tests, including the infamous `final_massive_test`
 - Pretty formatted output, sortable by ID, Time, or Thread
 
-### Usage
+### Testing compiling
 ```cpp
 #include "../ts_store.hpp" // Uses BufferSize=80 default, pair<bool,...> returns
 
@@ -59,6 +59,88 @@ ts_store<2,5,100>
          9        215          Debug           1  payload-1-4.........../  /.....................
 ========================================================================/  /=====================
 Total entries: 10
+
+Process finished with exit code 0
+```
+
+### Closer to real use
+```cpp
+//
+// final_massive_test.cpp
+//
+#include "../ts_store_headers/ts_store.hpp"
+#include <thread>
+#include <vector>
+#include <iostream>
+#include <random>
+#include <chrono>
+
+int main() {
+    constexpr int THREADS = 250;
+    constexpr int WORKERS_PER_THREAD = 4000;
+    constexpr int TOTAL = THREADS * WORKERS_PER_THREAD;
+    constexpr size_t BUFFER_SIZE = 100;
+
+    ts_store<THREADS, WORKERS_PER_THREAD, 80, true> store;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::vector<std::thread> threads;
+    for (int t = 0; t < THREADS; ++t) {
+        threads.emplace_back([t, &store]() {
+            for (int i = 0; i < WORKERS_PER_THREAD; ++i) {
+                // Zero-allocation payload — the real win
+                auto payload = FastPayload<BUFFER_SIZE>::make(t, i);
+                auto [ok, id] = store.claim(t, i);  // calls FastPayload overload
+                if (!ok || id >= 1ull << 50) {
+                    std::cerr << "CLAIM FAILED AT " << t << "/" << i << "\n";
+                    std::abort();
+                }
+            }
+        });
+    }
+    for (auto& th : threads) th.join();
+
+    auto mid = std::chrono::high_resolution_clock::now();
+
+    auto ids = store.get_all_ids();
+    std::sort(ids.begin(), ids.end());
+
+    if (ids.size() != TOTAL) {
+        std::cout << "LOST " << TOTAL - ids.size() << " ENTRIES\n";
+        return 1;
+    }
+
+    for (uint64_t i = 0; i < TOTAL; ++i) {
+        auto [ok, val] = store.select(i);
+        if (!ok || val.find("payload-") != 0) {
+            std::cout << "CORRUPTION AT ID " << i << "\n";
+            return 1;
+        }
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    auto write_us = std::chrono::duration_cast<std::chrono::microseconds>(mid - start).count();
+    auto read_us  = std::chrono::duration_cast<std::chrono::microseconds>(end - mid).count();
+
+    std::cout << "Massive Test Passed\n";
+    std::cout << "1,000,000 writes in " << write_us << " µs → "
+              << (1'000'000 * 1'000'000.0 / write_us) << " ops/sec\n";
+    std::cout << "1,000,000 sequential reads in " << read_us << " µs\n";
+
+    return 0;
+}
+
+Results below:
+Memory guard: 250-threads 4000-ops test (1000k entries) [timestamps]
+   Required      :      287 MiB
+   Available now :    48434 MiB
+   RAM check: PASSED
+
+Massive Test Passed
+1,000,000 writes in 666107 µs → 1.50126e+06 ops/sec
+1,000,000 sequential reads in 110207 µs
 
 Process finished with exit code 0
 ```
