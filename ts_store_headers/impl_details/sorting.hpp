@@ -2,6 +2,7 @@
 // File Path: ts_store/ts_store_headers/impl_details/sorting.hpp
 //
 
+/*
     std::vector<std::uint64_t> get_claimed_ids_sorted(int mode = 0) const {
         std::shared_lock lock(data_mtx_);
         auto ids = claimed_ids_;
@@ -22,3 +23,4 @@
         }
         return ids;
     }
+*/

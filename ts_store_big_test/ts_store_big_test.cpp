@@ -22,7 +22,9 @@ int main() {
     }
     for (auto& th : threads) th.join();
 
-    auto ids = store.get_claimed_ids_sorted(0);
+    auto ids = store.get_all_ids();
+    std::sort(ids.begin(), ids.end());
+
     if (ids.size() != N * OPS) {
         std::cout << "LOST ENTRIES: " << ids.size() << " vs " << N*OPS << "\n";
         return 1;

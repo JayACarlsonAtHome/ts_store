@@ -22,9 +22,6 @@ int main() {
     ts_store<THREADS, WORKERS, PAYLOAD_LENGTH, UseTS> safepay;
     ts_store<THREADS, WORKERS, PAYLOAD_LENGTH, UseTS> results; // Outputs
 
-    safepay.clear_claimed_ids(); // Reset for test
-    results.clear_claimed_ids(); // Reset for test
-
     std::vector<std::thread> threads;
     std::atomic<int> total_successes{ 0 };
     std::atomic<int> total_nulls{ 0 }; // NEW: Track failed selects (nulls/races)
@@ -73,8 +70,11 @@ int main() {
         threads.emplace_back(worker, t);
     }
     for (auto& th : threads) th.join();
+
     // Get sorted IDs (mode 2 = by time)
-    auto all_result_ids = results.get_claimed_ids_sorted(2);
+    auto all_result_ids = results.get_all_ids();  // ← new public method we added
+    std::sort(all_result_ids.begin(), all_result_ids.end());  // chronological order
+
     // Aligned size outputs
     std::cout << std::left << std::setw(22) << "Safepay Size: (Expected: " << Expected_Count << ")"
         << std::right << std::setw(8) << safepay.size() << "\n";

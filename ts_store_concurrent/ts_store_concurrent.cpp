@@ -95,12 +95,30 @@ int main() {
 
     std::cout << "Aggressive tail-reader: " << hits << " hits, " << misses << " misses (should be 0)\n";
 
+    /*
     auto all_ids = store.get_claimed_ids_sorted(0);
     int final_ok = 0;
     for (auto id : all_ids)
         if (store.select(id).first) ++final_ok;
 
     std::cout << "Final post-write check: " << final_ok << "/" << all_ids.size() << "\n";
+    */
+
+    auto all_ids = store.get_all_ids();
+
+    std::sort(all_ids.begin(), all_ids.end());  // chronological order
+
+    size_t verified = 0;
+    for (size_t i = 0; i < log_stream_write_pos.load(std::memory_order_acquire); ++i) {
+        uint64_t id = log_stream_array[i];
+        if (store.select(id).first) ++verified;
+    }
+    std::cout << "Final post-write check: " << verified
+              << "/" << log_stream_write_pos.load() << " (verification)\n";
+
+    assert(verified == WRITER_THREADS * OPS_PER_THREAD);
+
+
     store.show_duration("Store");
     std::cout << "\nPress Enter to display the full sorted trace...\n";
     std::cin.get();

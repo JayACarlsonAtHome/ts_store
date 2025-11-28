@@ -38,7 +38,10 @@ int main() {
     auto mid = std::chrono::high_resolution_clock::now();
 
     // Every single ID must be present and correct
-    auto ids = store.get_claimed_ids_sorted(0);
+    auto ids = store.get_all_ids();
+    std::sort(ids.begin(), ids.end());
+
+
     if (ids.size() != TOTAL) {
         std::cout << "LOST " << TOTAL - ids.size() << " ENTRIES\n";
         return 1;

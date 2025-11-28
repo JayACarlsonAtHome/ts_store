@@ -1,4 +1,3 @@
-
 // Project: ts_store
 // File Path: ts_store/ts_store_headers/impl_details/core.hpp
 //
@@ -8,9 +7,16 @@ size_t size() const {
     return rows_.size();
 }
 
-void clear_claimed_ids() {
-    std::unique_lock lock(data_mtx_);
-    claimed_ids_.clear();
+// Returns all stored IDs in undefined order (fast)
+// Use only for verification or debugging – not hot path
+std::vector<std::uint64_t> get_all_ids() const {
+    std::shared_lock lock(data_mtx_);
+    std::vector<std::uint64_t> ids;
+    ids.reserve(rows_.size());
+    for (const auto& pair : rows_) {
+        ids.push_back(pair.first);
+    }
+    return ids;
 }
 
 std::pair<bool, std::uint64_t> claim(unsigned int thread_id, std::string_view payload, bool debug = false) {
@@ -39,8 +45,11 @@ std::pair<bool, std::uint64_t> claim(unsigned int thread_id, std::string_view pa
 
     rows_.insert_or_assign(id, std::move(row));
 
-    // FIXED: publish claimed ID while still holding the exclusive lock
-    claimed_ids_.push_back(id);
+    // ----------------------------------------------------------------------
+    // STEP 1: Remove the global contention point
+    // Old (contended) code – kept for instant revert if needed:
+    // claimed_ids_.push_back(id);
+    // ----------------------------------------------------------------------
 
     return {true, id};
 }
