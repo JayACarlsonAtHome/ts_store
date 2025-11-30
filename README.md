@@ -334,10 +334,10 @@ Variable-length strings longer than the fixed payload</br>
 
 ### Performance (measured 2025-11-30)
 
-| Environment                         | Compiler       | Cores/Threads  | Writes/sec        |
+| Environment                         | Compiler       | Cores          | Writes/sec        |
 |-------------------------------------|----------------|----------------|-------------------|
-| RHEL 10.1 Virtual Machine *1        | g++ 15.1.1     |   8 threads    | 0.6 - 0.7 million |
-| Bare metal RHEL 9.7       *2        | g++ 15.1.1     | 20 threads     | 0.8 - 2.1 million |
+| RHEL 10.1 Virtual Machine *1        | g++ 15.1.1     |   4 cores      | 0.6 - 1.1 million |
+| Bare metal RHEL 9.7       *2        | g++ 15.1.1     |  20 cores      | 0.8 - 2.1 million |
 
 </br>
 *1</br>
