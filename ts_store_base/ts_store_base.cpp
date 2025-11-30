@@ -1,18 +1,21 @@
-//
-// ts_store_base.cpp
-//
+// ts_store_base.cpp — Final, clean, beautiful test driver
 
 #include "../ts_store_headers/ts_store.hpp"
-
+#include <iostream>
 
 int main() {
+    constexpr uint32_t threads = 50;
+    constexpr uint32_t events  = 200;
 
-    constexpr int Threads = 8;
-    constexpr int WorkersPerThread = 100;
-    constexpr int BufferSize = 100;
-    constexpr bool UseTimeStamps = true;
+    std::cout << "=== Production mode (real types & categories) ===\n";
+    ts_store<96, 12, 24, true> prod(threads, events);
+    prod.test_run_and_print(false);
 
-    ts_store<Threads, WorkersPerThread, BufferSize, UseTimeStamps > store;
-    store.test_run();  // When using this method:  UseTimeStamps = True, Debug = True (Set automatically)
-    store.print();
+    prod.press_any_key();
+
+    std::cout << "\n=== Debug mode (same types, but debug flag on) ===\n";
+    ts_store<96, 12, 24, true> debug(threads, events);
+    debug.test_run_and_print(true);
+
+    return 0;
 }

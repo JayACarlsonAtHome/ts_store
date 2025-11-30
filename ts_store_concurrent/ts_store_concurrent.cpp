@@ -1,4 +1,5 @@
 ﻿// ts_store_concurrent.cpp
+// Aggressive tail-reader stress test — 500 threads × 100 ops = 50,000 events
 
 #include "../ts_store_headers/ts_store.hpp"
 #include <atomic>
@@ -13,22 +14,27 @@ using namespace std::chrono;
 using Clock = steady_clock;
 
 // ──────────────────────────────────────────────────────────────
-// Global, inline variables (C++17) – no reallocation, no crash
-// ──────────────────────────────────────────────────────────────
-alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
-constexpr int    WRITER_THREADS = 500;
-constexpr int    OPS_PER_THREAD = 100;
-constexpr size_t MAX_ENTRIES = WRITER_THREADS * OPS_PER_THREAD + 1000;
+constexpr int    WRITER_THREADS     = 500;
+constexpr int    OPS_PER_THREAD     = 100;
 constexpr size_t BUFFER_SIZE        = 100;
+constexpr size_t TYPE_SIZE          = 16;
+constexpr size_t CATEGORY_SIZE      = 32;
 constexpr bool   USE_TIMESTAMPS     = true;
-inline std::array<uint64_t, MAX_ENTRIES> log_stream_array{};
 
-inline std::vector<std::thread> writers;
+constexpr size_t MAX_ENTRIES = WRITER_THREADS * OPS_PER_THREAD + 1000;
+
+alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
+inline std::array<uint64_t, MAX_ENTRIES> log_stream_array{};
 inline std::atomic<size_t> total_written{0};
 // ──────────────────────────────────────────────────────────────
 
-int main() {
-    ts_store<WRITER_THREADS, OPS_PER_THREAD, BUFFER_SIZE, USE_TIMESTAMPS> store;
+int main()
+{
+    ts_store<BUFFER_SIZE, TYPE_SIZE, CATEGORY_SIZE, USE_TIMESTAMPS> store(
+        WRITER_THREADS, OPS_PER_THREAD);
+
+    std::vector<std::thread> writers;
+    writers.reserve(WRITER_THREADS);
 
     auto writer_start = Clock::now();
     auto start_us = duration_cast<microseconds>(writer_start.time_since_epoch()).count();
@@ -37,11 +43,14 @@ int main() {
     for (int t = 0; t < WRITER_THREADS; ++t) {
         writers.emplace_back([&, t]() {
             for (int i = 0; i < OPS_PER_THREAD; ++i) {
-                auto payload = "t" + std::to_string(t) + "-op" + std::to_string(i);
-                auto [ok, id] = store.claim(t, payload, true);
+                std::string payload = "t" + std::to_string(t) + "-op" + std::to_string(i);
+
+                auto [ok, id] = store.claim(t, payload, "STRESS", "TAIL", true);
                 if (ok) {
                     size_t pos = log_stream_write_pos.fetch_add(1, std::memory_order_relaxed);
-                    log_stream_array[pos] = id;
+                    if (pos < MAX_ENTRIES) {
+                        log_stream_array[pos] = id;
+                    }
                     total_written.fetch_add(1, std::memory_order_release);
                 }
             }
@@ -67,14 +76,14 @@ int main() {
 
             size_t current_end = log_stream_write_pos.load(std::memory_order_acquire);
 
-            while (last_read < current_end) {
+            while (last_read < current_end && last_read < MAX_ENTRIES) {
                 uint64_t id = log_stream_array[last_read++];
                 auto [ok, _] = store.select(id);
                 (ok ? hits : misses).fetch_add(1, std::memory_order_relaxed);
             }
 
             if (last_read >= current_end)
-                std::this_thread::sleep_for(microseconds(50));
+                std::this_thread::sleep_for(microseconds(5));
         }
     });
 
@@ -95,35 +104,24 @@ int main() {
 
     std::cout << "Aggressive tail-reader: " << hits << " hits, " << misses << " misses (should be 0)\n";
 
-    /*
-    auto all_ids = store.get_claimed_ids_sorted(0);
-    int final_ok = 0;
-    for (auto id : all_ids)
-        if (store.select(id).first) ++final_ok;
-
-    std::cout << "Final post-write check: " << final_ok << "/" << all_ids.size() << "\n";
-    */
-
-    auto all_ids = store.get_all_ids();
-
-    std::sort(all_ids.begin(), all_ids.end());  // chronological order
-
+    // Final verification
     size_t verified = 0;
-    for (size_t i = 0; i < log_stream_write_pos.load(std::memory_order_acquire); ++i) {
+    size_t written = log_stream_write_pos.load(std::memory_order_acquire);
+    for (size_t i = 0; i < written && i < MAX_ENTRIES; ++i) {
         uint64_t id = log_stream_array[i];
         if (store.select(id).first) ++verified;
     }
+
     std::cout << "Final post-write check: " << verified
-              << "/" << log_stream_write_pos.load() << " (verification)\n";
+              << "/" << written << " (verification)\n";
 
     assert(verified == WRITER_THREADS * OPS_PER_THREAD);
-
 
     store.show_duration("Store");
     std::cout << "\nPress Enter to display the full sorted trace...\n";
     std::cin.get();
 
-    store.print(std::cout, 0,MAX_ENTRIES);
+    store.print();
 
     return 0;
 }

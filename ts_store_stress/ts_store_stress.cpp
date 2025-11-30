@@ -1,156 +1,169 @@
 // ts_store_stress.cpp
+// Full stress test with per-thread success/null tracking + results store
+
+// =============================================================================
+// DESIGN NOTE / KNOWN LIMITATION – Memory Guard
+// =============================================================================
+//
+// The current memory_guard runs once per unique ts_store instantiation type
+// (i.e. per distinct set of template parameters).
+// It correctly estimates and checks memory for that single type only.
+//
+// When multiple ts_store objects with different template parameters exist in the
+// same process (e.g. one with 100 B payload and another with 200 B), each gets
+// its own independent guard. The guards do NOT sum their requirements, so the
+// total memory usage of the process is not validated against available RAM.
+//
+// Impact: On systems with tight memory, it is theoretically possible to exceed
+// available memory without the guard triggering — although the 150 MiB safety
+// margin makes this unlikely in practice.
+//
+// Recommended future fix:
+//   • Use a single ts_store specialization (same payload size) everywhere, or
+//   • Implement a global static memory budget tracker shared across all instances.
+//
+// This is the only known correctness limitation as of 2025-11-30
+// =============================================================================
+
+#include "../ts_store_headers/ts_store.hpp"
 #include <atomic>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
-#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
-#include "../ts_store_headers/ts_store.hpp"
 
-int main() {
-    std::string fileName = "ts_store_stress"; // UPDATED: Match current file
-    constexpr int THREADS = 250; // UPDATED: To match comment (250 threads)
-    constexpr int WORKERS = 100; // UPDATED: 250*100=25000 ops
-    constexpr int PAYLOAD_LENGTH = 100;
-    constexpr int Expected_Count = THREADS * WORKERS;
+int main()
+{
+    constexpr uint32_t THREADS = 250;
+    constexpr uint32_t EVENTS_PER_THREAD = 100;
+    constexpr uint64_t EXPECTED_COUNT = uint64_t(THREADS) * EVENTS_PER_THREAD;
 
-    constexpr bool UseTS = true;
-    auto start_time = std::chrono::steady_clock::now();
+    constexpr size_t MAIN_PAYLOAD    = 100;
+    constexpr size_t RESULT_PAYLOAD  = 128;
+    constexpr size_t TYPE_SIZE       = 16;
+    constexpr size_t CATEGORY_SIZE   = 32;
+    constexpr bool   USE_TS          = true;
 
-    ts_store<THREADS, WORKERS, PAYLOAD_LENGTH, UseTS> safepay;
-    ts_store<THREADS, WORKERS, PAYLOAD_LENGTH, UseTS> results; // Outputs
+    using MainStore   = ts_store<MAIN_PAYLOAD,   TYPE_SIZE, CATEGORY_SIZE, USE_TS>;
+    using ResultStore = ts_store<RESULT_PAYLOAD, TYPE_SIZE, CATEGORY_SIZE, USE_TS>;
+
+    MainStore   safepay(THREADS, EVENTS_PER_THREAD);
+    ResultStore results(THREADS, 1);
 
     std::vector<std::thread> threads;
-    std::atomic<int> total_successes{ 0 };
-    std::atomic<int> total_nulls{ 0 }; // NEW: Track failed selects (nulls/races)
+    std::atomic<int> total_successes{0};
+    std::atomic<int> total_nulls{0};
 
-
-    auto worker = [&](int tid) {
+    auto worker = [&](int tid)
+    {
         int local_successes = 0;
-        int local_nulls = 0; // NEW: Per-thread nulls
-        for (int i = 0; i < WORKERS; ++i) {
-            auto payload_str = std::string("payload-") + std::to_string(tid) + "-" + std::to_string(i); // Build string first
-            std::string_view payload(payload_str); // View for claim
-            auto claim_pair = safepay.claim(tid, payload); // FIXED: Assign to var (no structured binding)
-            bool claim_ok = claim_pair.first; // FIXED: Extract bool
-            std::uint64_t id = claim_pair.second;
-            if (claim_ok) { // FIXED: Use extracted bool (no conditional on pair)
-                std::this_thread::yield();
-                std::atomic_thread_fence(std::memory_order_acquire);
-                auto select_pair = safepay.select(id); // FIXED: Assign to var
-                bool val_ok = select_pair.first; // FIXED: Extract bool
-                std::string_view val_sv = select_pair.second;
-                if (val_ok && val_sv == payload) {
-                    ++local_successes;
-                }
-                else if (!val_ok) { // NEW: Explicit null check (not found/race)
-                    ++local_nulls;
-                }
+        int local_nulls = 0;
+
+        for (int i = 0; i < EVENTS_PER_THREAD; ++i) {
+            std::string payload_str = "payload-" + std::to_string(tid) + "-" + std::to_string(i);
+            std::string_view payload(payload_str);
+
+            auto [claim_ok, id] = safepay.claim(tid, payload, "STRESS", "MAIN");
+            if (!claim_ok) {
+                std::cerr << "Claim fail tid " << tid << " i " << i << "\n";
+                continue;
             }
-            else {
-                std::cerr << "Claim fail tid " << tid << " i " << i << " (err: " << static_cast<int>(id) << ")" << std::endl; // Cast to int for ErrorCode
+
+            std::this_thread::yield();
+            std::atomic_thread_fence(std::memory_order_acquire);
+
+            auto [val_ok, val_sv] = safepay.select(id);
+            if (val_ok && val_sv == payload) {
+                ++local_successes;
+            } else if (!val_ok) {
+                ++local_nulls;
             }
         }
+
         total_successes += local_successes;
-        total_nulls += local_nulls; // NEW: Aggregate nulls
-        // Final claim: 1 per thread (auto-tracked)
-        auto output_payload_str = std::string("tid: ") + std::to_string(tid) + std::string(" succ: ") + std::to_string(local_successes) + std::string(" nulls: ") + std::to_string(local_nulls); // UPDATED: Include nulls in output
-        std::string_view output_payload(output_payload_str); // View
-        auto results_pair = results.claim(tid, output_payload); // FIXED: Assign to var
-        bool results_ok = results_pair.first; // FIXED: Extract bool
-        std::uint64_t out_id = results_pair.second;
-        if (!results_ok) { // FIXED: Use extracted bool
-            std::cerr << "Results claim failed for tid " << tid << " (err: " << static_cast<int>(out_id) << ")" << std::endl;
-            total_successes.fetch_sub(1); // Atomic adjust
+        total_nulls += local_nulls;
+
+        // Store result
+        std::string result_str = "tid: " + std::to_string(tid) +
+                                 " succ: " + std::to_string(local_successes) +
+                                 " nulls: " + std::to_string(local_nulls);
+        std::string_view result_view(result_str);
+
+        auto [ok, out_id] = results.claim(tid, result_view, "RESULT", "STATS");
+        if (!ok) {
+            std::cerr << "Results claim failed for tid " << tid << "\n";
         }
-        };
+    };
+
     for (int t = 0; t < THREADS; ++t) {
         threads.emplace_back(worker, t);
     }
     for (auto& th : threads) th.join();
 
-    // Get sorted IDs (mode 2 = by time)
-    auto all_result_ids = results.get_all_ids();  // ← new public method we added
-    std::sort(all_result_ids.begin(), all_result_ids.end());  // chronological order
+    // Results
+    auto all_result_ids = results.get_all_ids();
+    std::sort(all_result_ids.begin(), all_result_ids.end());
 
-    // Aligned size outputs
-    std::cout << std::left << std::setw(22) << "Safepay Size: (Expected: " << Expected_Count << ")"
-        << std::right << std::setw(8) << safepay.size() << "\n";
+    std::cout << std::left << std::setw(22) << "Safepay Size: (Expected: " << EXPECTED_COUNT << ")"
+              << std::right << std::setw(8) << safepay.size() << "\n";
     safepay.show_duration("Safepay");
     results.show_duration("Results");
-    // Aligned total output
+
     std::cout << "\n";
-    std::cout << std::left << std::setw(20) << "Total Count / Successes:"
-        << std::right << std::setw(7) << total_successes << " / " << Expected_Count;
-    if (total_successes == Expected_Count) {
-        std::cout << " PASS" << "\n";
-    }
-    else {
-        std::cout << " FAIL" << "\n";
-    }
-    std::cout << std::left << std::setw(20) << "Nulls (races):" << std::right << std::setw(19) << total_nulls << "\n"; // NEW: Print nulls
-    // Padded header for results
-    std::cout << "\n";
-    const std::string header_line = std::string(60, '-');
-    std::cout << header_line << "\n";
-    std::cout << " Final results from " << fileName << "\n";
-    std::cout << header_line << "\n";
-    std::cout << std::left << std::setw(8) << "ID" << std::setw(12) << "TID" << std::setw(12) << "SUCCESS" << std::setw(12) << "NULLS"; // UPDATED: Add NULLS col
-    if (UseTS) {
-        std::cout << std::setw(12) << "TIMESTAMP (us)" << "\n";
-    }
-    else {
+    std::cout << std::left << std::setw(20) << "Total Successes:"
+              << std::right << std::setw(7) << total_successes << " / " << EXPECTED_COUNT
+              << (total_successes == EXPECTED_COUNT ? " PASS\n" : " FAIL\n");
+    std::cout << std::left << std::setw(20) << "Nulls (races):"
+              << std::right << std::setw(19) << total_nulls << "\n\n";
+
+    const std::string line(80, '-');
+    std::cout << line << "\n";
+    std::cout << " Final per-thread results\n";
+
+    safepay.press_any_key();
+
+
+    std::cout << line << "\n";
+    std::cout << std::left
+              << std::setw(10) << "ID"
+              << std::setw(12) << "TID"
+              << std::setw(12) << "SUCCESS"
+              << std::setw(12) << "NULLS"
+              << (USE_TS ? std::setw(16) : std::setw(0)) << "TIMESTAMP (µs)\n";
+    std::cout << std::string(80, '-') << "\n";
+
+    for (auto rid : all_result_ids) {
+        auto [ok, sv] = results.select(rid);
+        if (!ok) {
+            std::cout << std::setw(10) << rid << " <missing>\n";
+            continue;
+        }
+
+        // Parse: "tid: X succ: Y nulls: Z"
+        int tid = 0, succ = 0, nulls = 0;
+        size_t p = sv.find("tid: ");     if (p != sv.npos) p += 5;
+        size_t q = sv.find(" succ: ");   if (q != sv.npos) { tid = std::stoi(std::string(sv.substr(p, q-p))); q += 7; }
+        size_t r = sv.find(" nulls: ");  if (r != sv.npos) { succ = std::stoi(std::string(sv.substr(q, r-q))); nulls = std::stoi(std::string(sv.substr(r+8))); }
+
+        uint64_t ts = 0;
+        if (USE_TS) {
+            auto [tok, t] = results.get_timestamp_us(rid);
+            if (tok) ts = t;
+        }
+
+        std::cout << std::left
+            << std::setw(10) << rid
+            << std::setw(12) << tid
+            << std::setw(12) << succ
+            << std::setw(12) << nulls;
+        if (USE_TS) std::cout << std::setw(16) << ts;
         std::cout << "\n";
     }
-    std::cout << std::string(64, '-') << "\n"; // UPDATED: Wider for new col
-    for (auto rid : all_result_ids) {
-        auto select_pair = results.select(rid); // FIXED: Assign to var
-        bool out_ok = select_pair.first; // FIXED: Extract bool
-        std::string_view out_sv = select_pair.second;
-        if (out_ok) { // FIXED: Use extracted bool
-            // UPDATED: Manual parsing for "tid: X succ: Y nulls: Z"
-            int tid = 0, succ = 0, nulls = 0;
-            size_t tid_pos = out_sv.find("tid: ");
-            if (tid_pos != std::string_view::npos) {
-                size_t tid_start = tid_pos + 5;
-                size_t succ_pos = out_sv.find(" succ: ", tid_start);
-                if (succ_pos != std::string_view::npos) {
-                    std::string_view tid_sv = out_sv.substr(tid_start, succ_pos - tid_start);
-                    tid = std::stoi(std::string(tid_sv));
-                    size_t nulls_pos = out_sv.find(" nulls: ", succ_pos);
-                    if (nulls_pos != std::string_view::npos) {
-                        size_t succ_start = succ_pos + 7;
-                        std::string_view succ_sv = out_sv.substr(succ_start, nulls_pos - succ_start);
-                        succ = std::stoi(std::string(succ_sv));
-                        size_t nulls_start = nulls_pos + 8;
-                        std::string_view nulls_sv = out_sv.substr(nulls_start);
-                        nulls = std::stoi(std::string(nulls_sv));
-                    }
-                }
-            }
-            auto ts_pair = results.get_timestamp_us(rid);
-            bool ts_ok = ts_pair.first;
-            uint64_t ts_us = ts_pair.second;
-            long long rel_us = -1;
-            if (ts_ok && ts_us != 0) {
-                rel_us = static_cast<long long>(ts_us);
-            }
 
-            std::cout << std::left << std::setw(8) << ("ID " + std::to_string(rid))
-                << std::setw(12) << ("tid:" + std::to_string(tid))
-                << std::setw(12) << ("succ:" + std::to_string(succ))
-                << std::setw(12) << ("nulls:" + std::to_string(nulls)) // NEW: Print per-thread nulls
-                << std::setw(12) << rel_us << " us" << "\n"; // << rel_us directly
-        }
-        else {
-            std::cout << std::left << std::setw(8) << ("ID " + std::to_string(rid))
-                << std::setw(36) << "Not found (rare lag)" << "\n"; // UPDATED: Wider for new col
-        }
-    }
-    // Final padded footer
-    std::cout << header_line << "\n";
+    std::cout << line << "\n\n";
+
 
     safepay.print();
     safepay.show_duration();

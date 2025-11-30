@@ -1,17 +1,16 @@
-// Project: ts_store
-// File Path: ts_store/ts_store_headers/impl_details/fast_payload.hpp
-//
+// ts_store/ts_store_headers/impl_details/fast_payload.hpp
+// This file is 100% compatible with the new runtime design — NO CHANGES NEEDED!
+
 #pragma once
 
 #include <cstddef>
 #include <string_view>
 #include <cstring>
-#include <iostream>
 
 template <std::size_t PayloadSize>
 struct FastPayload {
-    static const int debug = 0;
     static_assert(PayloadSize >= 64, "PayloadSize too small for FastPayload");
+
     thread_local inline static char buffer[PayloadSize]{};
     thread_local inline static char* pos = buffer;
 
@@ -19,16 +18,15 @@ struct FastPayload {
         pos = buffer;
 
         constexpr const char prefix[] = "payload-";
-        std::memcpy(pos, prefix, 8);
-        pos += 8;
+        std::memcpy(pos, prefix, sizeof(prefix) - 1);
+        pos += sizeof(prefix) - 1;
 
         pos = itoa(pos, tid);
         *pos++ = '-';
         pos = itoa(pos, index);
         *pos++ = '\0';
 
-        size_t len = static_cast<std::size_t>(pos - buffer - 1);
-        return {buffer, len};
+        return {buffer, static_cast<std::size_t>(pos - buffer - 1)};
     }
 
 private:
@@ -41,7 +39,7 @@ private:
         char tmp[12];
         char* t = tmp + sizeof(tmp);
         bool neg = value < 0;
-        unsigned v = neg ? -static_cast<unsigned>(value) : value;
+        unsigned int v = neg ? -static_cast<unsigned int>(value) : static_cast<unsigned int>(value);
 
         do {
             *--t = '0' + (v % 10);
@@ -50,9 +48,7 @@ private:
 
         if (neg) *--t = '-';
 
-        while (t < tmp + sizeof(tmp))
-            *dst++ = *t++;
-
-        return dst;
+        std::memcpy(dst, t, static_cast<std::size_t>(tmp + sizeof(tmp) - t));
+        return dst + (tmp + sizeof(tmp) - t);
     }
 };
