@@ -93,6 +93,7 @@ public:
     #include "impl_details/printing.hpp"
     #include "impl_details/duration.hpp"
     #include "impl_details/sorting.hpp"
+    #include "impl_details/press_to_cont.hpp"
 
     // REMOVED: duplicate claim() and size() — they are in core.hpp
     // REMOVED: duplicate fast path — now in core.hpp only
