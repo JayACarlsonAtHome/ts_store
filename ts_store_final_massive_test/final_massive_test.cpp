@@ -119,8 +119,9 @@ int main()
     double avg_us = static_cast<double>(total_write_us) / RUNS;
     double avg_ops_sec = 1'000'000.0 * 1'000'000.0 / avg_us;
 
-    std::cout << "\n═══════════════════════════════════════════════════════════════\n";
-    std::cout << "            FINAL RESULT — 10-RUN AVERAGE (store.clear())\n";
+    std::cout << "\n";
+    std::cout << "═══════════════════════════════════════════════════════════════\n";
+    std::cout << "            FINAL RESULT — " << RUNS << "-RUN AVERAGE          \n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";
     std::cout << "  Average write time : " << std::setw(9) << avg_us << " µs\n";
     std::cout << "  Average throughput : " << std::setw(10)
