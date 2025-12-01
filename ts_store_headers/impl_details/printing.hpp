@@ -1,5 +1,5 @@
 // ts_store/ts_store_headers/impl_details/printing.hpp
-// Final — beautiful, debug-friendly, zero-cost printing
+// v5 — Fully compatible with typed ValueT/TypeT/CategoryT
 
 #pragma once
 #include <iostream>
@@ -9,7 +9,7 @@
 #include <cstring>
 
 inline void print(std::ostream& os = std::cout,
-                  int sort_mode = 0,
+                  [[maybe_unused]] int sort_mode = 0,
                   size_t max_rows = 10'000) const
 {
     std::shared_lock lock(data_mtx_);
@@ -24,30 +24,26 @@ inline void print(std::ostream& os = std::cout,
     const size_t total = ids.size();
 
     if (total == 0) {
-        os << "ts_store<Buffer:" << BufferSize
-           << ", Type:" << TypeSize
-           << ", Cat:" << CategorySize
-           << ", TS:" << (UseTimestamps ? "yes" : "no") << "> is empty.\n\n";
+        os << "ts_store<...> is empty.\n\n";
         return;
     }
 
-    // Column widths
     constexpr int W_ID       = 12;
     constexpr int W_TIME     = 14;
-    constexpr int W_TYPE     = TypeSize + 4;
-    constexpr int W_CAT      = CategorySize + 4;
     constexpr int W_THREAD   = 10;
     constexpr int PAD        = 2;
 
-    const int total_width = W_ID + PAD + W_TIME + PAD + W_TYPE + PAD + W_CAT + PAD + W_THREAD + PAD + BufferSize;
+    // Dynamic widths based on actual storage
+    constexpr int W_TYPE = std::max<int>(TypeSize + 4, 20);
+    constexpr int W_CAT  = std::max<int>(CategorySize + 4, 20);
+    constexpr int W_PAYLOAD = BufferSize > 120 ? 120 : BufferSize;
 
-    // Header
+    const int total_width = W_ID + PAD + W_TIME + PAD + W_TYPE + PAD + W_CAT + PAD + W_THREAD + PAD + W_PAYLOAD + 10;
+
     os << "ts_store<"
-       << max_threads_ << " threads × " << events_per_thread_ << " events"
-       << ", Buffer:" << BufferSize << "B"
-       << ", Type:" << TypeSize << "B, Cat:" << CategorySize << "B"
-       << ", TS:" << (UseTimestamps ? "on" : "off")
-       << ", Expected:" << expected_size() << ">\n";
+       << max_threads_ << "t × " << events_per_thread_ << "e, "
+       << "ValueT=" << (TriviallyCopyableStringLike<ValueT> ? "trivial" : "charbuf") << ", "
+       << "TS=" << (UseTimestamps ? "on" : "off") << ">\n";
     os << std::string(total_width, '=') << "\n";
 
     os << std::left
@@ -55,40 +51,54 @@ inline void print(std::ostream& os = std::cout,
        << std::setw(W_TIME)   << "TIME (µs)"
        << std::setw(W_TYPE)   << "TYPE"
        << std::setw(W_CAT)    << "CATEGORY"
-       << std::setw(W_THREAD)<< "THREAD"
+       << std::setw(W_THREAD) << "THREAD"
        << "PAYLOAD\n";
 
     os << std::string(total_width, '-') << "\n";
 
-    // Print rows
-    bool any_debug = false;
     for (size_t i = 0; i < total && (max_rows == 0 || i < max_rows); ++i) {
-        const uint64_t id = ids[i];
+        const auto id = ids[i];
         auto it = rows_.find(id);
         if (it == rows_.end()) continue;
 
         const auto& r = it->second;
-        if (r.is_debug) any_debug = true;
 
-        std::string ts_str = UseTimestamps && r.ts_us
-            ? std::to_string(r.ts_us)
-            : std::string("-");
+        std::string ts_str = UseTimestamps && r.ts_us ? std::to_string(r.ts_us) : "-";
+
+        // Extract type/category as string_view
+        std::string_view type_sv = [&]() -> std::string_view {
+            if constexpr (std::is_same_v<TypeT, std::string_view>) {
+                return std::string_view(r.type_storage.data());
+            } else {
+                return std::string_view(r.type_storage);
+            }
+        }();
+
+        std::string_view cat_sv = [&]() -> std::string_view {
+            if constexpr (std::is_same_v<CategoryT, std::string_view>) {
+                return std::string_view(r.category_storage.data());
+            } else {
+                return std::string_view(r.category_storage);
+            }
+        }();
+
+        std::string_view payload_sv = [&]() -> std::string_view {
+            if constexpr (TriviallyCopyableStringLike<ValueT>) {
+                return std::string_view(r.value_storage);
+            } else {
+                return std::string_view(r.value_storage.data());
+            }
+        }();
 
         os << std::left
            << std::setw(W_ID)     << id
            << std::setw(W_TIME)   << ts_str
-           << std::setw(W_TYPE)    << r.type
-           << std::setw(W_CAT)    << r.category
+           << std::setw(W_TYPE)   << type_sv
+           << std::setw(W_CAT)    << cat_sv
            << std::setw(W_THREAD) << r.thread_id
-           << r.value << "\n";
-
-        // Insert breathing room only in debug mode and large dumps
-        if (any_debug && total > 2000 && (i + 1) % 1000 == 0) {
-            os << "\n";
-        }
+           << payload_sv.substr(0, W_PAYLOAD) << "\n";
     }
 
     os << std::string(total_width, '=') << "\n";
-    os << "Total entries: " << total
-       << "  (expected: " << expected_size() << ")\n\n";
+    os << "Total entries: " << total << " (expected: " << expected_size() << ")\n\n";
 }

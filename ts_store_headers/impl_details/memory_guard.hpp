@@ -1,5 +1,5 @@
 // ts_store/ts_store_headers/impl_details/memory_guard.hpp
-// Exact memory estimation — no guesswork, no underestimation
+// FINAL — NO concepts, NO dependencies, NO bullshit
 
 #pragma once
 
@@ -8,70 +8,50 @@
 #include <sstream>
 #include <sys/sysinfo.h>
 #include <cstdlib>
+#include <type_traits>
+#include <string_view>
 
 namespace jac::ts_store::inline_v001 {
 
+template<typename ValueT, typename TypeT, typename CategoryT,
+         size_t BufferSize, size_t TypeSize, size_t CategorySize, bool UseTimestamps>
 struct memory_guard {
-    memory_guard(uint32_t max_threads,
-                 uint32_t events_per_thread,
-                 size_t   buffer_size,
-                 size_t   type_size,
-                 size_t   category_size,
-                 bool     use_timestamps)
+    memory_guard(uint32_t max_threads, uint32_t events_per_thread)
     {
-        const uint64_t N = static_cast<uint64_t>(max_threads) * events_per_thread;
+        const uint64_t N = uint64_t(max_threads) * events_per_thread;
 
-        // Exact size of one row_data (aligned to 8 bytes)
-        const uint64_t row_bytes =
-            8 +                                          // thread_id (4) + is_debug (1) + 3 bytes padding → 8
-            type_size +                                  // char type[TypeSize]
-            category_size +                              // char category[CategorySize]
-            buffer_size +                                // char value[BufferSize]
-            (use_timestamps ? 8ULL : 0ULL);              // optional ts_us
+        // Hardcoded logic — no concepts, no circular deps
+        constexpr bool value_trivial = std::is_trivially_copyable_v<ValueT> &&
+            requires { std::string_view(std::declval<ValueT>()); };
 
-        // parallel_flat_hash_map overhead: ~32–48 bytes per entry (conservative)
-        const uint64_t overhead_per_entry = 40;
+        constexpr bool type_trivial  = !std::is_same_v<TypeT,  std::string_view>;
+        constexpr bool cat_trivial   = !std::is_same_v<CategoryT, std::string_view>;
 
-        const uint64_t bytes_per_entry = row_bytes + overhead_per_entry;
+        constexpr size_t value_bytes = value_trivial ? sizeof(ValueT) : BufferSize;
+        constexpr size_t type_bytes  = type_trivial  ? sizeof(TypeT)  : TypeSize;
+        constexpr size_t cat_bytes   = cat_trivial   ? sizeof(CategoryT) : CategorySize;
 
-        // Extra headroom for hash table growth, logging, etc.
-        const uint64_t extra_bytes = (N > 1000) ? (N + 1000) * 8 : 0;
+        const uint64_t row_bytes = 8 + type_bytes + cat_bytes + value_bytes + (UseTimestamps ? 8 : 0);
+        const uint64_t total_bytes = N * (row_bytes + 40) + (150ULL << 20);
 
-        // +150 MiB safety margin (covers stack, other allocations, fragmentation)
-        const uint64_t total_bytes = N * bytes_per_entry + extra_bytes + (150ULL << 20);
-
-        std::ostringstream name;
-        name << max_threads << " thread" << (max_threads == 1 ? "" : "s")
-             << " × " << events_per_thread << " event" << (events_per_thread == 1 ? "" : "s")
-             << "  (" << (N/1000) << "k entries"
-             << ", " << buffer_size << "B payload"
-             << ", " << type_size << "B type"
-             << ", " << category_size << "B category"
-             << (use_timestamps ? ", timestamps" : "") << ")";
+        std::cout << "Memory guard: " << max_threads << "t × " << events_per_thread << "e ("
+                  << (N/1000) << "k) → "
+                  << value_bytes << "B payload, "
+                  << type_bytes << "B type, "
+                  << cat_bytes << "B cat → "
+                  << (total_bytes >> 20) << " MiB\n";
 
         struct sysinfo info{};
-        uint64_t available_ram = 8ULL << 30; // fallback: 8 GiB
-        if (sysinfo(&info) == 0) {
-            available_ram = info.freeram + info.bufferram + info.sharedram;
-        }
+        uint64_t avail = 8ULL << 30;
+        if (sysinfo(&info) == 0)
+            avail = info.freeram + info.bufferram + info.sharedram;
 
-        const uint64_t required_mib = total_bytes >> 20;
-        const uint64_t avail_mib    = available_ram >> 20;
-
-        std::cout << "Memory guard: " << name.str() << "\n"
-                  << "   Required      : " << std::right << std::setw(8) << required_mib << " MiB\n"
-                  << "   Available now : " << std::right << std::setw(8) << avail_mib    << " MiB\n";
-        std::cout.flush();
-
-        // Abort if we're using >92% of available RAM — prevents thrashing/OOM killer
-        if (total_bytes > available_ram * 0.92) {
-            std::cerr << "   NOT ENOUGH RAM — aborting to prevent system instability.\n\n";
+        if (total_bytes > avail * 0.92) {
+            std::cerr << "   NOT ENOUGH RAM — aborting\n";
             std::exit(1);
         }
-
         std::cout << "   RAM check: PASSED\n\n";
-        std::cout.flush();
     }
 };
 
-} // end of namespace jac::ts_store::inline_v001
+} // namespace

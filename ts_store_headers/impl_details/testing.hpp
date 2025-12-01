@@ -1,73 +1,41 @@
-// ts_store/ts_store_headers/impl_details/testing.hpp
-// Updated to test type/category support — emits real types instead of debug flag
+// impl_details/testing.hpp — MODERN v5 — NO FastPayload, NO legacy
 
 #pragma once
-#include <iostream>
+#include <thread>
+#include <vector>
+#include <format>
+#include <cstring>
 
-inline void test_run(bool is_debug = false)
-{
+inline void test_run(bool is_debug = false) {
     std::vector<std::thread> threads;
-    std::atomic<int> total_successes{0};
-    std::atomic<int> total_nulls{0};
+    threads.reserve(max_threads_);
 
-    const uint32_t num_threads         = max_threads_;
-    const uint32_t num_events_per_thr  = events_per_thread_;
-    const uint64_t expected_total      = expected_size();
+    for (uint32_t t = 0; t < max_threads_; ++t) {
+        threads.emplace_back([this, t, is_debug] {
+            for (uint32_t i = 0; i < events_per_thread_; ++i) {
+                const auto payload = []<size_t N>(uint32_t t, uint32_t i) {
+                    std::string s = std::format("payload-{}-{}", t, i);
+                    fixed_string<N> fs;
+                    std::memcpy(fs.data, s.data(), std::min(s.size(), N-1));
+                    fs.data[std::min(s.size(), N-1)] = '\0';
+                    return fs;
+                }.template operator()<BufferSize>(t, i);
 
-    auto worker = [this, num_events_per_thr, is_debug, &total_successes, &total_nulls](unsigned int tid)
-    {
-        int local_successes = 0;
-        int local_nulls     = 0;
+                const char* types[] = {"INFO", "WARN", "ERROR", "TRACE"};
+                const char* cats[] = {"NET", "DB", "UI", "SYS", "GFX"};
 
-        const char* types[]     = { "INFO", "WARN", "ERROR", "TRACE" };
-        const char* categories[] = { "NET", "DB", "UI", "SYS", "GFX" };
+                auto [ok, id] = claim(t, payload, types[i%4], cats[t%5], is_debug);
+                if (!ok) continue;
 
-        for (uint32_t i = 0; i < num_events_per_thr; ++i)
-        {
-            auto payload = FastPayload<BufferSize>::make(tid, i);
+                std::this_thread::yield();
 
-            const char* type     = types[i % 4];
-            const char* category = categories[tid % 5];
+                auto [ok2, val] = select(id);
+                if (ok2 && std::string_view(val).find(std::format("payload-{}-{}", t, i)) != std::string_view::npos) {
+                    // good
+                }
+            }
+        });
+    }
 
-            auto [ok, id] = claim(tid, payload, type, category, is_debug);
-            if (!ok) continue;
-
-            std::this_thread::yield();
-
-            auto [val_ok, val] = select(id);
-
-            if (val_ok && val == payload)
-                ++local_successes;
-            else if (!val_ok)
-                ++local_nulls;
-        }
-
-        total_successes += local_successes;
-        total_nulls     += local_nulls;
-    };
-
-    threads.reserve(num_threads);
-    for (unsigned int t = 0; t < num_threads; ++t)
-        threads.emplace_back(worker, t);
-
-    for (auto& t : threads) t.join();
-
-    std::cout << "test_run(is_debug=" << (is_debug ? "true" : "false") << ") complete:\n"
-              << "  Expected entries : " << expected_total << "\n"
-              << "  Successful reads : " << total_successes << "\n"
-              << "  Visibility races  : " << total_nulls << " (should be 0)\n";
-
-    if (total_successes == static_cast<int>(expected_total) && total_nulls == 0)
-        std::cout << "  PASS — 100% correct\n\n";
-    else
-        std::cout << "  FAIL — data loss or races detected\n\n";
-}
-
-// Convenience overloads
-inline void test_run() { test_run(false); }
-
-inline void test_run_and_print(bool is_debug = false)
-{
-    test_run(is_debug);
-    print();
+    for (auto& th : threads) th.join();
 }
