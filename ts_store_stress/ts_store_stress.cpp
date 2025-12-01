@@ -34,6 +34,8 @@
 #include <thread>
 #include <vector>
 
+using namespace jac::ts_store::inline_v001;
+
 int main()
 {
     constexpr uint32_t THREADS = 250;

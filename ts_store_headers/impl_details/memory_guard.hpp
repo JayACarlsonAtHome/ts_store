@@ -9,6 +9,8 @@
 #include <sys/sysinfo.h>
 #include <cstdlib>
 
+namespace jac::ts_store::inline_v001 {
+
 struct memory_guard {
     memory_guard(uint32_t max_threads,
                  uint32_t events_per_thread,
@@ -71,3 +73,5 @@ struct memory_guard {
         std::cout.flush();
     }
 };
+
+} // end of namespace jac::ts_store::inline_v001

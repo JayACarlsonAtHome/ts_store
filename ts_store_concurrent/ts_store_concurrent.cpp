@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <array>
 
+using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 using Clock = steady_clock;
 

@@ -3,6 +3,8 @@
 #include "../ts_store_headers/ts_store.hpp"
 #include <iostream>
 
+using namespace jac::ts_store::inline_v001;
+
 int main() {
     constexpr uint32_t threads = 50;
     constexpr uint32_t events  = 200;

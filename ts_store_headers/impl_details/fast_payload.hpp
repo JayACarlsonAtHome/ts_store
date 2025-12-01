@@ -7,6 +7,8 @@
 #include <string_view>
 #include <cstring>
 
+namespace jac::ts_store::inline_v001 {
+
 template <std::size_t PayloadSize>
 struct FastPayload {
     static_assert(PayloadSize >= 64, "PayloadSize too small for FastPayload");
@@ -52,3 +54,5 @@ private:
         return dst + (tmp + sizeof(tmp) - t);
     }
 };
+
+} // end of namespace jac::ts_store::inline_v001

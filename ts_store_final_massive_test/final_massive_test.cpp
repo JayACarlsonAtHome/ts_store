@@ -9,6 +9,7 @@
 #include <chrono>
 #include <iomanip>
 
+using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
 constexpr uint32_t THREADS           = 250;

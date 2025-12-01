@@ -21,6 +21,8 @@
 #include "impl_details/fast_payload.hpp"
 #include "impl_details/memory_guard.hpp"
 
+namespace jac::ts_store::inline_v001 {
+
 template <
     size_t BufferSize    = 100,
     size_t TypeSize      = 16,
@@ -98,3 +100,5 @@ public:
     // REMOVED: duplicate claim() and size() — they are in core.hpp
     // REMOVED: duplicate fast path — now in core.hpp only
 };
+
+} // end of namespace jac::ts_store::inline_v001
