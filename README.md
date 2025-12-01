@@ -1,3 +1,25 @@
+### This readme is out of date
+Did massive restructuring to c++20 using-</br>
+    concepts,</br> 
+    requirements,</br> 
+    namespaces,</br>
+    better CMakeLists.txt,</br>
+    consistant file/target naming</br>
+Everything SEEMs to work, and probably does,</br>
+the tests are better, so that should have flushed out</br>
+any problems, but needs more time to review code, and test.</br>
+Printing/Output is not to the standard that I will settle on.
+The samples, and code that follows, is in the old code base</br>
+but not the current one.
+This is a fast moving target and is </br>
+not suitable for use in production in anything.
+there will be a time, (hopefully) when this is not the case.
+I still have a ton of features to add, be we taking</br>
+it one step at a time, and get everything to compile, then run.</br>
+And then see where we are again...
+
+    
+
 ### Why this exists
 You needed an event buffer that:
 - never drops or corrupts data
