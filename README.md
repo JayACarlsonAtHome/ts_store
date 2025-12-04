@@ -18,6 +18,10 @@ I still have a ton of features to add, be we taking</br>
 it one step at a time, and get everything to compile, then run.</br>
 And then see where we are again...
 
+### New
+Waiting for my next days off to get sometime to work on this.
+I should get another week off sometime in December,
+expect a flurry of changes when that starts...
     
 
 ### Why this exists
