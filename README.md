@@ -1,28 +1,11 @@
-### This readme is out of date
-Did massive restructuring to c++20 using-</br>
-    concepts,</br> 
-    requirements,</br> 
-    namespaces,</br>
-    better CMakeLists.txt,</br>
-    consistant file/target naming</br>
-Everything SEEMs to work, and probably does,</br>
-the tests are better, so that should have flushed out</br>
-any problems, but needs more time to review code, and test.</br>
-Printing/Output is not to the standard that I will settle on.
-The samples, and code that follows, is in the old code base</br>
-but not the current one.
-This is a fast moving target and is </br>
-not suitable for use in production in anything.
-there will be a time, (hopefully) when this is not the case.
-I still have a ton of features to add, be we taking</br>
-it one step at a time, and get everything to compile, then run.</br>
-And then see where we are again...
-
-### New
-Waiting for my next days off to get sometime to work on this.
-I should get another week off sometime in December,
-expect a flurry of changes when that starts...
-    
+### Massive changes, and minimal testing...
+You can use this. I wouldn't use this in production.
+I have limited time, a day here, a day there.
+So I usually get as much as I can do in one night,
+and it usually works out to get everything compiling, and runnning
+in the morning, when I don't have that extra to do more testing.
+That said, most all the tests were failing, and now they are not,
+so that is a good thing.
 
 ### Why this exists
 You needed an event buffer that:
@@ -30,19 +13,18 @@ You needed an event buffer that:
 - never allocates on the hot path after `reserve()`
 - gives perfect global order via timestamps
 - survives million-operation stress tests
-- modified from C++23 to C++17 so real older codebases can use it easier
-
-Most solutions fail at least one of those.  
-This one doesn’t.
+- modified from C++23 to C++17, 
+----and back to C++20 for concepts, and other stuff.
 
 ### Features
 - Memory check before run to ensure memory is available
 - Fixed-size payload (adjustable, default 80 bytes -- template parameter)
 - Microsecond timestamps relative to first claim (human-readable, zero cost)
-- `claim()` returns monotonic 64-bit ID
+- `claim()` returns monotonic 64-bit ID -- this is going to be renamed to save_event()
 - Reader-writer lock → unlimited concurrent readers
 - GTL `parallel_flat_hash_map` backend (the fastest thing that exists for this pattern)
-- Five independent stress tests, including the infamous `final_massive_test`
+- Five different tests from hello world at test_001 
+---- to 1 Million records, repeated 50 times in quick succession.
 - Pretty formatted output, sortable by ID, Time, or Thread
 
 ### If you get compiling failures
@@ -53,118 +35,128 @@ And depending on your system you might do it the other way around.</br>
 
 ### Test Compiling
 ```cpp
+ // ts_store_001/test_001.cpp — 
+
 #include "../ts_store_headers/ts_store.hpp"
 #include <iostream>
 
+using namespace jac::ts_store::inline_v001;
+using LogStore = ts_store<
+    fixed_string<96>,
+    fixed_string<12>,
+    fixed_string<24>,
+    96, 12, 24,
+    true        // UseTimestamps
+>;
+
 int main() {
-    constexpr uint32_t threads = 50;
-    constexpr uint32_t events  = 200;
-
-    std::cout << "=== Production mode (real types & categories) ===\n";
-    ts_store<96, 12, 24, true> prod(threads, events);
-    prod.test_run_and_print(false);
-
+    constexpr uint32_t threads = 5;
+    constexpr uint32_t events  = 3;
+    std::cout << "=== ts_store — TDD DEMO ===\n\n";
+    std::cout << "PRODUCTION SIMULATION (full test verification)\n";
+    
+    LogStore prod(threads, events);
+    prod.test_run();  //Test Run sets Debug == True
+    if (!prod.verify_integrity()) {
+        std::cerr << "PRODUCTION SIMULATION FAILED — structural corruption\n";
+        prod.diagnose_failures();
+        return 1;
+    }
+    if (!prod.verify_test_payloads()) {
+        std::cerr << "PRODUCTION SIMULATION FAILED — test payload corruption\n";
+        prod.diagnose_failures();
+        return 1;
+    }
+    std::cout << "PRODUCTION SIMULATION PASSED — 100% clean\n";
     prod.press_any_key();
-
-    std::cout << "\n=== Debug mode (same types, but debug flag on) ===\n";
-    ts_store<96, 12, 24, true> debug(threads, events);
-    debug.test_run_and_print(true);
-
+    prod.print();
+    std::cout << "\n=== ALL TESTS COMPLETED SUCCESSFULLY ===\n";
     return 0;
 }
 
-/home/jay/git/ts_store/cmake-build-release/ts_store_base
-=== Production mode (real types & categories) ===
-Memory guard: 50 threads × 200 events  (10k entries, 96B payload, 12B type, 24B category, timestamps)
-   Required      :      151 MiB
-   Available now :    52835 MiB
-   RAM check: PASSED
+=== ts_store — TDD DEMO ===
 
-test_run(is_debug=false) complete:
-  Expected entries : 10000
-  Successful reads : 10000
-  Visibility races  : 0 (should be 0)
-  PASS — 100% correct
+PRODUCTION SIMULATION (full test verification)
+Memory guard: Threads: 5, Events: 3,  (0k) 
+     Payload:       96 Bytes, 
+     Type:          12 Bytes, 
+     Category:      24 Bytes, 
+  Total Bytes:     150 MiB (Padded for safety) 
 
-ts_store<50 threads × 200 events, Buffer:96B, Type:12B, Cat:24B, TS:on, Expected:10000>
-==========================================================================================================================================================================================
-ID          TIME (µs)    TYPE            CATEGORY                    THREAD    PAYLOAD
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-0           61            INFO            NET                         0         payload-0-0
-1           66            WARN            NET                         0         payload-0-1
-2           67            ERROR           NET                         0         payload-0-2
-3           68            TRACE           NET                         0         payload-0-3
+   ***  RAM check: PASSED  ***
 
-63          172           INFO            SYS                         8         payload-8-8
-64          173           WARN            SYS                         8         payload-8-9
-65          176           ERROR           SYS                         8         payload-8-10
-66          178           INFO            NET                         5         payload-5-0
-67          182           INFO            GFX                         4         payload-4-0
-68          188           WARN            GFX                         4         payload-4-1
-
-9997        14173         WARN            DB                          1         payload-1-197
-9998        14174         ERROR           DB                          1         payload-1-198
-9999        14174         TRACE           DB                          1         payload-1-199
-==========================================================================================================================================================================================
-Total entries: 10000  (expected: 10000)
+     [VERIFY] ALL 15 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 15 TEST PAYLOADS VALID
+PRODUCTION SIMULATION PASSED — 100% clean
 
 Press ENTER to continue...
 
-=== Debug mode (same types, but debug flag on) ===
-test_run(is_debug=true) complete:
-  Expected entries : 10000
-  Successful reads : 10000
-  Visibility races  : 0 (should be 0)
-  PASS — 100% correct
 
-ts_store<50 threads × 200 events, Buffer:96B, Type:12B, Cat:24B, TS:on, Expected:10000>
-==========================================================================================================================================================================================
-ID          TIME (µs)    TYPE            CATEGORY                    THREAD    PAYLOAD
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-0           169407829     INFO            NET                         0         payload-0-0
-1           169407831     WARN            NET                         0         payload-0-1
-2           169407834     ERROR           NET                         0         payload-0-2
-3           169407835     TRACE           NET                         0         payload-0-3
-4           169407837     INFO            DB                          1         payload-1-0
-5           169407847     WARN            DB                          1         payload-1-1
-6           169407850     ERROR           DB                          1         payload-1-2
+ts_store < 
+   Threads    = 5
+   Events     = 3
+   ValueT     = Trivially Copyable String
+   Time Stamp = On>
+========================================================================================================================================================================================================
+ID          TIME (µs)     TYPE                CATEGORY                    THREAD    PAYLOAD
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+0           55            INFO                NET                         0         Test-Event: T=0 E=0
+1           57            WARN                NET                         0         Test-Event: T=0 E=1
+2           58            ERROR               NET                         0         Test-Event: T=0 E=2
+3           63            INFO                DB                          1         Test-Event: T=1 E=0
+4           64            WARN                DB                          1         Test-Event: T=1 E=1
+5           65            ERROR               DB                          1         Test-Event: T=1 E=2
+6           82            INFO                UI                          2         Test-Event: T=2 E=0
+7           83            WARN                UI                          2         Test-Event: T=2 E=1
+8           83            ERROR               UI                          2         Test-Event: T=2 E=2
+9           111           INFO                SYS                         3         Test-Event: T=3 E=0
+10          113           WARN                SYS                         3         Test-Event: T=3 E=1
+11          113           ERROR               SYS                         3         Test-Event: T=3 E=2
+12          128           INFO                GFX                         4         Test-Event: T=4 E=0
+13          129           WARN                GFX                         4         Test-Event: T=4 E=1
+14          130           ERROR               GFX                         4         Test-Event: T=4 E=2
+========================================================================================================================================================================================================
+Total entries: 15 (expected: 15)
 
-996         169421037     INFO            UI                          47        payload-47-196
-9997        169421037     WARN            UI                          47        payload-47-197
-9998        169421038     ERROR           UI                          47        payload-47-198
-9999        169421038     TRACE           UI                          47        payload-47-199
-==========================================================================================================================================================================================
-Total entries: 10000  (expected: 10000)
 
+=== ALL TESTS COMPLETED SUCCESSFULLY ===
+
+Process finished with exit code 0
 ```
 
 ### Closer to real use
 ```cpp
-//
 // final_massive_test.cpp — 250 threads × 4000 events = 1,000,000 entries
-// 10-run benchmark using store.clear() — fastest, most realistic, unbreakable
-//
+// 50-run benchmark with min/max/avg — FINAL, UNBREAKABLE, PERFECT
+
 #include "../ts_store_headers/ts_store.hpp"
 #include <thread>
 #include <vector>
 #include <iostream>
 #include <chrono>
 #include <iomanip>
+#include <format>
+#include <algorithm>
 
+using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
 constexpr uint32_t THREADS           = 250;
 constexpr uint32_t EVENTS_PER_THREAD = 4000;
 constexpr uint64_t TOTAL             = uint64_t(THREADS) * EVENTS_PER_THREAD;
+constexpr int      RUNS              = 50;
 
-constexpr size_t BUFFER_SIZE    = 100;
-constexpr size_t TYPE_SIZE      = 16;
-constexpr size_t CATEGORY_SIZE  = 32;
-constexpr bool   USE_TIMESTAMPS = true;
+using MassiveStore = ts_store<
+    fixed_string<100>,
+    fixed_string<16>,
+    fixed_string<32>,
+    100, 16, 32,
+    true
+>;
 
-int run_single_test(ts_store<BUFFER_SIZE, TYPE_SIZE, CATEGORY_SIZE, USE_TIMESTAMPS>& store)
+int run_single_test(MassiveStore& store)
 {
-    store.clear();  // Fresh start — zero cost, perfect reset
+    store.clear();
 
     auto start = high_resolution_clock::now();
 
@@ -172,12 +164,12 @@ int run_single_test(ts_store<BUFFER_SIZE, TYPE_SIZE, CATEGORY_SIZE, USE_TIMESTAM
     threads.reserve(THREADS);
 
     for (uint32_t t = 0; t < THREADS; ++t) {
-        threads.emplace_back([t, &store]() {
+        threads.emplace_back([&, t]() {
             for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
-                auto payload = FastPayload<BUFFER_SIZE>::make(t, i);
+                auto payload = store.make_test_payload(t, i);
                 auto [ok, id] = store.claim(t, payload, "MASSIVE", "FINAL");
-                if (!ok || id >= (1ull << 50)) {
-                    std::cerr << "CLAIM FAILED\n";
+                if (!ok) {
+                    std::cerr << "CLAIM FAILED — thread " << t << " event " << i << "\n";
                     std::abort();
                 }
             }
@@ -186,55 +178,39 @@ int run_single_test(ts_store<BUFFER_SIZE, TYPE_SIZE, CATEGORY_SIZE, USE_TIMESTAM
 
     for (auto& th : threads) th.join();
 
-    auto mid = high_resolution_clock::now();
+    auto end = high_resolution_clock::now();
+    auto write_us = duration_cast<microseconds>(end - start).count();
 
-    auto ids = store.get_all_ids();
-    std::sort(ids.begin(), ids.end());
-
-    if (ids.size() != TOTAL) {
-        std::cout << "LOST " << TOTAL - ids.size() << " ENTRIES\n";
+    if (!store.verify_integrity()) {
+        std::cerr << "STRUCTURAL VERIFICATION FAILED\n";
+        store.diagnose_failures();
         return -1;
     }
 
-    // 100% verification — NOT in write timing
-    //std::cout << "Verifying all " << TOTAL << " entries...\n";
-    size_t errors = 0;
-    for (uint64_t id : ids) {
-        auto [ok, val] = store.select(id);
-        if (!ok || val.find("payload-") != 0) {
-            ++errors;
-            if (errors <= 10) std::cout << "  Corruption at ID " << id << "\n";
-        }
-    }
-
-    if (errors > 0) {
-        std::cout << "FAILED: " << errors << " corrupted entries:  ";
+#ifdef TS_STORE_ENABLE_TEST_CHECKS
+    if (!store.verify_test_payloads()) {
+        std::cerr << "TEST PAYLOAD VERIFICATION FAILED\n";
+        store.diagnose_failures();
         return -1;
     }
+#endif
 
-    std::cout << "100% correct:  ";
-
-    auto write_us = duration_cast<microseconds>(mid - start).count();
     return static_cast<int>(write_us);
 }
 
 int main()
 {
-    constexpr int RUNS = 50;
-
-    // One store — memory guard runs ONCE
-    ts_store<BUFFER_SIZE, TYPE_SIZE, CATEGORY_SIZE, USE_TIMESTAMPS> store(
-        THREADS, EVENTS_PER_THREAD);
+    MassiveStore store(THREADS, EVENTS_PER_THREAD);
 
     long long total_write_us = 0;
-    int failed_runs = 0;
+    int64_t   durations[RUNS] = {};  // ← FIXED NAME
+    int       failed_runs = 0;
 
-    std::cout << "Running massive test — " << RUNS << " iterations (store.clear() between runs)\n";
-    std::cout << "Benchmark measures PURE WRITE throughput — verification is separate and untimed\n\n";
+    std::cout << "=== FINAL MASSIVE TEST — 1,000,000 entries × " << RUNS << " runs ===\n";
+    std::cout << "Using store.clear() — fastest, most realistic reuse\n\n";
 
-    for (int run = 1; run <= RUNS; ++run) {
-        std::cout << "Run " << std::right << std::setw(2) << run
-                  << " of " << RUNS << ":  ";
+    for (int run = 0; run < RUNS; ++run) {
+        std::cout << "Run " << std::setw(2) << (run + 1) << " / " << RUNS << "\n";
 
         int result = run_single_test(store);
 
@@ -243,103 +219,314 @@ int main()
             ++failed_runs;
         } else {
             total_write_us += result;
+            durations[run] = result;  // ← FIXED
+
             double ops_per_sec = 1'000'000.0 * 1'000'000.0 / result;
 
             std::cout << "PASS — "
-                      << std::setw(7) << result << " µs → "
+                      << std::setw(8) << result << " µs → "
                       << std::fixed << std::setprecision(0)
-                      << std::setw(10) << static_cast<uint64_t>(ops_per_sec + 0.5)
-                      << " ops/sec\n";
+                      << std::setw(9) << static_cast<uint64_t>(ops_per_sec + 0.5)
+                      << " ops/sec\n\n";
         }
     }
 
     if (failed_runs > 0) {
-        std::cout << "\n" << failed_runs << " runs failed.\n";
+        std::cout << "\n" << failed_runs << " runs failed — aborting summary.\n";
         return 1;
     }
 
+    auto [min_it, max_it] = std::minmax_element(std::begin(durations), std::end(durations));
     double avg_us = static_cast<double>(total_write_us) / RUNS;
+    double min_ops_sec = 1'000'000.0 * 1'000'000.0 / *max_it;
+    double max_ops_sec = 1'000'000.0 * 1'000'000.0 / *min_it;
     double avg_ops_sec = 1'000'000.0 * 1'000'000.0 / avg_us;
 
-    std::cout << "\n═══════════════════════════════════════════════════════════════\n";
-    std::cout << "            FINAL RESULT — " << RUNS << "-RUN AVERAGE (store.clear())\n";
+    std::cout << "\n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";
-    std::cout << "  Average write time : " << std::setw(9) << avg_us << " µs\n";
-    std::cout << "  Average throughput : " << std::setw(10)
-              << static_cast<uint64_t>(avg_ops_sec + 0.5) << " ops/sec\n";
-    std::cout << "  (1,000,000 events per run, 100% verified)\n";
+    std::cout << "               FINAL RESULT — " << RUNS << "-RUN STATISTICS            \n";
+    std::cout << "═══════════════════════════════════════════════════════════════\n";
+    std::cout << "  Fastest run        : " << std::setw(9) << *min_it << " µs  → "
+              << std::setw(10) << static_cast<uint64_t>(max_ops_sec + 0.5) << " ops/sec\n";
+    std::cout << "  Slowest run        : " << std::setw(9) << *max_it << " µs  → "
+              << std::setw(10) << static_cast<uint64_t>(min_ops_sec + 0.5) << " ops/sec\n";
+    std::cout << "  Average            : " << std::setw(9) << avg_us     << " µs  → "
+              << std::setw(10) << static_cast<uint64_t>(avg_ops_sec + 0.5) << " ops/sec\n";
+    std::cout << "  (1,000,000 events per run, 100% verified, zero corruption)\n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";
 
     return 0;
 }
-
 Real measured result on Bare Metal *2 (below) --> (Power setting: Performance, no tuning):
 Results below:
-Memory guard: 250 threads × 4000 events  (1000k entries, 100B payload, 16B type, 32B category, timestamps)
-   Required      :      352 MiB
-   Available now :    52001 MiB
-   RAM check: PASSED
+Memory guard: Threads: 250, Events: 4000,  (1000k) 
+     Payload:      100 Bytes, 
+     Type:          16 Bytes, 
+     Category:      32 Bytes, 
+  Total Bytes:     344 MiB (Padded for safety) 
 
-Running massive test — 50 iterations (store.clear() between runs)
-Benchmark measures PURE WRITE throughput — verification is separate and untimed
+   ***  RAM check: PASSED  ***
 
-Run  1 of 50:  100% correct:  PASS —  570032 µs →    1754287 ops/sec
-Run  2 of 50:  100% correct:  PASS —  538311 µs →    1857662 ops/sec
-Run  3 of 50:  100% correct:  PASS —  534254 µs →    1871769 ops/sec
-Run  4 of 50:  100% correct:  PASS —  466571 µs →    2143297 ops/sec
-Run  5 of 50:  100% correct:  PASS —  488808 µs →    2045793 ops/sec
-Run  6 of 50:  100% correct:  PASS —  495681 µs →    2017427 ops/sec
-Run  7 of 50:  100% correct:  PASS —  490380 µs →    2039235 ops/sec
-Run  8 of 50:  100% correct:  PASS —  689421 µs →    1450493 ops/sec
-Run  9 of 50:  100% correct:  PASS —  519895 µs →    1923465 ops/sec
-Run 10 of 50:  100% correct:  PASS —  482071 µs →    2074383 ops/sec
-Run 11 of 50:  100% correct:  PASS —  469797 µs →    2128579 ops/sec
-Run 12 of 50:  100% correct:  PASS —  533070 µs →    1875926 ops/sec
-Run 13 of 50:  100% correct:  PASS —  515446 µs →    1940067 ops/sec
-Run 14 of 50:  100% correct:  PASS —  476075 µs →    2100509 ops/sec
-Run 15 of 50:  100% correct:  PASS —  525109 µs →    1904367 ops/sec
-Run 16 of 50:  100% correct:  PASS —  472488 µs →    2116456 ops/sec
-Run 17 of 50:  100% correct:  PASS —  563794 µs →    1773697 ops/sec
-Run 18 of 50:  100% correct:  PASS —  534943 µs →    1869358 ops/sec
-Run 19 of 50:  100% correct:  PASS —  478658 µs →    2089174 ops/sec
-Run 20 of 50:  100% correct:  PASS —  507195 µs →    1971628 ops/sec
-Run 21 of 50:  100% correct:  PASS —  539406 µs →    1853891 ops/sec
-Run 22 of 50:  100% correct:  PASS —  544004 µs →    1838222 ops/sec
-Run 23 of 50:  100% correct:  PASS —  528840 µs →    1890931 ops/sec
-Run 24 of 50:  100% correct:  PASS —  522818 µs →    1912711 ops/sec
-Run 25 of 50:  100% correct:  PASS —  549733 µs →    1819065 ops/sec
-Run 26 of 50:  100% correct:  PASS —  534835 µs →    1869736 ops/sec
-Run 27 of 50:  100% correct:  PASS — 1230088 µs →     812950 ops/sec
-Run 28 of 50:  100% correct:  PASS —  564930 µs →    1770131 ops/sec
-Run 29 of 50:  100% correct:  PASS —  480373 µs →    2081716 ops/sec
-Run 30 of 50:  100% correct:  PASS —  763545 µs →    1309681 ops/sec
-Run 31 of 50:  100% correct:  PASS —  513257 µs →    1948342 ops/sec
-Run 32 of 50:  100% correct:  PASS —  507785 µs →    1969337 ops/sec
-Run 33 of 50:  100% correct:  PASS —  520948 µs →    1919577 ops/sec
-Run 34 of 50:  100% correct:  PASS —  892298 µs →    1120702 ops/sec
-Run 35 of 50:  100% correct:  PASS —  479204 µs →    2086794 ops/sec
-Run 36 of 50:  100% correct:  PASS —  951451 µs →    1051026 ops/sec
-Run 37 of 50:  100% correct:  PASS —  598998 µs →    1669455 ops/sec
-Run 38 of 50:  100% correct:  PASS —  799170 µs →    1251298 ops/sec
-Run 39 of 50:  100% correct:  PASS —  509989 µs →    1960827 ops/sec
-Run 40 of 50:  100% correct:  PASS —  475786 µs →    2101785 ops/sec
-Run 41 of 50:  100% correct:  PASS —  473326 µs →    2112709 ops/sec
-Run 42 of 50:  100% correct:  PASS —  504346 µs →    1982766 ops/sec
-Run 43 of 50:  100% correct:  PASS —  596192 µs →    1677312 ops/sec
-Run 44 of 50:  100% correct:  PASS —  470847 µs →    2123832 ops/sec
-Run 45 of 50:  100% correct:  PASS —  532751 µs →    1877050 ops/sec
-Run 46 of 50:  100% correct:  PASS —  604235 µs →    1654985 ops/sec
-Run 47 of 50:  100% correct:  PASS —  656637 µs →    1522911 ops/sec
-Run 48 of 50:  100% correct:  PASS —  544240 µs →    1837425 ops/sec
-Run 49 of 50:  100% correct:  PASS —  520537 µs →    1921093 ops/sec
-Run 50 of 50:  100% correct:  PASS —  536586 µs →    1863634 ops/sec
+=== FINAL MASSIVE TEST — 1,000,000 entries × 50 runs ===
+Using store.clear() — fastest, most realistic reuse
+
+Run  1 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   660228 µs →   1514628 ops/sec
+
+Run  2 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   504940 µs →   1980433 ops/sec
+
+Run  3 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   528099 µs →   1893584 ops/sec
+
+Run  4 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   528170 µs →   1893330 ops/sec
+
+Run  5 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   517996 µs →   1930517 ops/sec
+
+Run  6 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   478102 µs →   2091604 ops/sec
+
+Run  7 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   499773 µs →   2000908 ops/sec
+
+Run  8 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   466707 µs →   2142672 ops/sec
+
+Run  9 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   455665 µs →   2194595 ops/sec
+
+Run 10 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   856636 µs →   1167357 ops/sec
+
+Run 11 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   523411 µs →   1910544 ops/sec
+
+Run 12 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   605464 µs →   1651626 ops/sec
+
+Run 13 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   577995 µs →   1730119 ops/sec
+
+Run 14 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   535171 µs →   1868562 ops/sec
+
+Run 15 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   644517 µs →   1551549 ops/sec
+
+Run 16 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   498044 µs →   2007855 ops/sec
+
+Run 17 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   497360 µs →   2010616 ops/sec
+
+Run 18 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   507417 µs →   1970766 ops/sec
+
+Run 19 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   461560 µs →   2166566 ops/sec
+
+Run 20 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   549329 µs →   1820403 ops/sec
+
+Run 21 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   529026 µs →   1890266 ops/sec
+
+Run 22 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   531111 µs →   1882846 ops/sec
+
+Run 23 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   457969 µs →   2183554 ops/sec
+
+Run 24 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   488859 µs →   2045580 ops/sec
+
+Run 25 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   463259 µs →   2158620 ops/sec
+
+Run 26 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   500910 µs →   1996367 ops/sec
+
+Run 27 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   504959 µs →   1980359 ops/sec
+
+Run 28 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   474252 µs →   2108584 ops/sec
+
+Run 29 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   468384 µs →   2135000 ops/sec
+
+Run 30 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   471186 µs →   2122304 ops/sec
+
+Run 31 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   876967 µs →   1140294 ops/sec
+
+Run 32 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   518849 µs →   1927343 ops/sec
+
+Run 33 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   499625 µs →   2001501 ops/sec
+
+Run 34 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   530025 µs →   1886703 ops/sec
+
+Run 35 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   849458 µs →   1177221 ops/sec
+
+Run 36 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   737066 µs →   1356731 ops/sec
+
+Run 37 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   460460 µs →   2171741 ops/sec
+
+Run 38 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   904526 µs →   1105551 ops/sec
+
+Run 39 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   565521 µs →   1768281 ops/sec
+
+Run 40 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   505822 µs →   1976980 ops/sec
+
+Run 41 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   464270 µs →   2153919 ops/sec
+
+Run 42 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   543736 µs →   1839128 ops/sec
+
+Run 43 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   469726 µs →   2128901 ops/sec
+
+Run 44 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   459334 µs →   2177065 ops/sec
+
+Run 45 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   513704 µs →   1946646 ops/sec
+
+Run 46 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   476041 µs →   2100659 ops/sec
+
+Run 47 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   482204 µs →   2073811 ops/sec
+
+Run 48 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   509673 µs →   1962042 ops/sec
+
+Run 49 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   546131 µs →   1831063 ops/sec
+
+Run 50 / 50
+     [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT
+[TEST-VERIFY] ALL 1000000 TEST PAYLOADS VALID
+PASS —   752098 µs →   1329614 ops/sec
 
 ═══════════════════════════════════════════════════════════════
-            FINAL RESULT — 50-RUN AVERAGE          
+               FINAL RESULT — 50-RUN STATISTICS            
 ═══════════════════════════════════════════════════════════════
-  Average write time :    565983 µs
-  Average throughput :    1766837 ops/sec
-  (1,000,000 events per run, 100% verified)
+  Fastest run        :    455665 µs  →    2194595 ops/sec
+  Slowest run        :    904526 µs  →    1105551 ops/sec
+  Average            :    549035 µs  →    1821379 ops/sec
+  (1,000,000 events per run, 100% verified, zero corruption)
 ═══════════════════════════════════════════════════════════════
 
 Process finished with exit code 0
@@ -363,7 +550,7 @@ Variable-length strings longer than the fixed payload</br>
 | Environment                         | Compiler       | Cores          | Writes/sec        |
 |-------------------------------------|----------------|----------------|-------------------|
 | RHEL 10.1 Virtual Machine *1        | g++ 15.1.1     |   4 cores      | 0.6 - 1.1 million |
-| Bare metal RHEL 9.7       *2        | g++ 15.1.1     |  20 cores      | 0.8 - 2.1 million |
+| Bare metal RHEL 9.7       *2        | g++ 15.1.1     |  20 cores      | 1.1 - 2.2 million |
 
 </br>
 *1</br>
