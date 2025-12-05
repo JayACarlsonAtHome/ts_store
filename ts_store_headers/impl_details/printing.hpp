@@ -36,23 +36,24 @@ inline void print(std::ostream& os = std::cout,
     // Dynamic widths based on actual storage
     constexpr int W_TYPE = std::max<int>(TypeSize + 4, 20);
     constexpr int W_CAT  = std::max<int>(CategorySize + 4, 20);
-    constexpr int W_PAYLOAD = BufferSize > 120 ? 120 : BufferSize;
+    constexpr int W_PAYLOAD = BufferSize > 1024 ? 1024 : BufferSize;
 
     const int total_width = W_ID + PAD + W_TIME + PAD + W_TYPE + PAD + W_CAT + PAD + W_THREAD + PAD + W_PAYLOAD + 10;
 
-    os << "ts_store<"
-       << max_threads_ << "t × " << events_per_thread_ << "e, "
-       << "ValueT=" << (TriviallyCopyableStringLike<ValueT> ? "trivial" : "charbuf") << ", "
-       << "TS=" << (UseTimestamps ? "on" : "off") << ">\n";
+    os << "ts_store < \n"
+       << "   Threads    = " << max_threads_ << "\n"
+       << "   Events     = " << events_per_thread_ << "\n"
+       << "   ValueT     = " << (TriviallyCopyableStringLike<ValueT> ? "Trivially Copyable String" : "Character Buffer") << "\n"
+       << "   Time Stamp = " << (UseTimestamps ? "On" : "Off") << ">\n";
     os << std::string(total_width, '=') << "\n";
 
     os << std::left
        << std::setw(W_ID)     << "ID"
        << std::setw(W_TIME)   << "TIME (µs)"
-       << std::setw(W_TYPE)   << "TYPE"
-       << std::setw(W_CAT)    << "CATEGORY"
-       << std::setw(W_THREAD) << "THREAD"
-       << "PAYLOAD\n";
+       << std::setw(W_TYPE)   << " TYPE"
+       << std::setw(W_CAT)    << " CATEGORY"
+       << std::setw(W_THREAD) << " THREAD"
+       << " PAYLOAD\n";
 
     os << std::string(total_width, '-') << "\n";
 

@@ -1,29 +1,21 @@
-// test_002.cpp — 250,000 entry stress test using full verification
+// test_002.cpp — 250,000 entry stress test — FINAL 2025 EDITION
+// NOW 100% MATCHES FastPayload format: "thread:X event:Y payload-X-Y"
 
 #include "../ts_store_headers/ts_store.hpp"
 #include <iostream>
 #include <thread>
 #include <vector>
-#include <format>
+#include "../fmt/include/fmt/core.h"
+#include "../fmt/include/fmt/color.h"
 
 using namespace jac::ts_store::inline_v001;
-
-template<size_t N, class... Args>
-constexpr fixed_string<N> make_fixed(std::format_string<Args...> fmt, Args&&... args) {
-    std::string temp = std::format(fmt, std::forward<Args>(args)...);
-    fixed_string<N> result;
-    const size_t copy_len = std::min(temp.size(), N - 1);
-    std::memcpy(result.data, temp.data(), copy_len);
-    result.data[copy_len] = '\0';
-    return result;
-}
 
 using BigStore = ts_store<
     fixed_string<512>,
     fixed_string<32>,
     fixed_string<64>,
     512, 32, 64,
-    true
+    true        // UseTimestamps
 >;
 
 int main() {
@@ -31,8 +23,10 @@ int main() {
     constexpr uint32_t events_per_thread = 1000;
     constexpr uint64_t total_entries     = uint64_t(num_threads) * events_per_thread;
 
-    std::cout << "=== ts_store 250,000 entry test ===\n";
-    std::cout << "Threads: " << num_threads << ", Events/thread: " << events_per_thread << "\n\n";
+    std::cout << fmt::format(fg(fmt::color::lime) | fmt::emphasis::bold,
+        "=== ts_store {} entry stress test ===\n", total_entries);
+    std::cout << fmt::format("Threads: {}    Events/thread: {}    Total: {}\n\n",
+                             num_threads, events_per_thread, total_entries);
 
     BigStore store(num_threads, events_per_thread);
 
@@ -42,42 +36,45 @@ int main() {
     for (uint32_t t = 0; t < num_threads; ++t) {
         threads.emplace_back([t, &store] {
             for (uint32_t i = 0; i < events_per_thread; ++i) {
-                auto payload = make_fixed<512>(
-                    "thread:{} event:{} seq:{} time:{}",
-                    t, i, i * 777, std::chrono::steady_clock::now().time_since_epoch().count()
-                );
-
-                auto type     = make_fixed<32>("STRESS");
-                auto category = make_fixed<64>("PERF_TEST");
+                // EXACT SAME FORMAT AS FastPayload — 100% compatible
+                auto payload = store.make_test_payload(t,i);
+                auto type     = fixed_string<32>{"STRESS"};
+                auto category = fixed_string<64>{"PERF_TEST"};
 
                 auto [ok, id] = store.claim(t, payload, type, category);
                 if (!ok) {
-                    std::cerr << "[ERROR] claim failed — thread " << t << " event " << i << "\n";
+                    fmt::print(fg(fmt::color::red) | fmt::emphasis::bold,
+                               "[FATAL] claim failed — thread {} event {}\n", t, i);
                     std::abort();
                 }
             }
         });
     }
 
-    std::cout << "All threads started — joining...\n";
+    std::cout << "All threads launched — crossing the streams at full power...\n";
     for (auto& th : threads) th.join();
 
-    std::cout << "All threads joined — running verification...\n\n";
+    std::cout << "\nAll threads joined — running final verification...\n\n";
 
     if (!store.verify_integrity()) {
-        std::cerr << "Structural verification failed\n";
+        std::cerr << "Structural verification failed!\n";
         store.diagnose_failures();
         return 1;
     }
 
 #ifdef TS_STORE_ENABLE_TEST_CHECKS
     if (!store.verify_test_payloads()) {
-        std::cerr << "Test payload verification failed\n";
+        std::cerr << "Payload verification failed!\n";
         store.diagnose_failures();
         return 1;
     }
 #endif
 
-    std::cout << "All " << total_entries << " entries passed verification.\n";
+    fmt::print(fg(fmt::color::lime) | fmt::emphasis::bold,
+        "╔════════════════════════════════════════════════╗\n"
+               "║ All {:>12} entries passed verification!  ║\n"
+               "╚════════════════════════════════════════════════╝\n",
+        total_entries);
+
     return 0;
 }

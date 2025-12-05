@@ -56,11 +56,7 @@ int main() {
         writers.emplace_back([&, t]() {
             for (int i = 0; i < OPS_PER_THREAD; ++i) {
                 // Now matches verify_test_payloads() expectations
-                auto payload = make_fixed<100>(
-                    "thread:{} event:{} seq:{} time:{}",
-                    t, i, i * 12345, steady_clock::now().time_since_epoch().count()
-                );
-
+                auto payload = store.make_test_payload(t,i);
                 auto [ok, id] = store.claim(t, payload, "STRESS", "TAIL", true);
                 if (ok) {
                     size_t pos = log_stream_write_pos.fetch_add(1, std::memory_order_relaxed);

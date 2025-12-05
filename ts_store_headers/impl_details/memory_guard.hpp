@@ -21,6 +21,7 @@ struct memory_guard {
         const uint64_t N = uint64_t(max_threads) * events_per_thread;
 
         // Hardcoded logic — no concepts, no circular deps
+        const u_int32_t totalEvents = max_threads * events_per_thread;
         constexpr bool value_trivial = std::is_trivially_copyable_v<ValueT> &&
             requires { std::string_view(std::declval<ValueT>()); };
 
@@ -32,14 +33,14 @@ struct memory_guard {
         constexpr size_t cat_bytes   = cat_trivial   ? sizeof(CategoryT) : CategorySize;
 
         const uint64_t row_bytes = 8 + type_bytes + cat_bytes + value_bytes + (UseTimestamps ? 8 : 0);
-        const uint64_t total_bytes = N * (row_bytes + 40) + (150ULL << 20);
+        const uint64_t total_bytes = totalEvents * (row_bytes + 40) + (150ULL << 20);
 
-        std::cout << "Memory guard: " << max_threads << "t × " << events_per_thread << "e ("
-                  << (N/1000) << "k) → "
-                  << value_bytes << "B payload, "
-                  << type_bytes << "B type, "
-                  << cat_bytes << "B cat → "
-                  << (total_bytes >> 20) << " MiB\n";
+        std::cout << "Memory guard: Threads: " << max_threads << ", " << "Events: " << events_per_thread << ",  ("
+                  << (N/1000) << "k) \n"
+                  << "     Payload:  " << std::setw(7) << value_bytes << " Bytes, \n"
+                  << "     Type:     " << std::setw(7) << type_bytes  << " Bytes, \n"
+                  << "     Category: " << std::setw(7) << cat_bytes   << " Bytes, \n"
+                  << "  Total Bytes: " << std::setw(7) << (total_bytes >> 20) << " MiB (Padded for safety) \n\n";
 
         struct sysinfo info{};
         uint64_t avail = 8ULL << 30;
@@ -50,7 +51,7 @@ struct memory_guard {
             std::cerr << "   NOT ENOUGH RAM — aborting\n";
             std::exit(1);
         }
-        std::cout << "   RAM check: PASSED\n\n";
+        std::cout << "   ***  RAM check: PASSED  ***\n\n";
     }
 };
 
