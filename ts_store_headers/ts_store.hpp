@@ -152,5 +152,11 @@ public:
 
         return {buf, len < 0 ? 0 : static_cast<size_t>(len)};
         }
-    };
-} // namespace jac::ts_store::inline_v001
+
+    inline std::string_view make_test_payload_fixed() noexcept {
+        return test_event_prefix;
+    }
+ };
+
+
+}; // namespace jac::ts_store::inline_v001

@@ -1,5 +1,4 @@
-// final_massive_test.cpp — 250 threads × 4000 events = 1,000,000 entries
-// 50-run benchmark with min/max/avg — FINAL, UNBREAKABLE, PERFECT
+// final_massive_test_fixed_payload.cpp — 250 threads × 4000 events = 1,000,000 entries
 
 #include "../ts_store_headers/ts_store.hpp"
 #include <thread>
@@ -7,7 +6,7 @@
 #include <iostream>
 #include <chrono>
 #include <iomanip>
-#include <format>
+//#include <format>
 #include <algorithm>
 
 using namespace jac::ts_store::inline_v001;
@@ -23,7 +22,7 @@ using MassiveStore = ts_store<
     fixed_string<16>,
     fixed_string<32>,
     100, 16, 32,
-    false
+    true
 >;
 
 int run_single_test(MassiveStore& store)
@@ -38,7 +37,7 @@ int run_single_test(MassiveStore& store)
     for (uint32_t t = 0; t < THREADS; ++t) {
         threads.emplace_back([&, t]() {
             for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
-                auto payload = store.make_test_payload(t, i);
+                auto payload = store.make_test_payload_fixed();
                 auto [ok, id] = store.claim(t, payload, "MASSIVE", "FINAL");
                 if (!ok) {
                     std::cerr << "CLAIM FAILED — thread " << t << " event " << i << "\n";

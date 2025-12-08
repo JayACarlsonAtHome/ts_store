@@ -9,7 +9,7 @@ using LogStore = ts_store<
     fixed_string<12>,
     fixed_string<24>,
     96, 12, 24,
-    true        // UseTimestamps
+    false                   // UseTimestamps or not if false
 >;
 
 int main() {

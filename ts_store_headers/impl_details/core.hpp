@@ -57,7 +57,7 @@ claim(unsigned int thread_id,
     copy_string(row.category_storage, std::forward<C>(category), CategorySize);
 
     // — TIMESTAMP —
-    if constexpr (UseTimestamps || debug) {
+    if (UseTimestamps || debug) {
         const auto now = std::chrono::steady_clock::now();
         auto base = epoch_base.load(std::memory_order_relaxed);
         if (base == std::chrono::steady_clock::time_point::min()) {

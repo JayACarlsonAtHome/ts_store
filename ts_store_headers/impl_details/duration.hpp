@@ -5,38 +5,25 @@
 #include <iostream>
 #include <cstdint>
 
-inline void show_duration(const std::string& prefix = "Store") const
-{
-    // If timestamps are disabled at compile time → do nothing, zero cost
-    if constexpr (!UseTimestamps) {
-        std::cout << prefix << " duration: <timestamps disabled>\n";
-        return;
-    }
+void show_duration(const std::string& name) const {
+    if constexpr (UseTimestamps) {
+        uint64_t first_ts = 0;
+        uint64_t last_ts  = 0;
 
-    std::shared_lock lock(data_mtx_);
+        for (const auto& [id, row] : rows_) {
+            if (row.ts_us == 0) continue;
 
-    uint64_t first_ts = 0;
-    uint64_t last_ts  = 0;
-    bool found_any    = false;
-
-    for (const auto& [id, row] : rows_) {
-        if (row.ts_us == 0)
-            continue;
-
-        if (!found_any) {
-            first_ts = last_ts = row.ts_us;
-            found_any = true;
-        } else {
-            if (row.ts_us < first_ts) first_ts = row.ts_us;
-            if (row.ts_us > last_ts)  last_ts  = row.ts_us;
+            if (first_ts == 0 || row.ts_us < first_ts) first_ts = row.ts_us;
+            if (row.ts_us > last_ts)                   last_ts  = row.ts_us;
         }
-    }
 
-    if (found_any && last_ts >= first_ts) {
-        uint64_t duration_us = last_ts - first_ts;
-        std::cout << prefix << " duration: " << duration_us << " µs"
-                  << "  (first @ " << first_ts << " µs, last @ " << last_ts << " µs)\n";
+        if (first_ts == 0) {
+            fmt::print("{} duration: no timed entries\n", name);
+        } else {
+            auto duration_us = last_ts - first_ts;
+            fmt::print("{} duration: {} µs ({} → {})\n", name, duration_us, first_ts, last_ts);
+        }
     } else {
-        std::cout << prefix << " duration: <no valid timestamps recorded>\n";
+        fmt::print("{} duration: timestamps disabled (UseTimestamps=false)\n", name);
     }
 }

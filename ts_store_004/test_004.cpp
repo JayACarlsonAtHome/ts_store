@@ -3,7 +3,7 @@
 
 #include "../ts_store_headers/ts_store.hpp"
 #include <atomic>
-#include <chrono>
+//#include <chrono>
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -15,8 +15,11 @@ constexpr uint32_t THREADS           = 250;
 constexpr uint32_t EVENTS_PER_THREAD = 100;
 constexpr uint64_t TOTAL_EVENTS      = uint64_t(THREADS) * EVENTS_PER_THREAD;
 
-using MainStore   = ts_store<fixed_string<100>, fixed_string<16>, fixed_string<32>, 100, 16, 32, true>;
-using ResultStore = ts_store<fixed_string<128>, fixed_string<16>, fixed_string<32>, 128, 16, 32, true>;
+
+
+
+using MainStore   = ts_store<fixed_string<100>, fixed_string<16>, fixed_string<32>, 100, 16, 32, false>;
+using ResultStore = ts_store<fixed_string<128>, fixed_string<16>, fixed_string<32>, 128, 16, 32, false>;
 
 // Helper to make fixed_string from format
 template<size_t N, class... Args>

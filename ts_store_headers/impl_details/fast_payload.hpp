@@ -16,6 +16,22 @@ struct FastPayload {
     thread_local inline static char buffer[PayloadSize]{};
     thread_local inline static char* pos = buffer;
 
+    static std::string_view make_fixed_payload() noexcept {
+        pos = buffer;
+
+        constexpr const char prefix[] = "Fixed Payload";
+        std::memcpy(pos, prefix, sizeof(prefix) - 1);
+        pos += sizeof(prefix) - 1;
+
+        pos = itoa(pos, tid);
+        *pos++ = '-';
+        pos = itoa(pos, index);
+        *pos++ = '\0';
+
+        return {buffer, static_cast<std::size_t>(pos - buffer - 1)};
+    }
+
+
     static std::string_view make(int tid, int index) noexcept {
         pos = buffer;
 

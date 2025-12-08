@@ -12,7 +12,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(-O3 -march=native -flto=auto -ffat-lto-objects)
 add_link_options(-flto=auto)
 
-set(TEST_NUMBERS 001 002 003 004 005)
+set(TEST_NUMBERS 001 002 003 004 005 006)
 
 foreach(num IN LISTS TEST_NUMBERS)
     set(target_name "ts_store_${num}")

@@ -64,7 +64,10 @@ inline void print(std::ostream& os = std::cout,
 
         const auto& r = it->second;
 
-        std::string ts_str = UseTimestamps && r.ts_us ? std::to_string(r.ts_us) : "-";
+        std::string ts_str = "-";                                     // default when no timestamp
+        if constexpr (UseTimestamps) {                                // <-- compile-time check
+            if (r.ts_us != 0) ts_str = std::to_string(r.ts_us);       // only if actually set
+        }
 
         // Extract type/category as string_view
         std::string_view type_sv = [&]() -> std::string_view {

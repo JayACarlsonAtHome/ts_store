@@ -5,17 +5,18 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include "../fmt/include/fmt/core.h"
+//#include "../fmt/include/fmt/core.h"
 #include "../fmt/include/fmt/color.h"
 
 using namespace jac::ts_store::inline_v001;
 
 using BigStore = ts_store<
+
     fixed_string<512>,
     fixed_string<32>,
     fixed_string<64>,
     512, 32, 64,
-    true        // UseTimestamps
+    false        // UseTimestamps
 >;
 
 int main() {

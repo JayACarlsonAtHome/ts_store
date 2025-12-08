@@ -6,7 +6,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include <iomanip>
+//#include <iomanip>
 #include <array>
 #include <format>
 
@@ -38,7 +38,7 @@ using StressStore = ts_store<
     fixed_string<16>,
     fixed_string<32>,
     100, 16, 32,
-    true
+    false
 >;
 
 int main() {
@@ -97,7 +97,7 @@ int main() {
             }
 
             if (last_read >= current_end)
-                std::this_thread::sleep_for(microseconds(5));
+                std::this_thread::sleep_for(microseconds(10));
         }
     });
 
