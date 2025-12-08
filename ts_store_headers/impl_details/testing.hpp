@@ -4,9 +4,9 @@
 #pragma once
 
 // FMT FIRST — GCC 15 FIX — CORRECT PATH
-#include "../../../fmt/include/fmt/core.h"
-#include "../../../fmt/include/fmt/format.h"
-#include "../../../fmt/include/fmt/color.h"
+#include "../../fmt/include/fmt/core.h"
+#include "../../fmt/include/fmt/format.h"
+#include "../../fmt/include/fmt/color.h"
 
 #include <thread>
 #include <vector>

@@ -2,9 +2,9 @@
 
 // FMT MUST BE FIRST — THIS IS THE GCC 15 FIX
 // FMT MUST BE FIRST — THIS IS THE GCC 15 FIX
-#include "../../../fmt/include/fmt/core.h"
-#include "../../../fmt/include/fmt/format.h"
-#include "../../../fmt/include/fmt/color.h"
+#include "../../fmt/include/fmt/core.h"
+#include "../../fmt/include/fmt/format.h"
+#include "../../fmt/include/fmt/color.h"
 
 inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::max()) const {
     std::shared_lock lock(data_mtx_);

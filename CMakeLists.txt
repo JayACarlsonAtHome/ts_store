@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # THIS LINE FIXES THE GCC 15 + <ranges> + fmt BUG
-add_compile_options(-Wno-error=template-body)
+#add_compile_options(-Wno-error=template-body)
 
 # Max performance
 add_compile_options(-O3 -march=native -flto=auto -ffat-lto-objects)
