@@ -1,11 +1,13 @@
 ### Massive changes, and minimal testing...
-You can use this. I wouldn't use this in production.
+I wouldn't use this in production.
 I have limited time, a day here, a day there.
 So I usually get as much as I can do in one night,
 and it usually works out to get everything compiling, and runnning
 in the morning, when I don't have that extra to do more testing.
 That said, most all the tests were failing, and now they are not,
 so that is a good thing.
+I was hoping to get back to this, 
+but I have real work that is taking priority
 
 ### Why this exists
 You needed an event buffer that:
