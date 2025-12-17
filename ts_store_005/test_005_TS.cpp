@@ -23,7 +23,7 @@ using MassiveStore = ts_store<
     fixed_string<16>,
     fixed_string<32>,
     100, 16, 32,
-    false
+    true
 >;
 
 int run_single_test(MassiveStore& store)
@@ -39,7 +39,7 @@ int run_single_test(MassiveStore& store)
         threads.emplace_back([&, t]() {
             for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
                 auto payload = store.make_test_payload(t, i);
-                auto [ok, id] = store.claim(t, payload, "MASSIVE", "FINAL");
+                auto [ok, id] = store.save_event(t, payload, "MASSIVE", "FINAL");
                 if (!ok) {
                     std::cerr << "CLAIM FAILED — thread " << t << " event " << i << "\n";
                     std::abort();

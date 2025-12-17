@@ -113,8 +113,8 @@ public:
 
         if constexpr (UseTimestamps) {
             const auto min_time = std::chrono::steady_clock::time_point::min();
-            if (auto cur = epoch_base.load(std::memory_order_relaxed); cur == min_time)
-                epoch_base.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
+            if (auto cur = s_epoch_base.load(std::memory_order_relaxed); cur == min_time)
+                s_epoch_base.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
         }
 
         static const memory_guard<ValueT, TypeT, CategoryT, BufferSize, TypeSize, CategorySize, UseTimestamps>
@@ -123,14 +123,14 @@ public:
     }
 
 private:
-    const char* test_event_prefix = "Test-Event: ";
-    static inline std::atomic<std::chrono::steady_clock::time_point> epoch_base{
+    static inline std::atomic<std::chrono::steady_clock::time_point> s_epoch_base{
         std::chrono::steady_clock::time_point::min()
     };
 
     std::atomic<std::uint64_t> next_id_{0};
     gtl::parallel_flat_hash_map<std::uint64_t, row_data> rows_;
     mutable std::shared_mutex data_mtx_;
+
 
 public:
     static constexpr bool debug_mode_v = DebugMode;
@@ -142,21 +142,9 @@ public:
 #include "impl_details/sorting.hpp"
 #include "impl_details/press_to_cont.hpp"
 #include "impl_details/verify_checks.hpp"
+#include "impl_details/unicode.hpp"
 #include "impl_details/diagnostic.hpp"
 
-    inline std::string_view make_test_payload(int thread_id, int event_index) noexcept {
-        thread_local static char buf[64]{};
-
-        int len = std::snprintf(buf, sizeof(buf), "%sT=%d E=%d",
-                                test_event_prefix, thread_id, event_index);
-
-        return {buf, len < 0 ? 0 : static_cast<size_t>(len)};
-        }
-
-    inline std::string_view make_test_payload_fixed() noexcept {
-        return test_event_prefix;
-    }
- };
-
+};
 
 }; // namespace jac::ts_store::inline_v001

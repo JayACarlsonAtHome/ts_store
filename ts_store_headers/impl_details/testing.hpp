@@ -24,13 +24,13 @@ inline void test_run(bool is_debug = false) {
                 const char* types[] = {"INFO", "WARN", "ERROR", "TRACE"};
                 const char* cats[]  = {"NET",  "DB",   "UI",   "SYS",  "GFX"};
 
-                auto [ok, id] = claim(t, payload, types[i % 4], cats[t % 5], is_debug);
+                auto [ok, id] = save_event(t, payload, types[i % 4], cats[t % 5], is_debug);
                 if (!ok) continue;
 
                 std::this_thread::yield();
 
                 auto [ok2, val] = select(id);
-                if (ok2 && std::string_view(val).starts_with(test_event_prefix)) {
+                if (ok2 && std::string_view(val).starts_with(test_event_prefix_)) {
                     // good
                 }
             }

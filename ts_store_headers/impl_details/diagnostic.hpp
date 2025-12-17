@@ -1,12 +1,16 @@
 // BEAUTIFUL DIAGNOSE — FINAL, NO WARNINGS, NO UNUSED VARIABLES
 
+#pragma once
+
 // FMT MUST BE FIRST — THIS IS THE GCC 15 FIX
 // FMT MUST BE FIRST — THIS IS THE GCC 15 FIX
 #include "../../fmt/include/fmt/core.h"
 #include "../../fmt/include/fmt/format.h"
 #include "../../fmt/include/fmt/color.h"
 
-inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::max()) const {
+public:
+
+inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::max())  {
     std::shared_lock lock(data_mtx_);
 
     if (rows_.size() != expected_size()) {
@@ -24,7 +28,7 @@ inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::m
     for (const auto& [id, row] : rows_) {
         if (failures.size() >= max_report) break;
         std::string_view payload = row.value_storage.view();
-        if (!payload.starts_with(test_event_prefix)) {
+        if (!payload.starts_with(test_event_prefix_)) {
             failures.push_back({id, row.thread_id, payload});
         }
     }

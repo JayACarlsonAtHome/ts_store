@@ -16,7 +16,7 @@ using BigStore = ts_store<
     fixed_string<32>,
     fixed_string<64>,
     512, 32, 64,
-    false        // UseTimestamps
+    true        // UseTimestamps
 >;
 
 int main() {
@@ -42,7 +42,7 @@ int main() {
                 auto type     = fixed_string<32>{"STRESS"};
                 auto category = fixed_string<64>{"PERF_TEST"};
 
-                auto [ok, id] = store.claim(t, payload, type, category);
+                auto [ok, id] = store.save_event(t, payload, type, category);
                 if (!ok) {
                     fmt::print(fg(fmt::color::red) | fmt::emphasis::bold,
                                "[FATAL] claim failed — thread {} event {}\n", t, i);

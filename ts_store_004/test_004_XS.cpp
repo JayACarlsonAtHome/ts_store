@@ -47,7 +47,7 @@ int main() {
         for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
             auto payload = safepay.make_test_payload(tid, i);  // ← global function
 
-            auto [claim_ok, id] = safepay.claim(tid, payload, "STRESS", "MAIN");
+            auto [claim_ok, id] = safepay.save_event(tid, payload, "STRESS", "MAIN");
             if (!claim_ok) continue;
 
             std::this_thread::yield();
@@ -67,7 +67,7 @@ int main() {
             "RESULT: thread={:>3}  successes={:>6}  nulls={:>4}  total_events={:>6}",
             tid, local_successes, local_nulls, EVENTS_PER_THREAD);
 
-        auto [ok, _] = results.claim(tid, result_payload, "RESULT", "STATS");
+        auto [ok, _] = results.save_event(tid, result_payload, "RESULT", "STATS");
         if (!ok) {
             std::cerr << "Results claim failed for thread " << tid << "\n";
         }
