@@ -18,20 +18,14 @@ constexpr uint32_t EVENTS_PER_THREAD = 4000;
 constexpr uint64_t TOTAL             = uint64_t(THREADS) * EVENTS_PER_THREAD;
 constexpr int      RUNS              = 50;
 
-using MassiveStore = ts_store<
-    fixed_string<100>,
-    fixed_string<16>,
-    fixed_string<32>,
-    100, 16, 32,
-    false
->;
 
-int run_single_test(MassiveStore& store)
+using LogConfig = ts_store_config<100, 16, 32, false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogxStore = ts_store<LogConfig>;
+
+int run_single_test(LogxStore& store)
 {
     store.clear();
-
     auto start = high_resolution_clock::now();
-
     std::vector<std::thread> threads;
     threads.reserve(THREADS);
 
@@ -72,7 +66,8 @@ int run_single_test(MassiveStore& store)
 
 int main()
 {
-    MassiveStore store(THREADS, EVENTS_PER_THREAD);
+
+    LogxStore  store(THREADS, EVENTS_PER_THREAD);
 
     long long total_write_us = 0;
     int64_t   durations[RUNS] = {};  // ← FIXED NAME

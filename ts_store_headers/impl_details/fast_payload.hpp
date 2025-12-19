@@ -59,7 +59,7 @@ struct FastPayload {
         return {tl_buf, static_cast<size_t>(pos - tl_buf)};
     }
 
-    static std::string_view make(int tid, int index) noexcept {
+    sstatic std::string_view make(int tid, int index) noexcept {
         pos = buffer;
 
         constexpr const char prefix[] = "payload-";
@@ -69,35 +69,26 @@ struct FastPayload {
         pos = itoa(pos, tid);
         *pos++ = '-';
         pos = itoa(pos, index);
-        *pos++ = '\0';
+        *pos++ = ' ';
 
-        return {buffer, static_cast<std::size_t>(pos - buffer - 1)};
-    }
+        // Middle padding with '.'
+        const size_t pad_len = PayloadSize - 80;  // leave room for suffix
+        std::memset(pos, '.', pad_len);
+        pos += pad_len;
 
-    /*
-private:
-    static char* itoa(char* dst, int value) noexcept {
-        if (value == 0) {
-            *dst++ = '0';
-            return dst;
+        // Thread-specific visible Unicode suffix: box-drawing characters (highly visible)
+        // Cycle through 8 distinct characters
+        constexpr char32_t box_chars[8] = {0x250F, 0x2513, 0x2517, 0x251B, 0x2523, 0x252B, 0x2533, 0x253B}; // ┏ ┓ ┗ ┛ ┣ ┫ ┳ ┻
+        char32_t ch = box_chars[tid % 8];
+
+        // Repeat 12 times for visibility
+        for (int i = 0; i < 12; ++i) {
+            pos += encode_utf8(pos, ch);
         }
 
-        char tmp[12];
-        char* t = tmp + sizeof(tmp);
-        bool neg = value < 0;
-        unsigned int v = neg ? -static_cast<unsigned int>(value) : static_cast<unsigned int>(value);
+        *pos = '\0';
 
-        do {
-            *--t = '0' + (v % 10);
-            v /= 10;
-        } while (v);
-
-        if (neg) *--t = '-';
-
-        std::memcpy(dst, t, static_cast<std::size_t>(tmp + sizeof(tmp) - t));
-        return dst + (tmp + sizeof(tmp) - t);
+        return {buffer, static_cast<std::size_t>(pos - buffer)};
     }
-};
-*/
 
 } // end of namespace jac::ts_store::inline_v001

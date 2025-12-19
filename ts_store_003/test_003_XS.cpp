@@ -33,16 +33,12 @@ alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 inline std::array<uint64_t, MAX_ENTRIES> log_stream_array{};
 inline std::atomic<size_t> total_written{0};
 
-using StressStore = ts_store<
-    fixed_string<100>,
-    fixed_string<16>,
-    fixed_string<32>,
-    100, 16, 32,
-    false
->;
+using LogConfig = ts_store_config<100, 16, 32, false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogxStore = ts_store<LogConfig>;
+
 
 int main() {
-    StressStore store(WRITER_THREADS, OPS_PER_THREAD);
+    LogxStore store(WRITER_THREADS, OPS_PER_THREAD);
 
     std::vector<std::thread> writers;
     writers.reserve(WRITER_THREADS);

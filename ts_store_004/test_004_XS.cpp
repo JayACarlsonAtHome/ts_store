@@ -16,10 +16,12 @@ constexpr uint32_t EVENTS_PER_THREAD = 100;
 constexpr uint64_t TOTAL_EVENTS      = uint64_t(THREADS) * EVENTS_PER_THREAD;
 
 
+using LogConfigxMainx = ts_store_config<100, 16, 32, false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogxStore = ts_store<LogConfigxMainx>;
 
+using LogConfigResult = ts_store_config<128, 16, 32, false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogResult = ts_store<LogConfigResult>;
 
-using MainStore   = ts_store<fixed_string<100>, fixed_string<16>, fixed_string<32>, 100, 16, 32, false>;
-using ResultStore = ts_store<fixed_string<128>, fixed_string<16>, fixed_string<32>, 128, 16, 32, false>;
 
 // Helper to make fixed_string from format
 template<size_t N, class... Args>
@@ -33,8 +35,8 @@ constexpr auto make_fixed(std::format_string<Args...> fmt, Args&&... args) {
 }
 
 int main() {
-    MainStore   safepay(THREADS, EVENTS_PER_THREAD);
-    ResultStore results(THREADS, 1);
+    LogxStore  safepay(THREADS, EVENTS_PER_THREAD);
+    LogResult  results(THREADS, 1);
 
     std::vector<std::thread> threads;
     std::atomic<int> total_successes{0};

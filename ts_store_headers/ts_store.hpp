@@ -1,17 +1,13 @@
 // ts_store/ts_store_headers/ts_store.hpp
-// FINAL v14 — PERFECT, COMPLETE, BEAUTIFUL, UNBREAKABLE
+// FINAL v15 — PERFECT, COMPLETE, BEAUTIFUL, UNBREAKABLE
 // C++20 — GCC 15 — fmt 12 — December 2025
-
 #pragma once
-
 #undef _GLIBCXX_VISIBILITY
 #define _GLIBCXX_VISIBILITY(...)
-
 // FMT FIRST — GCC 15 FIX — CORRECT PATH
 #include "../../fmt/include/fmt/core.h"
 #include "../../fmt/include/fmt/format.h"
 #include "../../fmt/include/fmt/color.h"
-
 #include <thread>
 #include <mutex>
 #include <shared_mutex>
@@ -25,116 +21,84 @@
 #include <vector>
 #include <cstring>
 #include <iomanip>
-#include <cmath>          // for std::log10
+#include <cmath> // for std::log10
 #include <sys/sysinfo.h>
-
 #include "./fixed_string.hpp"
-
+#include "ts_store_config.hpp"
 #include "../GTL/include/gtl/phmap.hpp"
 #include "impl_details/memory_guard.hpp"
-
 namespace jac::ts_store::inline_v001 {
-
 // ——————————————————————— CONCEPTS ———————————————————————
 template<typename T>
 concept StringLike = requires(T t) {
     { std::string_view(t) } -> std::convertible_to<std::string_view>;
 };
-
 template<typename T>
 concept TriviallyCopyableStringLike = std::is_trivially_copyable_v<T> && StringLike<T>;
-
 // ——————————————————————— ts_store ———————————————————————
-template <
-    typename ValueT,
-    typename TypeT      = fixed_string<16>,
-    typename CategoryT  = fixed_string<32>,
-    size_t   BufferSize = 100,
-    size_t   TypeSize   = 16,
-    size_t   CategorySize = 32,
-    bool     UseTimestamps = true,
-    bool     DebugMode = false
->
-    requires StringLike<ValueT> && StringLike<TypeT> && StringLike<CategoryT>
+template <typename Config>
+    requires StringLike<typename Config::ValueT> && StringLike<typename Config::TypeT> && StringLike<typename Config::CategoryT>
 class ts_store
 {
 private:
     struct row_data {
         unsigned int thread_id{0};
-        bool         is_debug{false};
-
+        bool is_debug{false};
         [[no_unique_address]]
-        std::conditional_t<std::is_same_v<TypeT, std::string_view>,
-            std::array<char, TypeSize>, TypeT> type_storage{};
-
+        std::conditional_t<std::is_same_v<typename Config::TypeT, std::string_view>,
+            std::array<char, Config::type_size>, typename Config::TypeT> type_storage{};
         [[no_unique_address]]
-        std::conditional_t<std::is_same_v<CategoryT, std::string_view>,
-            std::array<char, CategorySize>, CategoryT> category_storage{};
-
+        std::conditional_t<std::is_same_v<typename Config::CategoryT, std::string_view>,
+            std::array<char, Config::category_size>, typename Config::CategoryT> category_storage{};
         [[no_unique_address]]
-        std::conditional_t<TriviallyCopyableStringLike<ValueT>,
-            ValueT, std::array<char, BufferSize>> value_storage{};
-
-        std::conditional_t<UseTimestamps, uint64_t, std::monostate> ts_us{};
+        std::conditional_t<TriviallyCopyableStringLike<typename Config::ValueT>,
+            typename Config::ValueT, std::array<char, Config::buffer_size>> value_storage{};
+        std::conditional_t<Config::use_timestamps, uint64_t, std::monostate> ts_us{};
     };
-
     const uint32_t max_threads_;
     const uint32_t events_per_thread_;
-
 public:
     // ——— GETTERS ———
     constexpr uint32_t get_max_threads() const noexcept { return max_threads_; }
-
     // Perfect thread ID width — mathematically exact, zero-cost
     uint32_t thread_id_width() const noexcept {
         const uint32_t n = get_max_threads();
         if (n == 0) return 1;
         return static_cast<uint32_t>(std::log10(static_cast<double>(n - 1))) + 2;
     }
-
     [[nodiscard]] uint64_t expected_size() const noexcept {
         return uint64_t(max_threads_) * events_per_thread_;
     }
-
     void clear() {
         std::unique_lock lock(data_mtx_);
         rows_.clear();
         next_id_.store(0, std::memory_order_relaxed);
     }
-
     explicit ts_store(uint32_t max_threads, uint32_t events_per_thread)
         : max_threads_(max_threads)
         , events_per_thread_(events_per_thread)
     {
         if (max_threads == 0 || events_per_thread == 0)
             throw std::invalid_argument("ts_store: thread/event count must be > 0");
-
         rows_.reserve(expected_size() * 2);
-
-        if constexpr (UseTimestamps) {
+        if constexpr (Config::use_timestamps) {
             const auto min_time = std::chrono::steady_clock::time_point::min();
             if (auto cur = s_epoch_base.load(std::memory_order_relaxed); cur == min_time)
                 s_epoch_base.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
         }
-
-        static const memory_guard<ValueT, TypeT, CategoryT, BufferSize, TypeSize, CategorySize, UseTimestamps>
+        static const memory_guard<typename Config::ValueT, typename Config::TypeT, typename Config::CategoryT, Config::buffer_size, Config::type_size, Config::category_size, Config::use_timestamps>
             guard(max_threads_, events_per_thread_);
         (void)guard;
     }
-
 private:
     static inline std::atomic<std::chrono::steady_clock::time_point> s_epoch_base{
         std::chrono::steady_clock::time_point::min()
     };
-
     std::atomic<std::uint64_t> next_id_{0};
     gtl::parallel_flat_hash_map<std::uint64_t, row_data> rows_;
     mutable std::shared_mutex data_mtx_;
-
-
 public:
-    static constexpr bool debug_mode_v = DebugMode;
-
+    static constexpr bool debug_mode_v = Config::debug_mode;
 #include "impl_details/core.hpp"
 #include "impl_details/testing.hpp"
 #include "impl_details/printing.hpp"
@@ -144,7 +108,5 @@ public:
 #include "impl_details/verify_checks.hpp"
 #include "impl_details/unicode.hpp"
 #include "impl_details/diagnostic.hpp"
-
 };
-
 }; // namespace jac::ts_store::inline_v001

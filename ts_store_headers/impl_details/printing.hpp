@@ -34,17 +34,17 @@ inline void print(std::ostream& os = std::cout,
     constexpr int PAD        = 2;
 
     // Dynamic widths based on actual storage
-    constexpr int W_TYPE = std::max<int>(TypeSize + 4, 20);
-    constexpr int W_CAT  = std::max<int>(CategorySize + 4, 20);
-    constexpr int W_PAYLOAD = BufferSize > 1024 ? 1024 : BufferSize;
+    constexpr int W_TYPE = std::max<int>(Config::type_size + 4, 20);
+    constexpr int W_CAT  = std::max<int>(Config::category_size + 4, 20);
+    constexpr int W_PAYLOAD = Config::buffer_size > 1024 ? 1024 : Config::buffer_size;
 
     const int total_width = W_ID + PAD + W_TIME + PAD + W_TYPE + PAD + W_CAT + PAD + W_THREAD + PAD + W_PAYLOAD + 10;
 
     os << "ts_store < \n"
        << "   Threads    = " << max_threads_ << "\n"
        << "   Events     = " << events_per_thread_ << "\n"
-       << "   ValueT     = " << (TriviallyCopyableStringLike<ValueT> ? "Trivially Copyable String" : "Character Buffer") << "\n"
-       << "   Time Stamp = " << (UseTimestamps ? "On" : "Off") << ">\n";
+       << "   ValueT     = " << (TriviallyCopyableStringLike<typename Config::ValueT> ? "Trivially Copyable String" : "Character Buffer") << "\n"
+       << "   Time Stamp = " << (Config::use_timestamps ? "On" : "Off") << ">\n";
     os << std::string(total_width, '=') << "\n";
 
     os << std::left
@@ -65,13 +65,13 @@ inline void print(std::ostream& os = std::cout,
         const auto& r = it->second;
 
         std::string ts_str = "-";                                     // default when no timestamp
-        if constexpr (UseTimestamps) {                                // <-- compile-time check
+        if constexpr (Config::use_timestamps) {                                // <-- compile-time check
             if (r.ts_us != 0) ts_str = std::to_string(r.ts_us);       // only if actually set
         }
 
         // Extract type/category as string_view
         std::string_view type_sv = [&]() -> std::string_view {
-            if constexpr (std::is_same_v<TypeT, std::string_view>) {
+            if constexpr (std::is_same_v<typename Config::TypeT, std::string_view>) {
                 return std::string_view(r.type_storage.data());
             } else {
                 return std::string_view(r.type_storage);
@@ -79,7 +79,7 @@ inline void print(std::ostream& os = std::cout,
         }();
 
         std::string_view cat_sv = [&]() -> std::string_view {
-            if constexpr (std::is_same_v<CategoryT, std::string_view>) {
+            if constexpr (std::is_same_v<typename Config::CategoryT, std::string_view>) {
                 return std::string_view(r.category_storage.data());
             } else {
                 return std::string_view(r.category_storage);
@@ -87,7 +87,7 @@ inline void print(std::ostream& os = std::cout,
         }();
 
         std::string_view payload_sv = [&]() -> std::string_view {
-            if constexpr (TriviallyCopyableStringLike<ValueT>) {
+            if constexpr (TriviallyCopyableStringLike<typename Config::ValueT>) {
                 return std::string_view(r.value_storage);
             } else {
                 return std::string_view(r.value_storage.data());

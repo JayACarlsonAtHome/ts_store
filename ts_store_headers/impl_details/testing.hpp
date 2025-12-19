@@ -11,8 +11,43 @@
 #include <thread>
 #include <vector>
 
-// Now test_run() can see it
+const char* test_event_prefix_ = "Test-Event: ";
+
+// Minimum bytes needed for prefix + thread + worker + spaces (worst-case max_threads/events)
+inline size_t min_prefix_bytes() noexcept {
+    // "Test-Event: T=" = 14
+    // " Worker=" = 8
+    // spaces = 2
+    // max thread digits = log10(max_threads_ - 1) + 1
+    // max event digits = log10(events_per_thread_ - 1) + 1
+    size_t total = 0;
+    size_t base = 14 + 8 + 2;
+    std::cout << "base = " << base << std::endl;
+    size_t thread_digits = static_cast<size_t>(std::log10(max_threads_ > 1 ? max_threads_ - 1 : 1)) + 1;
+    std::cout << "thread_digits = " << thread_digits << std::endl;
+    size_t event_digits = static_cast<size_t>(std::log10(events_per_thread_ > 1 ? events_per_thread_ - 1 : 1)) + 1;
+    std::cout << "event_digits = " << event_digits << std::endl;
+    total = base + thread_digits * event_digits;
+    std::cout << "total = " << total << std::endl;
+    std::cout << "BufferSize = " << Config::buffer_size << std::endl;
+    return total;
+}
+
+
+
 inline void test_run(bool is_debug = false) {
+    if (Config::buffer_size <= min_prefix_bytes()) {
+        fmt::print(fmt::fg(fmt::color::red) | fmt::emphasis::bold | fmt::emphasis::blink,
+            "╔═══════════════════════════════════════════════════════════════════════════════╗\n"
+            "║                  FATAL ERROR — BUFFER TOO SMALL!                              ║\n"
+            "║  BufferSize = {} bytes, but needs at least {} bytes for safe prefix formatting ║\n"
+            "║  (Test-Event: T=<thread> Worker=<event> + padding)                           ║\n"
+            "║                  TEST ABORTED — INCREASE BufferSize                           ║\n"
+            "╚═══════════════════════════════════════════════════════════════════════════════╝\n",
+            Config::buffer_size, min_prefix_bytes());
+        return;
+    }
+
     std::vector<std::thread> threads;
     threads.reserve(max_threads_);
 

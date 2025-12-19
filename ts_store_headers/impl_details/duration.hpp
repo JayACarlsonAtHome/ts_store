@@ -6,7 +6,7 @@
 #include <cstdint>
 
 void show_duration(const std::string& name) const {
-    if constexpr (UseTimestamps) {
+    if constexpr (Config::use_timestamps) {
         uint64_t first_ts = 0;
         uint64_t last_ts  = 0;
 

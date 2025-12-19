@@ -41,7 +41,7 @@ inline std::vector<std::uint64_t> get_all_ids_sorted(int mode = 0) const
 // Bonus: helper if you ever want sorted timestamps
 inline std::vector<std::uint64_t> get_ids_sorted_by_timestamp() const
 {
-    if constexpr (!UseTimestamps)
+    if constexpr (!Config::UseTimestamps)
         return {};
 
     std::shared_lock lock(data_mtx_);

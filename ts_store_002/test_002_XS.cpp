@@ -10,14 +10,8 @@
 
 using namespace jac::ts_store::inline_v001;
 
-using BigStore = ts_store<
-
-    fixed_string<512>,
-    fixed_string<32>,
-    fixed_string<64>,
-    512, 32, 64,
-    false        // UseTimestamps
->;
+using LogConfig = ts_store_config<512, 32, 64, false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogxStore = ts_store<LogConfig>;
 
 int main() {
     constexpr uint32_t num_threads       = 250;
@@ -29,7 +23,7 @@ int main() {
     std::cout << fmt::format("Threads: {}    Events/thread: {}    Total: {}\n\n",
                              num_threads, events_per_thread, total_entries);
 
-    BigStore store(num_threads, events_per_thread);
+    LogxStore store(num_threads, events_per_thread);
 
     std::vector<std::thread> threads;
     threads.reserve(num_threads);

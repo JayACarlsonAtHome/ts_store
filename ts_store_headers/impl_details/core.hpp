@@ -8,29 +8,43 @@
 
 // NO namespace — this file is included inside ts_store class
 
-const char* test_event_prefix_ = "Test-Event: ";
 
 inline std::string_view make_test_payload(int thread_id, int event_index) noexcept {
-    thread_local static char tl_buf[64]{};
+    thread_local static char tl_buf[Config::buffer_size + 1]{};
 
-    int len = std::snprintf(tl_buf, sizeof(tl_buf), "%sT=%d E=%d",
-                            test_event_prefix_, thread_id, event_index);
+    char* pos = tl_buf;
 
-    return {tl_buf, len < 0 ? 0 : static_cast<size_t>(len)};
+    constexpr const char prefix[] = "Test-Event: T=";
+    std::memcpy(pos, prefix, sizeof(prefix) - 1);
+    pos += sizeof(prefix) - 1;
+
+    pos = itoa(pos, thread_id);
+    constexpr const char worker_prefix[] = " Worker=";
+    std::memcpy(pos, worker_prefix, sizeof(worker_prefix) - 1);
+    pos += sizeof(worker_prefix) - 1;
+
+    pos = itoa(pos, event_index);
+    *pos++ = ' ';
+
+    // Exact padding to BufferSize - 1
+    const size_t used = static_cast<size_t>(pos - tl_buf);
+    const size_t pad_len = (used < Config::buffer_size - 1) ? Config::buffer_size - used - 1 : 0;
+    std::memset(pos, '.', pad_len);
+    pos += pad_len;
+
+    *pos = '\0';
+
+
+    return {tl_buf, static_cast<size_t>(pos - tl_buf)};
 }
-
-inline std::string_view make_test_payload_fixed() noexcept {
-    return test_event_prefix_;
-}
-
 // Main save_event definition (out-of-class, fully qualified with all template parameters)
 //template<typename V = ValueT, typename T = TypeT, typename C = CategoryT>
 //    requires StringLike<V> && StringLike<T> && StringLike<C>
 inline std::pair<bool, std::uint64_t>
 save_event(unsigned int thread_id,
-                     ValueT&& value,
-                     TypeT&& type,
-                     CategoryT&& category,
+                     Config::ValueT&& value,
+                     Config::TypeT&& type,
+                     Config::CategoryT&& category,
                      bool debug = false)
 {
     std::unique_lock lock(data_mtx_);
@@ -45,8 +59,8 @@ save_event(unsigned int thread_id,
     if (sv.empty()) {
         sv = "Payload not provided";
     }
-    if (sv.size() + 1 > BufferSize) {
-        sv = sv.substr(0, BufferSize - 1);
+    if (sv.size() + 1 > Config::buffer_size) {
+        sv = sv.substr(0, Config::buffer_size - 1);
     }
     row.value_storage.copy_from(sv);
 
@@ -58,11 +72,11 @@ save_event(unsigned int thread_id,
         storage.copy_from(s);
     };
 
-    copy_string(row.type_storage,     std::forward<TypeT>(type),     TypeSize);
-    copy_string(row.category_storage, std::forward<CategoryT>(category), CategorySize);
+    copy_string(row.type_storage,     std::forward<typename Config::TypeT>(type),         Config::type_size);
+    copy_string(row.category_storage, std::forward<typename Config::CategoryT>(category), Config::category_size);
 
     // — TIMESTAMP —
-    if constexpr (UseTimestamps) {
+    if constexpr (Config::use_timestamps) {
         const auto now = std::chrono::steady_clock::now();
         auto base = s_epoch_base.load(std::memory_order_relaxed);
         if (base == std::chrono::steady_clock::time_point::min()) {
@@ -83,7 +97,7 @@ save_event(unsigned int thread_id,
 inline std::pair<bool, std::uint64_t>
 save_event(unsigned int thread_id, std::string_view payload, std::string_view type, std::string_view category, bool debug = false)
 {
-    return save_event(thread_id, ValueT(payload), TypeT(type), CategoryT(category), debug);
+    return save_event(thread_id, typename Config::ValueT(payload), typename Config::TypeT(type), typename Config::CategoryT(category), debug);
 }
 
 inline std::pair<bool, std::uint64_t>
@@ -124,7 +138,7 @@ inline std::vector<std::uint64_t> get_all_ids() const {
 
 // get_timestamp_us
 inline std::pair<bool, uint64_t> get_timestamp_us(std::uint64_t id) const {
-    if constexpr (!UseTimestamps) return {false, 0};
+    if constexpr (!Config::UseTimestamps) return {false, 0};
     std::shared_lock lock(data_mtx_);
     auto it = rows_.find(id);
     return (it == rows_.end()) ? std::pair{false, 0} : std::pair{true, it->second.ts_us};

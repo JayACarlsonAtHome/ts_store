@@ -1,25 +1,18 @@
- // ts_store_001/test_001.cpp —
-
+// ts_store_001/test_001_XS.cpp —
 #include "../ts_store_headers/ts_store.hpp"
 #include <iostream>
-
 using namespace jac::ts_store::inline_v001;
-using LogStore = ts_store<
-    fixed_string<96>,
-    fixed_string<12>,
-    fixed_string<24>,
-    96, 12, 24,
-    false                   // UseTimestamps or not if false
->;
+
+using LogConfig = ts_store_config<96, 12, 24, false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=false
+using LogxStore = ts_store<LogConfig>;
 
 int main() {
     constexpr uint32_t threads = 5;
-    constexpr uint32_t events  = 3;
+    constexpr uint32_t events = 3;
     std::cout << "=== ts_store — TDD DEMO ===\n\n";
     std::cout << "PRODUCTION SIMULATION (full test verification)\n";
-
-    LogStore prod(threads, events);
-    prod.test_run();  //Test Run sets Debug == True
+    LogxStore prod(threads, events);
+    prod.test_run(); //Test Run sets Debug == True
     if (!prod.verify_integrity()) {
         std::cerr << "PRODUCTION SIMULATION FAILED — structural corruption\n";
         prod.diagnose_failures();
