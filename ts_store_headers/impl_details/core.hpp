@@ -54,7 +54,6 @@ save_event(unsigned int thread_id,
     row.thread_id = thread_id;
     row.is_debug  = debug;
 
-    // — VALUE: kind, safe, perfect —
     std::string_view sv = value;
     if (sv.empty()) {
         sv = "Payload not provided";
@@ -64,7 +63,6 @@ save_event(unsigned int thread_id,
     }
     row.value_storage.copy_from(sv);
 
-    // — TYPE & CATEGORY: safe, clean, perfect —
     auto copy_string = [&](auto& storage, auto&& src, size_t max_size, const char* fallback = "UNKNOWN") {
         std::string_view s = src;
         if (s.empty()) s = fallback;
