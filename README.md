@@ -31,6 +31,7 @@ All 10 stress tests pass 100% on g++ 15.1.1 (RHEL 9/10)
 *Not Measured -- bulk validation of payload timing at end of test.
 *Note 1: The simplification of code came at a 5% reduction in ops/sec, but I feel it is worth it.*
 *Note 2: I plan to get the speed back later.*
+*Note 3: Test only run on GCC G++ version 15.1.1, no tests on LLVM\Clang or ZIG Build of LLVM C++ on this run."
 
 ### Planned Features
 - Double-buffered disk persistence
