@@ -72,8 +72,8 @@ int main() {
 #endif
 
     std::cout << std::format("╔════════════════════════════════════════════════╗\n"
-                                    "║ All {:06} entries passed verification!         "
-                                    "║\n"
+                                    "║ All {:06} entries passed verification!  "
+                                    "      ║\n"
                                     "╚════════════════════════════════════════════════╝\n",   total_entries);
     return 0;
 }
