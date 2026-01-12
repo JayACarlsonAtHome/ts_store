@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace jac::ts_store::inline_v001;
 
-using LogConfig = ts_store_config<96, 12, 24, true>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogConfig = ts_store_config<true>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
 using LogxStore = ts_store<LogConfig>;
 
 int main() {

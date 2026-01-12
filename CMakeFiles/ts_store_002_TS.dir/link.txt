@@ -1,0 +1,1 @@
+/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/zig  c++ -O3 -DNDEBUG -flto=auto -fno-sanitize=undefined -fno-sanitize=all -flto CMakeFiles/ts_store_002_TS.dir/ts_store_002/test_002_TS.cpp.o CMakeFiles/ts_store_002_TS.dir/fmt/src/format.cc.o CMakeFiles/ts_store_002_TS.dir/fmt/src/os.cc.o -o ts_store_002_TS 

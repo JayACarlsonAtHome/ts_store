@@ -15,12 +15,20 @@ using namespace std::chrono;
 
 constexpr uint32_t THREADS           = 250;
 constexpr uint32_t EVENTS_PER_THREAD = 4000;
-constexpr uint64_t TOTAL             = uint64_t(THREADS) * EVENTS_PER_THREAD;
+//constexpr uint64_t TOTAL           = uint64_t(THREADS) * EVENTS_PER_THREAD;
 constexpr int      RUNS              = 50;
 
-
-using LogConfig = ts_store_config<100, 16, 32, true>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogConfig = ts_store_config<true>;
 using LogxStore = ts_store<LogConfig>;
+
+constexpr std::array<std::string_view, 5> event_messages = {
+    "[INFO]  Processing request",
+    "[WARN]  Resource usage high",
+    "[ERROR] Connection failed",
+    "[INFO]  Cache hit ratio 98%",
+    "[DEBUG] Thread pool active"
+};
+
 
 int run_single_test(LogxStore& store)
 {
@@ -32,7 +40,10 @@ int run_single_test(LogxStore& store)
     for (uint32_t t = 0; t < THREADS; ++t) {
         threads.emplace_back([&, t]() {
             for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
-                auto payload = store.make_test_payload(t, i);
+
+                std::string_view extra = event_messages[t % event_messages.size()];
+                std::string payload = store.generateTestPayload(t, i, extra);
+
                 auto [ok, id] = store.save_event(t, payload, "MASSIVE", "FINAL");
                 if (!ok) {
                     std::cerr << "CLAIM FAILED — thread " << t << " event " << i << "\n";

@@ -1,19 +1,14 @@
 // ts_store/ts_store_headers/ts_store.hpp
 // FINAL v15 — PERFECT, COMPLETE, BEAUTIFUL, UNBREAKABLE
-// C++20 — GCC 15 — fmt 12 — December 2025
+// C++20 — GCC 15 — December 2025
 #pragma once
-#undef _GLIBCXX_VISIBILITY
-#define _GLIBCXX_VISIBILITY(...)
-// FMT FIRST — GCC 15 FIX — CORRECT PATH
-#include "../../fmt/include/fmt/core.h"
-#include "../../fmt/include/fmt/format.h"
-#include "../../fmt/include/fmt/color.h"
+
 #include <thread>
 #include <mutex>
 #include <shared_mutex>
 #include <atomic>
 #include <chrono>
-#include <concepts>
+#include <format>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -21,48 +16,41 @@
 #include <vector>
 #include <cstring>
 #include <iomanip>
+#include <iostream>
 #include <cmath> // for std::log10
 #include <sys/sysinfo.h>
-#include "./fixed_string.hpp"
 #include "ts_store_config.hpp"
 #include "../GTL/include/gtl/phmap.hpp"
-#include "impl_details/memory_guard.hpp"
 namespace jac::ts_store::inline_v001 {
 // ——————————————————————— CONCEPTS ———————————————————————
-template<typename T>
-concept StringLike = requires(T t) {
-    { std::string_view(t) } -> std::convertible_to<std::string_view>;
-};
-template<typename T>
-concept TriviallyCopyableStringLike = std::is_trivially_copyable_v<T> && StringLike<T>;
-// ——————————————————————— ts_store ———————————————————————
-template <typename Config>
-    requires StringLike<typename Config::ValueT> && StringLike<typename Config::TypeT> && StringLike<typename Config::CategoryT>
+template<typename Config>
 class ts_store
 {
 private:
     struct row_data {
         unsigned int thread_id{0};
         bool is_debug{false};
-        [[no_unique_address]]
-        std::conditional_t<std::is_same_v<typename Config::TypeT, std::string_view>,
-            std::array<char, Config::type_size>, typename Config::TypeT> type_storage{};
-        [[no_unique_address]]
-        std::conditional_t<std::is_same_v<typename Config::CategoryT, std::string_view>,
-            std::array<char, Config::category_size>, typename Config::CategoryT> category_storage{};
-        [[no_unique_address]]
-        std::conditional_t<TriviallyCopyableStringLike<typename Config::ValueT>,
-            typename Config::ValueT, std::array<char, Config::buffer_size>> value_storage{};
+        std::string type_storage;
+        std::string category_storage;
+        std::string value_storage;
         std::conditional_t<Config::use_timestamps, uint64_t, std::monostate> ts_us{};
     };
+
     const uint32_t max_threads_;
     const uint32_t events_per_thread_;
 public:
     // ——— GETTERS ———
     constexpr uint32_t get_max_threads() const noexcept { return max_threads_; }
     // Perfect thread ID width — mathematically exact, zero-cost
-    uint32_t thread_id_width() const noexcept {
+      uint32_t thread_id_width() const noexcept {
         const uint32_t n = get_max_threads();
+        if (n == 0) return 1;
+        return static_cast<uint32_t>(std::log10(static_cast<double>(n - 1))) + 2;
+    }
+
+    constexpr uint32_t get_max_events() const noexcept { return events_per_thread_; }
+    uint32_t events_id_width() const noexcept {
+        const uint32_t n = get_max_events();
         if (n == 0) return 1;
         return static_cast<uint32_t>(std::log10(static_cast<double>(n - 1))) + 2;
     }
@@ -86,9 +74,6 @@ public:
             if (auto cur = s_epoch_base.load(std::memory_order_relaxed); cur == min_time)
                 s_epoch_base.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
         }
-        static const memory_guard<typename Config::ValueT, typename Config::TypeT, typename Config::CategoryT, Config::buffer_size, Config::type_size, Config::category_size, Config::use_timestamps>
-            guard(max_threads_, events_per_thread_);
-        (void)guard;
     }
 private:
     static inline std::atomic<std::chrono::steady_clock::time_point> s_epoch_base{
@@ -106,7 +91,6 @@ public:
 #include "impl_details/sorting.hpp"
 #include "impl_details/press_to_cont.hpp"
 #include "impl_details/verify_checks.hpp"
-#include "impl_details/unicode.hpp"
 #include "impl_details/diagnostic.hpp"
 };
 }; // namespace jac::ts_store::inline_v001

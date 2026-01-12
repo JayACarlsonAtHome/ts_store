@@ -2,6 +2,7 @@
 // Optional advanced sorting — safe to include or exclude
 
 #pragma once
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <cstring>

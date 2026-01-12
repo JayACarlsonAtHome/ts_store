@@ -1,51 +1,21 @@
 // ts_store/ts_store_headers/impl_details/core.hpp
-// FINAL — 100% CORRECT, CLEAN, COMPILING — December 2025
+// Updated for dynamic std::string storage (no fixed buffers, no copy_from, no size limits)
 
 #pragma once
 
-#include "../../fmt/include/fmt/core.h"
-#include "../../fmt/include/fmt/color.h"
+#include <string>
+#include <string_view>
+#include <chrono>
+#include <memory>  // for unique_lock/shared_lock if needed elsewhere
 
 // NO namespace — this file is included inside ts_store class
 
-
-inline std::string_view make_test_payload(int thread_id, int event_index) noexcept {
-    thread_local static char tl_buf[Config::buffer_size + 1]{};
-
-    char* pos = tl_buf;
-
-    constexpr const char prefix[] = "Test-Event: T=";
-    std::memcpy(pos, prefix, sizeof(prefix) - 1);
-    pos += sizeof(prefix) - 1;
-
-    pos = itoa(pos, thread_id);
-    constexpr const char worker_prefix[] = " Worker=";
-    std::memcpy(pos, worker_prefix, sizeof(worker_prefix) - 1);
-    pos += sizeof(worker_prefix) - 1;
-
-    pos = itoa(pos, event_index);
-    *pos++ = ' ';
-
-    // Exact padding to BufferSize - 1
-    const size_t used = static_cast<size_t>(pos - tl_buf);
-    const size_t pad_len = (used < Config::buffer_size - 1) ? Config::buffer_size - used - 1 : 0;
-    std::memset(pos, '.', pad_len);
-    pos += pad_len;
-
-    *pos = '\0';
-
-
-    return {tl_buf, static_cast<size_t>(pos - tl_buf)};
-}
-// Main save_event definition (out-of-class, fully qualified with all template parameters)
-//template<typename V = ValueT, typename T = TypeT, typename C = CategoryT>
-//    requires StringLike<V> && StringLike<T> && StringLike<C>
 inline std::pair<bool, std::uint64_t>
 save_event(unsigned int thread_id,
-                     Config::ValueT&& value,
-                     Config::TypeT&& type,
-                     Config::CategoryT&& category,
-                     bool debug = false)
+           Config::ValueT&& value,
+           Config::TypeT&& type,
+           Config::CategoryT&& category,
+           bool debug = false)
 {
     std::unique_lock lock(data_mtx_);
     const std::uint64_t id = next_id_.fetch_add(1, std::memory_order_relaxed);
@@ -54,24 +24,21 @@ save_event(unsigned int thread_id,
     row.thread_id = thread_id;
     row.is_debug  = debug;
 
-    std::string_view sv = value;
-    if (sv.empty()) {
-        sv = "Payload not provided";
+    // Direct move/assignment — std::string handles everything dynamically
+    row.value_storage = std::forward<typename Config::ValueT>(value);
+    if (row.value_storage.empty()) {
+        row.value_storage = "Payload not provided";
     }
-    if (sv.size() + 1 > Config::buffer_size) {
-        sv = sv.substr(0, Config::buffer_size - 1);
+
+    row.type_storage = std::forward<typename Config::TypeT>(type);
+    if (row.type_storage.empty()) {
+        row.type_storage = "UNKNOWN";
     }
-    row.value_storage.copy_from(sv);
 
-    auto copy_string = [&](auto& storage, auto&& src, size_t max_size, const char* fallback = "UNKNOWN") {
-        std::string_view s = src;
-        if (s.empty()) s = fallback;
-        if (s.size() + 1 > max_size) s = s.substr(0, max_size - 1);
-        storage.copy_from(s);
-    };
-
-    copy_string(row.type_storage,     std::forward<typename Config::TypeT>(type),         Config::type_size);
-    copy_string(row.category_storage, std::forward<typename Config::CategoryT>(category), Config::category_size);
+    row.category_storage = std::forward<typename Config::CategoryT>(category);
+    if (row.category_storage.empty()) {
+        row.category_storage = "UNKNOWN";
+    }
 
     // — TIMESTAMP —
     if constexpr (Config::use_timestamps) {
@@ -79,10 +46,11 @@ save_event(unsigned int thread_id,
         auto base = s_epoch_base.load(std::memory_order_relaxed);
         if (base == std::chrono::steady_clock::time_point::min()) {
             auto expected = std::chrono::steady_clock::time_point::min();
-            if (s_epoch_base.compare_exchange_strong(expected, now))
+            if (s_epoch_base.compare_exchange_strong(expected, now)) {
                 base = now;
-            else
+            } else {
                 base = s_epoch_base.load(std::memory_order_relaxed);
+            }
         }
         row.ts_us = std::chrono::duration_cast<std::chrono::microseconds>(now - base).count();
     }
@@ -91,53 +59,76 @@ save_event(unsigned int thread_id,
     return {true, id};
 }
 
-// Legacy overloads
+// Legacy overloads (converted to std::string)
 inline std::pair<bool, std::uint64_t>
-save_event(unsigned int thread_id, std::string_view payload, std::string_view type, std::string_view category, bool debug = false)
+save_event(unsigned int thread_id,
+           std::string_view payload,
+           std::string_view type,
+           std::string_view category,
+           bool debug = false)
 {
-    return save_event(thread_id, typename Config::ValueT(payload), typename Config::TypeT(type), typename Config::CategoryT(category), debug);
+    return save_event(thread_id,
+                      std::string(payload),
+                      std::string(type),
+                      std::string(category),
+                      debug);
 }
 
 inline std::pair<bool, std::uint64_t>
-save_event(unsigned int thread_id, std::string_view payload, const char* type, const char* category, bool debug = false)
+save_event(unsigned int thread_id,
+           std::string_view payload,
+           const char* type,
+           const char* category,
+           bool debug = false)
 {
-    return save_event(thread_id, payload, std::string_view(type ? type : "UNKNOWN"), std::string_view(category ? category : "UNKNOWN"), debug);
+    return save_event(thread_id,
+                      payload,
+                      type ? std::string_view(type) : std::string_view("UNKNOWN"),
+                      category ? std::string_view(category) : std::string_view("UNKNOWN"),
+                      debug);
 }
 
 inline std::pair<bool, std::uint64_t>
-save_event(unsigned int thread_id, int index, bool debug = false)
+save_event(unsigned int thread_id,
+           std::string_view payload,
+           bool debug = false)
 {
-    return save_event(thread_id, make_test_payload(thread_id, index), "TEST", "EVENT", debug);
+    return save_event(thread_id, payload, std::string_view("DATA"), std::string_view("UNKNOWN"), debug);
 }
 
-inline std::pair<bool, std::uint64_t>
-save_event(unsigned int thread_id, std::string_view payload, bool debug = false)
+// select() — returns string_view into stored std::string
+inline auto select(std::uint64_t id) const
 {
-    return save_event(thread_id, payload, "DATA", "UNKNOWN", debug);
-}
-
-// select() — FINAL, CLEAN
-inline auto select(std::uint64_t id) const {
     std::shared_lock lock(data_mtx_);
     auto it = rows_.find(id);
-    if (it == rows_.end())
+    if (it == rows_.end()) {
         return std::pair<bool, std::string_view>{false, {}};
-    return std::pair{true, it->second.value_storage.view()};
+    }
+    return std::pair{true, std::string_view(it->second.value_storage)};
 }
 
 // get_all_ids
-inline std::vector<std::uint64_t> get_all_ids() const {
+inline std::vector<std::uint64_t> get_all_ids() const
+{
     std::shared_lock lock(data_mtx_);
     std::vector<std::uint64_t> ids;
     ids.reserve(rows_.size());
-    for (const auto& p : rows_) ids.push_back(p.first);
+    for (const auto& p : rows_) {
+        ids.push_back(p.first);
+    }
     return ids;
 }
 
 // get_timestamp_us
-inline std::pair<bool, uint64_t> get_timestamp_us(std::uint64_t id) const {
-    if constexpr (!Config::UseTimestamps) return {false, 0};
+inline std::pair<bool, uint64_t> get_timestamp_us(std::uint64_t id) const
+{
+    if constexpr (!Config::use_timestamps) {
+        return {false, 0};
+    }
     std::shared_lock lock(data_mtx_);
     auto it = rows_.find(id);
-    return (it == rows_.end()) ? std::pair{false, 0} : std::pair{true, it->second.ts_us};
+    if (it == rows_.end()) {
+        return {false, 0};
+    }
+    return {true, it->second.ts_us};
 }

@@ -1,17 +1,24 @@
 // ts_store/ts_store_headers/impl_details/printing.hpp
-// v5 — Fully compatible with typed ValueT/TypeT/CategoryT
+// Updated for std::string-based storage (dynamic allocation)
+// Simplified column widths, direct std::string_view access
 
 #pragma once
+
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <string_view>
 #include <algorithm>
-#include <cstring>
+#include <vector>
+#include <cstdint>
+#include <limits>
 
 inline void print(std::ostream& os = std::cout,
-                  [[maybe_unused]] int sort_mode = 0,
                   size_t max_rows = 10'000) const
 {
+    if (max_rows == 0) {
+        max_rows = std::numeric_limits<size_t>::max();
+    }
     std::shared_lock lock(data_mtx_);
 
     std::vector<std::uint64_t> ids;
@@ -19,12 +26,12 @@ inline void print(std::ostream& os = std::cout,
     for (const auto& [id, _] : rows_)
         ids.push_back(id);
 
-    std::sort(ids.begin(), ids.end());  // chronological
+    std::sort(ids.begin(), ids.end());  // chronological order by ID
 
     const size_t total = ids.size();
 
     if (total == 0) {
-        os << "ts_store<...> is empty.\n\n";
+        os << "ts_store is empty.\n\n";
         return;
     }
 
@@ -33,17 +40,17 @@ inline void print(std::ostream& os = std::cout,
     constexpr int W_THREAD   = 10;
     constexpr int PAD        = 2;
 
-    // Dynamic widths based on actual storage
-    constexpr int W_TYPE = std::max<int>(Config::type_size + 4, 20);
-    constexpr int W_CAT  = std::max<int>(Config::category_size + 4, 20);
-    constexpr int W_PAYLOAD = Config::buffer_size > 1024 ? 1024 : Config::buffer_size;
+    // Fixed widths suitable for std::string (dynamic) usage
+    constexpr int W_TYPE     = 10;
+    constexpr int W_CAT      = 10;
+    constexpr int W_PAYLOAD = 120;
 
     const int total_width = W_ID + PAD + W_TIME + PAD + W_TYPE + PAD + W_CAT + PAD + W_THREAD + PAD + W_PAYLOAD + 10;
 
-    os << "ts_store < \n"
+    os << "ts_store <\n"
        << "   Threads    = " << max_threads_ << "\n"
        << "   Events     = " << events_per_thread_ << "\n"
-       << "   ValueT     = " << (TriviallyCopyableStringLike<typename Config::ValueT> ? "Trivially Copyable String" : "Character Buffer") << "\n"
+       << "   ValueT     = std::string (dynamic allocation)\n"
        << "   Time Stamp = " << (Config::use_timestamps ? "On" : "Off") << ">\n";
     os << std::string(total_width, '=') << "\n";
 
@@ -65,44 +72,32 @@ inline void print(std::ostream& os = std::cout,
         const auto& r = it->second;
 
         std::string ts_str = "-";                                     // default when no timestamp
-        if constexpr (Config::use_timestamps) {                                // <-- compile-time check
-            if (r.ts_us != 0) ts_str = std::to_string(r.ts_us);       // only if actually set
+        if constexpr (Config::use_timestamps) {
+            if (r.ts_us != 0) ts_str = std::to_string(r.ts_us);
         }
 
-        // Extract type/category as string_view
-        std::string_view type_sv = [&]() -> std::string_view {
-            if constexpr (std::is_same_v<typename Config::TypeT, std::string_view>) {
-                return std::string_view(r.type_storage.data());
-            } else {
-                return std::string_view(r.type_storage);
-            }
-        }();
-
-        std::string_view cat_sv = [&]() -> std::string_view {
-            if constexpr (std::is_same_v<typename Config::CategoryT, std::string_view>) {
-                return std::string_view(r.category_storage.data());
-            } else {
-                return std::string_view(r.category_storage);
-            }
-        }();
-
-        std::string_view payload_sv = [&]() -> std::string_view {
-            if constexpr (TriviallyCopyableStringLike<typename Config::ValueT>) {
-                return std::string_view(r.value_storage);
-            } else {
-                return std::string_view(r.value_storage.data());
-            }
-        }();
+        std::string_view type_sv    = r.type_storage;
+        std::string_view cat_sv     = r.category_storage;
+        std::string_view payload_sv = r.value_storage;
 
         os << std::left
            << std::setw(W_ID)     << id
            << std::setw(W_TIME)   << ts_str
            << std::setw(W_TYPE)   << type_sv
            << std::setw(W_CAT)    << cat_sv
+           << "   "
+           << std::right
            << std::setw(W_THREAD) << r.thread_id
+           << std::left
+           << "   "
            << payload_sv.substr(0, W_PAYLOAD) << "\n";
     }
 
     os << std::string(total_width, '=') << "\n";
-    os << "Total entries: " << total << " (expected: " << expected_size() << ")\n\n";
+    if (max_rows == 0) {
+        os << "Output Truncated to " << max_rows << ".\n";
+    }
+    os << "Note: Output is zero indexed, so it is expected that last entry is " << expected_size()-1 << ".\n";
+    os << "Total entries: " << total << " (expected: " << expected_size() << ")\n";
+    os << std::endl;
 }

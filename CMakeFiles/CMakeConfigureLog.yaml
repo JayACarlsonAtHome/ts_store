@@ -1,0 +1,223 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake:204 (message)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      The system is: Linux - 5.14.0-611.16.1.el9_7.x86_64 - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/zig c++
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is Clang, found in:
+        /home/jay/git/ts_store/CMakeFiles/3.26.5/CompilerIdCXX/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "/usr/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI"
+      binary: "/home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: /home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI
+        
+        Run Build Command(s):/usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_5fadf/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_5fadf.dir/build.make CMakeFiles/cmTC_5fadf.dir/build
+        gmake[1]: Entering directory '/home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI'
+        Building CXX object CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o
+        /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/zig  c++   -v -MD -MT CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        clang version 21.1.0 (https://codeberg.org/ziglang/zig-bootstrap.git 11ba677d7ea5c8abfa7bf6ec6f7b98edec5bd518)
+        Target: x86_64-unknown-linux5.10.0-gnu2.35.0
+        Thread model: posix
+        InstalledDir: /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c
+        Found candidate GCC installation: /usr/lib/gcc/x86_64-redhat-linux/11
+        Selected GCC installation: /usr/lib/gcc/x86_64-redhat-linux/11
+        Candidate multilib: .;@m64
+        Candidate multilib: 32;@m32
+        Selected multilib: .;@m64
+         (in-process)
+         "/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/zig" -cc1 -triple x86_64-unknown-linux5.10.0-gnu2.35.0 -O0 -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -fhalf-no-semantic-interposition -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -gdwarf32 -fdebug-compilation-dir=/home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI -v -fcoverage-compilation-dir=/home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI -nostdsysteminc -nobuiltininc -resource-dir /home/jay/Tools/lib/clang/21 -dependency-file CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isystem /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxx/include -isystem /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxxabi/include -isystem /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/include -isystem /usr/include -isystem /usr/local/include -isystem /usr/include/x86_64-linux-gnu -isystem /usr/include -isystem /home/jay/Tools/llvm-full_release_22_0_0/include -isystem /home/jay/Tools/llvm-21_1_0/include -isystem /home/jay/Tools/llvm-full_release_22_0_0/include -isystem /home/jay/Tools/llvm-21_1_0/include -isystem /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libunwind/include -D __GLIBC_MINOR__=35 -D _LIBCPP_ABI_VERSION=1 -D _LIBCPP_ABI_NAMESPACE=__1 -D _LIBCPP_HAS_THREADS=1 -D _LIBCPP_HAS_MONOTONIC_CLOCK -D _LIBCPP_HAS_TERMINAL -D _LIBCPP_HAS_MUSL_LIBC=0 -D _LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS -D _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D _LIBCPP_HAS_VENDOR_AVAILABILITY_ANNOTATIONS=0 -D _LIBCPP_HAS_FILESYSTEM=1 -D _LIBCPP_HAS_RANDOM_DEVICE -D _LIBCPP_HAS_LOCALIZATION -D _LIBCPP_HAS_UNICODE -D _LIBCPP_HAS_WIDE_CHARACTERS -D _LIBCPP_HAS_NO_STD_MODULES -D _LIBCPP_HAS_TIME_ZONE_DATABASE -D _LIBCPP_PSTL_BACKEND_SERIAL -D _LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_NONE -c-isystem /home/jay/Tools/llvm-full_release_22_0_0/include -c-isystem /home/jay/Tools/llvm-21_1_0/include -c-isystem . -cxx-isystem /home/jay/Tools/llvm-full_release_22_0_0/include -cxx-isystem /home/jay/Tools/llvm-21_1_0/include -cxx-isystem . -fdeprecated-macro -ferror-limit 19 -stack-protector 2 -stack-protector-buffer-size 4 -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fno-spell-checking -target-cpu arrowlake-s -target-feature -16bit-mode -target-feature -32bit-mode -target-feature +64bit -target-feature +adx -target-feature +aes -target-feature +allow-light-256-bit -target-feature -amx-avx512 -target-feature -amx-bf16 -target-feature -amx-complex -target-feature -amx-fp16 -target-feature -amx-fp8 -target-feature -amx-int8 -target-feature -amx-movrs -target-feature -amx-tf32 -target-feature -amx-tile -target-feature -amx-transpose -target-feature +avx -target-feature -avx10.1-512 -target-feature -avx10.2-512 -target-feature +avx2 -target-feature -avx512bf16 -target-feature -avx512bitalg -target-feature -avx512bw -target-feature -avx512cd -target-feature -avx512dq -target-feature -avx512f -target-feature -avx512fp16 -target-feature -avx512ifma -target-feature -avx512vbmi -target-feature -avx512vbmi2 -target-feature -avx512vl -target-feature -avx512vnni -target-feature -avx512vp2intersect -target-feature -avx512vpopcntdq -target-feature +avxifma -target-feature +avxneconvert -target-feature +avxvnni -target-feature +avxvnniint16 -target-feature +avxvnniint8 -target-feature +bmi -target-feature +bmi2 -target-feature -branch-hint -target-feature -branchfusion -target-feature -ccmp -target-feature -cf -target-feature -cldemote -target-feature +clflushopt -target-feature +clwb -target-feature -clzero -target-feature +cmov -target-feature +cmpccxadd -target-feature +crc32 -target-feature +cx16 -target-feature +cx8 -target-feature -egpr -target-feature -enqcmd -target-feature -ermsb -target-feature -evex512 -target-feature +f16c -target-feature -false-deps-getmant -target-feature -false-deps-lzcnt-tzcnt -target-feature -false-deps-mulc -target-feature -false-deps-mullq -target-feature +false-deps-perm -target-feature +false-deps-popcnt -target-feature -false-deps-range -target-feature -fast-11bytenop -target-feature +fast-15bytenop -target-feature -fast-7bytenop -target-feature -fast-bextr -target-feature -fast-dpwssd -target-feature +fast-gather -target-feature -fast-hops -target-feature -fast-imm16 -target-feature -fast-lzcnt -target-feature -fast-movbe -target-feature +fast-scalar-fsqrt -target-feature -fast-scalar-shift-masks -target-feature +fast-shld-rotate -target-feature +fast-variable-crosslane-shuffle -target-feature +fast-variable-perlane-shuffle -target-feature +fast-vector-fsqrt -target-feature -fast-vector-shift-masks -target-feature -faster-shift-than-shuffle -target-feature +fma -target-feature -fma4 -target-feature +fsgsbase -target-feature -fsrm -target-feature +fxsr -target-feature +gfni -target-feature -harden-sls-ijmp -target-feature -harden-sls-ret -target-feature +hreset -target-feature -idivl-to-divb -target-feature +idivq-to-divl -target-feature -inline-asm-use-gpr32 -target-feature +invpcid -target-feature -kl -target-feature -lea-sp -target-feature -lea-uses-ag -target-feature -lvi-cfi -target-feature -lvi-load-hardening -target-feature -lwp -target-feature +lzcnt -target-feature +macrofusion -target-feature +mmx -target-feature +movbe -target-feature +movdir64b -target-feature +movdiri -target-feature -movrs -target-feature -mwaitx -target-feature -ndd -target-feature -nf -target-feature -no-bypass-delay -target-feature +no-bypass-delay-blend -target-feature +no-bypass-delay-mov -target-feature +no-bypass-delay-shuffle -target-feature +nopl -target-feature -pad-short-functions -target-feature +pclmul -target-feature +pconfig -target-feature +pku -target-feature +popcnt -target-feature -ppx -target-feature -prefer-128-bit -target-feature -prefer-256-bit -target-feature -prefer-mask-registers -target-feature +prefer-movmsk-over-vtest -target-feature -prefer-no-gather -target-feature -prefer-no-scatter -target-feature -prefetchi -target-feature +prfchw -target-feature +ptwrite -target-feature -push2pop2 -target-feature -raoint -target-feature +rdpid -target-feature -rdpru -target-feature +rdrnd -target-feature +rdseed -target-feature -retpoline -target-feature -retpoline-external-thunk -target-feature -retpoline-indirect-branches -target-feature -retpoline-indirect-calls -target-feature -rtm -target-feature +sahf -target-feature -sbb-dep-breaking -target-feature +serialize -target-feature -seses -target-feature -sgx -target-feature +sha -target-feature +sha512 -target-feature +shstk -target-feature +slow-3ops-lea -target-feature -slow-incdec -target-feature -slow-lea -target-feature -slow-pmaddwd -target-feature -slow-pmulld -target-feature -slow-shld -target-feature -slow-two-mem-ops -target-feature -slow-unaligned-mem-16 -target-feature -slow-unaligned-mem-32 -target-feature +sm3 -target-feature +sm4 -target-feature +sse -target-feature +sse2 -target-feature +sse3 -target-feature +sse4.1 -target-feature +sse4.2 -target-feature -sse4a -target-feature -sse-unaligned-mem -target-feature +ssse3 -target-feature -tagged-globals -target-feature -tbm -target-feature -tsxldtrk -target-feature +tuning-fast-imm-vector-shift -target-feature +uintr -target-feature -use-glm-div-sqrt-costs -target-feature -use-slm-arith-costs -target-feature -usermsr -target-feature +vaes -target-feature +vpclmulqdq -target-feature +vzeroupper -target-feature +waitpkg -target-feature +wbnoinvd -target-feature -widekl -target-feature +x87 -target-feature -xop -target-feature +xsave -target-feature +xsavec -target-feature +xsaveopt -target-feature +xsaves -target-feature -zu -fsanitize=alignment,array-bounds,bool,builtin,enum,float-cast-overflow,integer-divide-by-zero,nonnull-attribute,null,pointer-overflow,return,returns-nonnull-attribute,shift-base,shift-exponent,signed-integer-overflow,unreachable,vla-bound -fsanitize-recover=alignment,array-bounds,bool,builtin,enum,float-cast-overflow,integer-divide-by-zero,nonnull-attribute,null,pointer-overflow,returns-nonnull-attribute,shift-base,shift-exponent,signed-integer-overflow,vla-bound -fsanitize-merge=alignment,array-bounds,bool,builtin,enum,float-cast-overflow,integer-divide-by-zero,nonnull-attribute,null,pointer-overflow,return,returns-nonnull-attribute,shift-base,shift-exponent,signed-integer-overflow,unreachable,vla-bound -fno-sanitize-memory-param-retval -fno-sanitize-address-use-odr-indicator -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        clang -cc1 version 21.1.0 based upon LLVM 21.1.0 default target x86_64-linux-musl
+        ignoring nonexistent directory "/usr/include/x86_64-linux-gnu"
+        ignoring nonexistent directory "/home/jay/Tools/llvm-21_1_0/include"
+        ignoring nonexistent directory "/home/jay/Tools/llvm-21_1_0/include"
+        ignoring nonexistent directory "/home/jay/Tools/llvm-21_1_0/include"
+        ignoring nonexistent directory "/home/jay/Tools/llvm-21_1_0/include"
+        ignoring duplicate directory "/usr/include"
+        ignoring duplicate directory "/home/jay/Tools/llvm-full_release_22_0_0/include"
+        ignoring duplicate directory "/home/jay/Tools/llvm-full_release_22_0_0/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxx/include
+         /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxxabi/include
+         /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/include
+         /usr/include
+         /usr/local/include
+         /home/jay/Tools/llvm-full_release_22_0_0/include
+         /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libunwind/include
+         .
+        End of search list.
+        Linking CXX executable cmTC_5fadf
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5fadf.dir/link.txt --verbose=1
+        /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/zig  c++  -v CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_5fadf 
+        ld.lld --error-limit=0 -mllvm -float-abi=hard --entry _start -z stack-size=16777216 --build-id=none --image-base=16777216 --eh-frame-hdr -znow -m elf_x86_64 -o cmTC_5fadf /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crti.o -L /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64 --dynamic-linker /lib64/ld-linux-x86-64.so.2 CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o /home/jay/.cache/zig/o/5adc0274de0e107be8107335e36048b0/libubsan_rt.a --as-needed /home/jay/.cache/zig/o/1b01eb88a29fe8f4cc41f7a9d502c67c/libc++abi.a /home/jay/.cache/zig/o/66dfe1bb0e7ef7fe86b2be531e181c07/libc++.a /home/jay/.cache/zig/o/17fbd7d38963a0fe84d93d9e8fefb422/libunwind.a -lm -lpthread -lc -ldl -lrt -lutil /home/jay/.cache/zig/o/ccc7e21851801f1834013fe676a0d706/libcompiler_rt.a /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crtn.o
+        gmake[1]: Leaving directory '/home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:127 (message)"
+      - "/usr/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Parsed CXX implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxx/include]
+          add: [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxxabi/include]
+          add: [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/include]
+          add: [/usr/include]
+          add: [/usr/local/include]
+          add: [/home/jay/Tools/llvm-full_release_22_0_0/include]
+          add: [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libunwind/include]
+          add: [.]
+        end of search list found
+        collapse include dir [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxx/include] ==> [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxx/include]
+        collapse include dir [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxxabi/include] ==> [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxxabi/include]
+        collapse include dir [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/include] ==> [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/include]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/home/jay/Tools/llvm-full_release_22_0_0/include] ==> [/home/jay/Tools/llvm-full_release_22_0_0/include]
+        collapse include dir [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libunwind/include] ==> [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libunwind/include]
+        skipping relative include dir [.]
+        implicit include dirs: [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxx/include;/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxxabi/include;/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/include;/usr/include;/usr/local/include;/home/jay/Tools/llvm-full_release_22_0_0/include;/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libunwind/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:152 (message)"
+      - "/usr/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld\\.lld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        ignore line: [Change Dir: /home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI]
+        ignore line: []
+        ignore line: [Run Build Command(s):/usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_5fadf/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_5fadf.dir/build.make CMakeFiles/cmTC_5fadf.dir/build]
+        ignore line: [gmake[1]: Entering directory '/home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI']
+        ignore line: [Building CXX object CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/zig  c++   -v -MD -MT CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [clang version 21.1.0 (https://codeberg.org/ziglang/zig-bootstrap.git 11ba677d7ea5c8abfa7bf6ec6f7b98edec5bd518)]
+        ignore line: [Target: x86_64-unknown-linux5.10.0-gnu2.35.0]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c]
+        ignore line: [Found candidate GCC installation: /usr/lib/gcc/x86_64-redhat-linux/11]
+        ignore line: [Selected GCC installation: /usr/lib/gcc/x86_64-redhat-linux/11]
+        ignore line: [Candidate multilib: .]
+        ignore line: [@m64]
+        ignore line: [Candidate multilib: 32]
+        ignore line: [@m32]
+        ignore line: [Selected multilib: .]
+        ignore line: [@m64]
+        ignore line: [ (in-process)]
+        ignore line: [ "/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/zig" -cc1 -triple x86_64-unknown-linux5.10.0-gnu2.35.0 -O0 -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -fhalf-no-semantic-interposition -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -gdwarf32 -fdebug-compilation-dir=/home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI -v -fcoverage-compilation-dir=/home/jay/git/ts_store/CMakeFiles/CMakeScratch/TryCompile-0nD1dI -nostdsysteminc -nobuiltininc -resource-dir /home/jay/Tools/lib/clang/21 -dependency-file CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isystem /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxx/include -isystem /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxxabi/include -isystem /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/include -isystem /usr/include -isystem /usr/local/include -isystem /usr/include/x86_64-linux-gnu -isystem /usr/include -isystem /home/jay/Tools/llvm-full_release_22_0_0/include -isystem /home/jay/Tools/llvm-21_1_0/include -isystem /home/jay/Tools/llvm-full_release_22_0_0/include -isystem /home/jay/Tools/llvm-21_1_0/include -isystem /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libunwind/include -D __GLIBC_MINOR__=35 -D _LIBCPP_ABI_VERSION=1 -D _LIBCPP_ABI_NAMESPACE=__1 -D _LIBCPP_HAS_THREADS=1 -D _LIBCPP_HAS_MONOTONIC_CLOCK -D _LIBCPP_HAS_TERMINAL -D _LIBCPP_HAS_MUSL_LIBC=0 -D _LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS -D _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D _LIBCPP_HAS_VENDOR_AVAILABILITY_ANNOTATIONS=0 -D _LIBCPP_HAS_FILESYSTEM=1 -D _LIBCPP_HAS_RANDOM_DEVICE -D _LIBCPP_HAS_LOCALIZATION -D _LIBCPP_HAS_UNICODE -D _LIBCPP_HAS_WIDE_CHARACTERS -D _LIBCPP_HAS_NO_STD_MODULES -D _LIBCPP_HAS_TIME_ZONE_DATABASE -D _LIBCPP_PSTL_BACKEND_SERIAL -D _LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_NONE -c-isystem /home/jay/Tools/llvm-full_release_22_0_0/include -c-isystem /home/jay/Tools/llvm-21_1_0/include -c-isystem . -cxx-isystem /home/jay/Tools/llvm-full_release_22_0_0/include -cxx-isystem /home/jay/Tools/llvm-21_1_0/include -cxx-isystem . -fdeprecated-macro -ferror-limit 19 -stack-protector 2 -stack-protector-buffer-size 4 -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fno-spell-checking -target-cpu arrowlake-s -target-feature -16bit-mode -target-feature -32bit-mode -target-feature +64bit -target-feature +adx -target-feature +aes -target-feature +allow-light-256-bit -target-feature -amx-avx512 -target-feature -amx-bf16 -target-feature -amx-complex -target-feature -amx-fp16 -target-feature -amx-fp8 -target-feature -amx-int8 -target-feature -amx-movrs -target-feature -amx-tf32 -target-feature -amx-tile -target-feature -amx-transpose -target-feature +avx -target-feature -avx10.1-512 -target-feature -avx10.2-512 -target-feature +avx2 -target-feature -avx512bf16 -target-feature -avx512bitalg -target-feature -avx512bw -target-feature -avx512cd -target-feature -avx512dq -target-feature -avx512f -target-feature -avx512fp16 -target-feature -avx512ifma -target-feature -avx512vbmi -target-feature -avx512vbmi2 -target-feature -avx512vl -target-feature -avx512vnni -target-feature -avx512vp2intersect -target-feature -avx512vpopcntdq -target-feature +avxifma -target-feature +avxneconvert -target-feature +avxvnni -target-feature +avxvnniint16 -target-feature +avxvnniint8 -target-feature +bmi -target-feature +bmi2 -target-feature -branch-hint -target-feature -branchfusion -target-feature -ccmp -target-feature -cf -target-feature -cldemote -target-feature +clflushopt -target-feature +clwb -target-feature -clzero -target-feature +cmov -target-feature +cmpccxadd -target-feature +crc32 -target-feature +cx16 -target-feature +cx8 -target-feature -egpr -target-feature -enqcmd -target-feature -ermsb -target-feature -evex512 -target-feature +f16c -target-feature -false-deps-getmant -target-feature -false-deps-lzcnt-tzcnt -target-feature -false-deps-mulc -target-feature -false-deps-mullq -target-feature +false-deps-perm -target-feature +false-deps-popcnt -target-feature -false-deps-range -target-feature -fast-11bytenop -target-feature +fast-15bytenop -target-feature -fast-7bytenop -target-feature -fast-bextr -target-feature -fast-dpwssd -target-feature +fast-gather -target-feature -fast-hops -target-feature -fast-imm16 -target-feature -fast-lzcnt -target-feature -fast-movbe -target-feature +fast-scalar-fsqrt -target-feature -fast-scalar-shift-masks -target-feature +fast-shld-rotate -target-feature +fast-variable-crosslane-shuffle -target-feature +fast-variable-perlane-shuffle -target-feature +fast-vector-fsqrt -target-feature -fast-vector-shift-masks -target-feature -faster-shift-than-shuffle -target-feature +fma -target-feature -fma4 -target-feature +fsgsbase -target-feature -fsrm -target-feature +fxsr -target-feature +gfni -target-feature -harden-sls-ijmp -target-feature -harden-sls-ret -target-feature +hreset -target-feature -idivl-to-divb -target-feature +idivq-to-divl -target-feature -inline-asm-use-gpr32 -target-feature +invpcid -target-feature -kl -target-feature -lea-sp -target-feature -lea-uses-ag -target-feature -lvi-cfi -target-feature -lvi-load-hardening -target-feature -lwp -target-feature +lzcnt -target-feature +macrofusion -target-feature +mmx -target-feature +movbe -target-feature +movdir64b -target-feature +movdiri -target-feature -movrs -target-feature -mwaitx -target-feature -ndd -target-feature -nf -target-feature -no-bypass-delay -target-feature +no-bypass-delay-blend -target-feature +no-bypass-delay-mov -target-feature +no-bypass-delay-shuffle -target-feature +nopl -target-feature -pad-short-functions -target-feature +pclmul -target-feature +pconfig -target-feature +pku -target-feature +popcnt -target-feature -ppx -target-feature -prefer-128-bit -target-feature -prefer-256-bit -target-feature -prefer-mask-registers -target-feature +prefer-movmsk-over-vtest -target-feature -prefer-no-gather -target-feature -prefer-no-scatter -target-feature -prefetchi -target-feature +prfchw -target-feature +ptwrite -target-feature -push2pop2 -target-feature -raoint -target-feature +rdpid -target-feature -rdpru -target-feature +rdrnd -target-feature +rdseed -target-feature -retpoline -target-feature -retpoline-external-thunk -target-feature -retpoline-indirect-branches -target-feature -retpoline-indirect-calls -target-feature -rtm -target-feature +sahf -target-feature -sbb-dep-breaking -target-feature +serialize -target-feature -seses -target-feature -sgx -target-feature +sha -target-feature +sha512 -target-feature +shstk -target-feature +slow-3ops-lea -target-feature -slow-incdec -target-feature -slow-lea -target-feature -slow-pmaddwd -target-feature -slow-pmulld -target-feature -slow-shld -target-feature -slow-two-mem-ops -target-feature -slow-unaligned-mem-16 -target-feature -slow-unaligned-mem-32 -target-feature +sm3 -target-feature +sm4 -target-feature +sse -target-feature +sse2 -target-feature +sse3 -target-feature +sse4.1 -target-feature +sse4.2 -target-feature -sse4a -target-feature -sse-unaligned-mem -target-feature +ssse3 -target-feature -tagged-globals -target-feature -tbm -target-feature -tsxldtrk -target-feature +tuning-fast-imm-vector-shift -target-feature +uintr -target-feature -use-glm-div-sqrt-costs -target-feature -use-slm-arith-costs -target-feature -usermsr -target-feature +vaes -target-feature +vpclmulqdq -target-feature +vzeroupper -target-feature +waitpkg -target-feature +wbnoinvd -target-feature -widekl -target-feature +x87 -target-feature -xop -target-feature +xsave -target-feature +xsavec -target-feature +xsaveopt -target-feature +xsaves -target-feature -zu -fsanitize=alignment array-bounds bool builtin enum float-cast-overflow integer-divide-by-zero nonnull-attribute null pointer-overflow return returns-nonnull-attribute shift-base shift-exponent signed-integer-overflow unreachable vla-bound -fsanitize-recover=alignment array-bounds bool builtin enum float-cast-overflow integer-divide-by-zero nonnull-attribute null pointer-overflow returns-nonnull-attribute shift-base shift-exponent signed-integer-overflow vla-bound -fsanitize-merge=alignment array-bounds bool builtin enum float-cast-overflow integer-divide-by-zero nonnull-attribute null pointer-overflow return returns-nonnull-attribute shift-base shift-exponent signed-integer-overflow unreachable vla-bound -fno-sanitize-memory-param-retval -fno-sanitize-address-use-odr-indicator -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [clang -cc1 version 21.1.0 based upon LLVM 21.1.0 default target x86_64-linux-musl]
+        ignore line: [ignoring nonexistent directory "/usr/include/x86_64-linux-gnu"]
+        ignore line: [ignoring nonexistent directory "/home/jay/Tools/llvm-21_1_0/include"]
+        ignore line: [ignoring nonexistent directory "/home/jay/Tools/llvm-21_1_0/include"]
+        ignore line: [ignoring nonexistent directory "/home/jay/Tools/llvm-21_1_0/include"]
+        ignore line: [ignoring nonexistent directory "/home/jay/Tools/llvm-21_1_0/include"]
+        ignore line: [ignoring duplicate directory "/usr/include"]
+        ignore line: [ignoring duplicate directory "/home/jay/Tools/llvm-full_release_22_0_0/include"]
+        ignore line: [ignoring duplicate directory "/home/jay/Tools/llvm-full_release_22_0_0/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxx/include]
+        ignore line: [ /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libcxxabi/include]
+        ignore line: [ /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/include]
+        ignore line: [ /usr/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /home/jay/Tools/llvm-full_release_22_0_0/include]
+        ignore line: [ /home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/lib/libunwind/include]
+        ignore line: [ .]
+        ignore line: [End of search list.]
+        ignore line: [Linking CXX executable cmTC_5fadf]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5fadf.dir/link.txt --verbose=1]
+        ignore line: [/home/jay/Tools/zig-x86_64-linux-0.16.0-dev.1657+985a3565c/zig  c++  -v CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_5fadf ]
+        link line: [ld.lld --error-limit=0 -mllvm -float-abi=hard --entry _start -z stack-size=16777216 --build-id=none --image-base=16777216 --eh-frame-hdr -znow -m elf_x86_64 -o cmTC_5fadf /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crti.o -L /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64 --dynamic-linker /lib64/ld-linux-x86-64.so.2 CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o /home/jay/.cache/zig/o/5adc0274de0e107be8107335e36048b0/libubsan_rt.a --as-needed /home/jay/.cache/zig/o/1b01eb88a29fe8f4cc41f7a9d502c67c/libc++abi.a /home/jay/.cache/zig/o/66dfe1bb0e7ef7fe86b2be531e181c07/libc++.a /home/jay/.cache/zig/o/17fbd7d38963a0fe84d93d9e8fefb422/libunwind.a -lm -lpthread -lc -ldl -lrt -lutil /home/jay/.cache/zig/o/ccc7e21851801f1834013fe676a0d706/libcompiler_rt.a /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crtn.o]
+          arg [ld.lld] ==> ignore
+          arg [--error-limit=0] ==> ignore
+          arg [-mllvm] ==> ignore
+          arg [-float-abi=hard] ==> ignore
+          arg [--entry] ==> ignore
+          arg [_start] ==> ignore
+          arg [-zstack-size=16777216] ==> ignore
+          arg [--build-id=none] ==> ignore
+          arg [--image-base=16777216] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-znow] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_5fadf] ==> ignore
+          arg [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crt1.o] ==> obj [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crt1.o]
+          arg [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crti.o] ==> obj [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crti.o]
+          arg [-L/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64] ==> dir [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64]
+          arg [--dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [CMakeFiles/cmTC_5fadf.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [/home/jay/.cache/zig/o/5adc0274de0e107be8107335e36048b0/libubsan_rt.a] ==> lib [/home/jay/.cache/zig/o/5adc0274de0e107be8107335e36048b0/libubsan_rt.a]
+          arg [--as-needed] ==> ignore
+          arg [/home/jay/.cache/zig/o/1b01eb88a29fe8f4cc41f7a9d502c67c/libc++abi.a] ==> lib [/home/jay/.cache/zig/o/1b01eb88a29fe8f4cc41f7a9d502c67c/libc++abi.a]
+          arg [/home/jay/.cache/zig/o/66dfe1bb0e7ef7fe86b2be531e181c07/libc++.a] ==> lib [/home/jay/.cache/zig/o/66dfe1bb0e7ef7fe86b2be531e181c07/libc++.a]
+          arg [/home/jay/.cache/zig/o/17fbd7d38963a0fe84d93d9e8fefb422/libunwind.a] ==> lib [/home/jay/.cache/zig/o/17fbd7d38963a0fe84d93d9e8fefb422/libunwind.a]
+          arg [-lm] ==> lib [m]
+          arg [-lpthread] ==> lib [pthread]
+          arg [-lc] ==> lib [c]
+          arg [-ldl] ==> lib [dl]
+          arg [-lrt] ==> lib [rt]
+          arg [-lutil] ==> lib [util]
+          arg [/home/jay/.cache/zig/o/ccc7e21851801f1834013fe676a0d706/libcompiler_rt.a] ==> lib [/home/jay/.cache/zig/o/ccc7e21851801f1834013fe676a0d706/libcompiler_rt.a]
+          arg [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crtn.o] ==> obj [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crtn.o]
+        collapse obj [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crt1.o] ==> [/usr/lib64/crt1.o]
+        collapse obj [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crti.o] ==> [/usr/lib64/crti.o]
+        collapse obj [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crtn.o] ==> [/usr/lib64/crtn.o]
+        collapse library dir [/usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64] ==> [/usr/lib64]
+        implicit libs: [/home/jay/.cache/zig/o/5adc0274de0e107be8107335e36048b0/libubsan_rt.a;/home/jay/.cache/zig/o/1b01eb88a29fe8f4cc41f7a9d502c67c/libc++abi.a;/home/jay/.cache/zig/o/66dfe1bb0e7ef7fe86b2be531e181c07/libc++.a;/home/jay/.cache/zig/o/17fbd7d38963a0fe84d93d9e8fefb422/libunwind.a;m;pthread;c;dl;rt;util;/home/jay/.cache/zig/o/ccc7e21851801f1834013fe676a0d706/libcompiler_rt.a]
+        implicit objs: [/usr/lib64/crt1.o;/usr/lib64/crti.o;/usr/lib64/crtn.o]
+        implicit dirs: [/usr/lib64]
+        implicit fwks: []
+      
+      
+...

@@ -1,76 +1,75 @@
 // ts_store/ts_store_headers/impl_details/testing.hpp
-// FINAL — 100% COMPILING, 100% CORRECT, 100% PASSING
 
 #pragma once
 
-// FMT FIRST — GCC 15 FIX — CORRECT PATH
-#include "../../fmt/include/fmt/core.h"
-#include "../../fmt/include/fmt/format.h"
-#include "../../fmt/include/fmt/color.h"
+#include <array>
+#include <format>
+#include <string>
 
+#include <string_view>
 #include <thread>
 #include <vector>
 
-const char* test_event_prefix_ = "Test-Event: ";
 
-// Minimum bytes needed for prefix + thread + worker + spaces (worst-case max_threads/events)
-inline size_t min_prefix_bytes() noexcept {
-    // "Test-Event: T=" = 14
-    // " Worker=" = 8
-    // spaces = 2
-    // max thread digits = log10(max_threads_ - 1) + 1
-    // max event digits = log10(events_per_thread_ - 1) + 1
-    size_t total = 0;
-    size_t base = 14 + 8 + 2;
-    std::cout << "base = " << base << std::endl;
-    size_t thread_digits = static_cast<size_t>(std::log10(max_threads_ > 1 ? max_threads_ - 1 : 1)) + 1;
-    std::cout << "thread_digits = " << thread_digits << std::endl;
-    size_t event_digits = static_cast<size_t>(std::log10(events_per_thread_ > 1 ? events_per_thread_ - 1 : 1)) + 1;
-    std::cout << "event_digits = " << event_digits << std::endl;
-    total = base + thread_digits * event_digits;
-    std::cout << "total = " << total << std::endl;
-    std::cout << "BufferSize = " << Config::buffer_size << std::endl;
-    return total;
-}
-
-
-
-inline void test_run(bool is_debug = false) {
-    if (Config::buffer_size <= min_prefix_bytes()) {
-        fmt::print(fmt::fg(fmt::color::red) | fmt::emphasis::bold | fmt::emphasis::blink,
-            "╔═══════════════════════════════════════════════════════════════════════════════╗\n"
-            "║                  FATAL ERROR — BUFFER TOO SMALL!                              ║\n"
-            "║  BufferSize = {} bytes, but needs at least {} bytes for safe prefix formatting ║\n"
-            "║  (Test-Event: T=<thread> Worker=<event> + padding)                           ║\n"
-            "║                  TEST ABORTED — INCREASE BufferSize                           ║\n"
-            "╚═══════════════════════════════════════════════════════════════════════════════╝\n",
-            Config::buffer_size, min_prefix_bytes());
-        return;
+inline std::string generateTestPayload(uint32_t thread_id,
+                                       uint32_t event_index,
+                                       std::string_view message = "") noexcept
+{
+    uint32_t t_padw = thread_id_width();
+    uint32_t e_padw = events_id_width();
+    std::string payload = std::format("Test-Event: T={:>{}} W={:>{}}", thread_id, t_padw, event_index, e_padw);
+    if (!message.empty()) {
+        payload += " ";
+        payload.append(message);
     }
 
+    payload.append(80, '.');
+
+    return payload;
+}
+
+inline void test_run(bool is_debug = false) noexcept
+{
     std::vector<std::thread> threads;
     threads.reserve(max_threads_);
 
+    constexpr std::array<const char*, 5> types = {"INFO", "WARN", "ERROR", "TRACE", "DEBUG"};
+    constexpr std::array<const char*, 5> categories = {"NET", "DB", "UI", "SYS", "GFX"};
+    constexpr std::array<const char*, 5> event_messages = {
+        "[INFO]  Processing request",
+        "[WARN]  Resource usage high",
+        "[ERROR] Connection failed",
+        "[TRACE] Executing detailed step: cache lookup completed in 3ms",
+        "[DEBUG] Internal state: active worker threads = ???????"
+    };
+
+
+
     for (uint32_t t = 0; t < max_threads_; ++t) {
-        threads.emplace_back([this, t, is_debug] {
+
+        threads.emplace_back([this, t, is_debug, &types, &categories, &event_messages] {
             for (uint32_t i = 0; i < events_per_thread_; ++i) {
-                auto payload = make_test_payload(t, i);
 
-                const char* types[] = {"INFO", "WARN", "ERROR", "TRACE"};
-                const char* cats[]  = {"NET",  "DB",   "UI",   "SYS",  "GFX"};
+                std::string_view msg_sv = event_messages[i % event_messages.size()];
+                std::string payload = generateTestPayload(t, i, msg_sv);
 
-                auto [ok, id] = save_event(t, payload, types[i % 4], cats[t % 5], is_debug);
+                std::string_view type_sv = types[i % types.size()];
+                std::string_view cat_sv  = categories[t % categories.size()];
+
+                auto [ok, id] = save_event(t, payload, type_sv, cat_sv, is_debug);
                 if (!ok) continue;
 
                 std::this_thread::yield();
 
                 auto [ok2, val] = select(id);
-                if (ok2 && std::string_view(val).starts_with(test_event_prefix_)) {
-                    // good
+                if (ok2 && std::string_view(val).starts_with("Test-Event: T=")) {
+                    // payload survived round-trip — success
                 }
             }
         });
     }
 
-    for (auto& th : threads) th.join();
+    for (auto& th : threads) {
+        th.join();
+    }
 }

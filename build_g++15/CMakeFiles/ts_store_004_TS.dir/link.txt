@@ -1,0 +1,1 @@
+/opt/rh/gcc-toolset-15/root/usr/bin/g++ -O3 -DNDEBUG -flto=auto -fno-sanitize=undefined -fno-sanitize=all -flto CMakeFiles/ts_store_004_TS.dir/ts_store_004/test_004_TS.cpp.o CMakeFiles/ts_store_004_TS.dir/fmt/src/format.cc.o CMakeFiles/ts_store_004_TS.dir/fmt/src/os.cc.o -o ts_store_004_TS 

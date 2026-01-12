@@ -6,23 +6,12 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-//#include <iomanip>
+#include <iomanip>
 #include <array>
 #include <format>
 
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
-
-// ———————————————————— make_fixed helper ————————————————————
-template<size_t N, class... Args>
-constexpr fixed_string<N> make_fixed(std::format_string<Args...> fmt, Args&&... args) {
-    std::string temp = std::format(fmt, std::forward<Args>(args)...);
-    fixed_string<N> result;
-    const size_t copy_len = std::min(temp.size(), N - 1);
-    std::memcpy(result.data, temp.data(), copy_len);
-    result.data[copy_len] = '\0';
-    return result;
-}
 
 // ———————————————————— Test configuration ————————————————————
 constexpr int    WRITER_THREADS     = 500;
@@ -33,7 +22,7 @@ alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 inline std::array<uint64_t, MAX_ENTRIES> log_stream_array{};
 inline std::atomic<size_t> total_written{0};
 
-using LogConfig = ts_store_config<100, 16, 32, false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogConfig = ts_store_config<false>;
 using LogxStore = ts_store<LogConfig>;
 
 
@@ -48,11 +37,22 @@ int main() {
               << duration_cast<microseconds>(writer_start.time_since_epoch()).count()
               << " µs\n";
 
+    constexpr std::array<std::string_view, 5> event_messages = {
+        "[INFO]  Processing request",
+        "[WARN]  Resource usage high",
+        "[ERROR] Connection failed",
+        "[INFO]  Cache hit ratio 98%",
+        "[DEBUG] Thread pool active"
+    };
+
     for (int t = 0; t < WRITER_THREADS; ++t) {
         writers.emplace_back([&, t]() {
             for (int i = 0; i < OPS_PER_THREAD; ++i) {
                 // Now matches verify_test_payloads() expectations
-                auto payload = store.make_test_payload(t,i);
+
+                std::string_view extra = event_messages[t % event_messages.size()];
+                std::string payload = store.generateTestPayload(t,  i, extra);
+
                 auto [ok, id] = store.save_event(t, payload, "STRESS", "TAIL", true);
                 if (ok) {
                     size_t pos = log_stream_write_pos.fetch_add(1, std::memory_order_relaxed);
@@ -133,9 +133,8 @@ int main() {
 
     std::cout << "ALL 50,000 ENTRIES VERIFIED — ZERO CORRUPTION\n";
     store.show_duration("Store");
-    std::cout << "\nPress Enter to display full trace...\n";
+    std::cout << "\nPress Enter to display (truncated) trace logs...\n";
     std::cin.get();
-    store.print();
-
+    store.print(std::cout, 0);
     return 0;
 }

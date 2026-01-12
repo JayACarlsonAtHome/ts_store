@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -flto -fno-sanitize=undefined -fno-sanitize=all CMakeFiles/ts_store_002_TS.dir/ts_store_002/test_002_TS.cpp.o CMakeFiles/ts_store_002_TS.dir/fmt/src/format.cc.o CMakeFiles/ts_store_002_TS.dir/fmt/src/os.cc.o -o ts_store_002_TS 

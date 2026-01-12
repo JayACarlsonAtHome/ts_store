@@ -7,7 +7,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include <format>
+//#include <format>
 
 using namespace jac::ts_store::inline_v001;
 
@@ -15,24 +15,19 @@ constexpr uint32_t THREADS           = 250;
 constexpr uint32_t EVENTS_PER_THREAD = 100;
 constexpr uint64_t TOTAL_EVENTS      = uint64_t(THREADS) * EVENTS_PER_THREAD;
 
-
-using LogConfigxMainx = ts_store_config<100, 16, 32, false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogConfigxMainx = ts_store_config<false>;
 using LogxStore = ts_store<LogConfigxMainx>;
 
-using LogConfigResult = ts_store_config<128, 16, 32, false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogConfigResult = ts_store_config<false>;
 using LogResult = ts_store<LogConfigResult>;
 
-
-// Helper to make fixed_string from format
-template<size_t N, class... Args>
-constexpr auto make_fixed(std::format_string<Args...> fmt, Args&&... args) {
-    std::string temp = std::format(fmt, std::forward<Args>(args)...);
-    fixed_string<N> result;
-    const size_t len = std::min(temp.size(), N - 1);
-    std::memcpy(result.data, temp.data(), len);
-    result.data[len] = '\0';
-    return result;
-}
+constexpr std::array<std::string_view, 5> event_messages = {
+    "[INFO]  Processing request   ",
+    "[WARN]  Resource usage high  ",
+    "[ERROR] Connection failed    ",
+    "[INFO]  Cache hit ratio 98%  ",
+    "[DEBUG] Thread pool active   "
+};
 
 int main() {
     LogxStore  safepay(THREADS, EVENTS_PER_THREAD);
@@ -45,11 +40,12 @@ int main() {
     auto worker = [&](int tid) {
         int local_successes = 0;
         int local_nulls = 0;
-
         for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
-            auto payload = safepay.make_test_payload(tid, i);  // ← global function
 
-            auto [claim_ok, id] = safepay.save_event(tid, payload, "STRESS", "MAIN");
+            std::string_view extra = event_messages[tid % event_messages.size()];
+            std::string payload = safepay.generateTestPayload(tid,  i, extra);
+
+            auto [claim_ok, id] = safepay.save_event(tid, payload, extra, "MAIN");
             if (!claim_ok) continue;
 
             std::this_thread::yield();
@@ -65,10 +61,7 @@ int main() {
         total_successes += local_successes;
         total_nulls     += local_nulls;
 
-        auto result_payload = make_fixed<128>(
-            "RESULT: thread={:>3}  successes={:>6}  nulls={:>4}  total_events={:>6}",
-            tid, local_successes, local_nulls, EVENTS_PER_THREAD);
-
+        std::string result_payload = std::format("RESULT: thread={:>3}  successes={:>6}  nulls={:>4}  total_events={:>6}", tid, local_successes, local_nulls, EVENTS_PER_THREAD);
         auto [ok, _] = results.save_event(tid, result_payload, "RESULT", "STATS");
         if (!ok) {
             std::cerr << "Results claim failed for thread " << tid << "\n";
@@ -101,7 +94,7 @@ int main() {
 
     safepay.press_any_key();
     std::cout << "\nMain store contents:\n";
-    safepay.print();
+    safepay.print(std::cout, 0);
 
     return 0;
 }
