@@ -1,4 +1,4 @@
-# ts_store — Ultra-Fast, Zero-Allocation, Thread-Safe Event Buffer
+# ts_store — Ultra-Fast, Thread-Safe Event Buffer
 
 ### Why this exists
 - Simple, clean user interface — pick it up in minutes
@@ -7,15 +7,11 @@
 
 A lock-protected, timestamp-ordered in-memory event store built for massive concurrency with **guaranteed no drops or corruption**.
 
-- Never allocates on the hot path after construction  
-- Fixed-size payloads (default 100 bytes, fully configurable)  
-- Optional microsecond timestamps (compile-time toggle)  
-- Global chronological order via 64-bit monotonic IDs  
 - Survives repeated 1,000,000-event stress tests across 250 threads  
 - Backed by Google's `parallel_flat_hash_map` (fastest for this pattern)  
 - Unlimited concurrent readers via `shared_mutex`
 
-### Current Status — December 2025
+### Current Status — January 2026
 **Extensively tested — zero corruption observed across all runs**  
 All 10 stress tests pass 100% on g++ 15.1.1 (RHEL 9/10)  
 
@@ -25,22 +21,16 @@ All 10 stress tests pass 100% on g++ 15.1.1 (RHEL 9/10)
 | Environment         | Compiler   | Cores | Timestamps | Writes/sec (1M events)      |
 |---------------------|------------|-------|------------|-----------------------------|
 |                     |            |       |            | High    | Low     | Avg     |
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | 1.00M   | 0.58M   | 0.81M   |
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | 1.14M   | 0.69M   | 0.88M   |
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | On         | 2.18M   | 0.96M   | 1.84M   |
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | Off        | 2.33M   | 1.16M   | 1.90M   |
+| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | -----   | -----   | -----   | Untested at this time
+| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | -----   | -----   | -----   | Untested at this time
+| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | On         | 2.09M   | 1.11M   | 1.68M   |
+| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | Off        | 2.16M   | 0.89M   | 1.76M   |
 
 *Writes: 250 threads × 4000 events over 50 runs (real data from test_005).*
+*Average over 1.5 million operations per second with or without time stamps*
 *Not Measured -- bulk validation of payload timing at end of test.
-
-### Key Features
-- Pre-flight memory availability check
-- Configurable via `ts_store_config<BufferSize, TypeSize, CategorySize, UseTimestamps>`
-- Human-readable relative µs timestamps (zero cost when disabled)
-- Monotonic 64-bit event IDs
-- Colored, sortable pretty-print output
-- Full structural + payload integrity verification
-- Thread-local buffers — zero heap allocation on write path
+*Note 1: The simplification of code came at a 5% reduction in ops/sec, but I feel it is worth it.*
+*Note 2: I plan to get the speed back later.*
 
 ### Planned Features
 - Double-buffered disk persistence
