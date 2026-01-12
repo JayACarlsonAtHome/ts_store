@@ -17,7 +17,7 @@ All 10 stress tests pass 100% on g++ 15.1.1 (RHEL 9/10)
 
 **Not production-ready yet** — API is in flux and will change before final lock-down.
 
-### Performance (measured 2025-12-19)
+### Performance (measured 2026-01-12)
 | Environment         | Compiler   | Cores | Timestamps | Writes/sec (1M events)      |
 |---------------------|------------|-------|------------|-----------------------------|
 |                     |            |       |            | High    | Low     | Avg     |
