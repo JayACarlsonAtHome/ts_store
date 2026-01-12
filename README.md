@@ -57,11 +57,3 @@ Code is actively evolving and needs more polish.
 See the test files:  
 - `test_001_TS.cpp` through `test_005_TS.cpp` → Timestamps enabled  
 - `test_001_XS.cpp` through `test_005_XS.cpp` → Timestamps disabled
-
-- ### New Notes...Dec 27,2025
-I am going to start using both GCC and Clang, and I'll try to get both to compile my project successfully. 
-Since there are more painful and less painful ways of accomplishing this, 
-I will probably create a dedicated page for each compiler explaining how to install and set it up with CLion.
-On a side project, I'm experimenting with a new version that achieves 13M operations per second, although it
-is currently only single-threaded. It may drop to about 10M ops/second once 
-it becomes multithreaded, but that would still be roughly 500% faster than the current version.
