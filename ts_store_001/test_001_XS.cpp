@@ -7,6 +7,7 @@ using LogConfig = ts_store_config<false>;  // BufferSize=96, TypeSize=12, Catego
 using LogxStore = ts_store<LogConfig>;
 
 int main() {
+
     constexpr uint32_t threads = 5;
     constexpr uint32_t events = 3;
     std::cout << "=== ts_store — TDD DEMO ===\n\n";

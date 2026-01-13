@@ -13,11 +13,11 @@ using LogConfig = ts_store_config<false>;  // BufferSize=96, TypeSize=12, Catego
 using LogxStore = ts_store<LogConfig>;
 
 constexpr std::array<std::string_view, 5> event_messages = {
-    "[INFO] Processing request",
-    "[WARN] Resource usage high",
-    "[ERROR] Connection failed",
-    "[INFO] Cache hit ratio 98%",
-    "[DEBUG] Thread pool active"
+    "[INFO]  Processing request ",
+    "[WARN]  Resource usage high",
+    "[ERROR] Connection failed  ",
+    "[INFO]  Cache hit ratio 98%",
+    "[DEBUG] Thread pool active "
 };
 
 int main() {
@@ -32,18 +32,17 @@ int main() {
 
     std::vector<std::thread> threads;
     threads.reserve(num_threads);
+
     for (uint32_t t = 0; t < num_threads; ++t) {
         threads.emplace_back([t, &store] {
             for (uint32_t i = 0; i < events_per_thread; ++i) {
-                // EXACT SAME FORMAT AS FastPayload — 100% compatible
 
-                std::string_view extra = event_messages[t % event_messages.size()];
-                std::string payload = store.generateTestPayload(t, i, extra);
-
-                auto type     = std::string{"STRESS"};
-                auto category = std::string{"PERF_TEST"};
-
-                auto [ok, id] = store.save_event(t, payload, type, category);
+                std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
+                if (payload.size() < LogxStore::kMaxStoredPayloadLength) payload.append(LogxStore::kMaxStoredPayloadLength - payload.size(), '.');
+                std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
+                std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
+                bool is_debug = true;
+                auto [ok, id] = store.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
                 if (!ok) {
                     std::cout << std::format("\033[1;31m[FATAL] claim failed — thread {} event {}\033[0m\n", t, i);
                     std::abort();

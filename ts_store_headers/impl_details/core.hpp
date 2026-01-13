@@ -12,6 +12,46 @@
 
 inline std::pair<bool, std::uint64_t>
 save_event(unsigned int thread_id,
+           unsigned int event_id,                  // ← new
+           Config::ValueT&& value,
+           Config::TypeT&& type,
+           Config::CategoryT&& category,
+           bool debug = false)
+{
+    std::unique_lock lock(data_mtx_);
+    const std::uint64_t id = next_id_.fetch_add(1, std::memory_order_relaxed);
+
+    row_data row{};
+    row.thread_id = thread_id;
+    row.event_id  = event_id;                      // ← store it
+    row.is_debug  = debug;
+
+    row.value_storage     = std::forward<typename Config::ValueT>(value);
+    row.type_storage      = std::forward<typename Config::TypeT>(type);
+    row.category_storage  = std::forward<typename Config::CategoryT>(category);
+
+    // — TIMESTAMP —
+    if constexpr (Config::use_timestamps) {
+        const auto now = std::chrono::steady_clock::now();
+        auto base = s_epoch_base.load(std::memory_order_relaxed);
+        if (base == std::chrono::steady_clock::time_point::min()) {
+            auto expected = std::chrono::steady_clock::time_point::min();
+            if (s_epoch_base.compare_exchange_strong(expected, now)) {
+                base = now;
+            } else {
+                base = s_epoch_base.load(std::memory_order_relaxed);
+            }
+        }
+        row.ts_us = std::chrono::duration_cast<std::chrono::microseconds>(now - base).count();
+    }
+
+    rows_.insert_or_assign(id, std::move(row));
+    return {true, id};
+}
+
+
+inline std::pair<bool, std::uint64_t>
+save_event(unsigned int thread_id,
            Config::ValueT&& value,
            Config::TypeT&& type,
            Config::CategoryT&& category,
@@ -59,42 +99,6 @@ save_event(unsigned int thread_id,
     return {true, id};
 }
 
-// Legacy overloads (converted to std::string)
-inline std::pair<bool, std::uint64_t>
-save_event(unsigned int thread_id,
-           std::string_view payload,
-           std::string_view type,
-           std::string_view category,
-           bool debug = false)
-{
-    return save_event(thread_id,
-                      std::string(payload),
-                      std::string(type),
-                      std::string(category),
-                      debug);
-}
-
-inline std::pair<bool, std::uint64_t>
-save_event(unsigned int thread_id,
-           std::string_view payload,
-           const char* type,
-           const char* category,
-           bool debug = false)
-{
-    return save_event(thread_id,
-                      payload,
-                      type ? std::string_view(type) : std::string_view("UNKNOWN"),
-                      category ? std::string_view(category) : std::string_view("UNKNOWN"),
-                      debug);
-}
-
-inline std::pair<bool, std::uint64_t>
-save_event(unsigned int thread_id,
-           std::string_view payload,
-           bool debug = false)
-{
-    return save_event(thread_id, payload, std::string_view("DATA"), std::string_view("UNKNOWN"), debug);
-}
 
 // select() — returns string_view into stored std::string
 inline auto select(std::uint64_t id) const

@@ -16,7 +16,7 @@ using namespace std::chrono;
 // ———————————————————— Test configuration ————————————————————
 constexpr int    WRITER_THREADS     = 500;
 constexpr int    OPS_PER_THREAD     = 100;
-constexpr size_t MAX_ENTRIES        = WRITER_THREADS * OPS_PER_THREAD + 1000;
+constexpr size_t MAX_ENTRIES        = WRITER_THREADS * OPS_PER_THREAD;
 
 alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 inline std::array<uint64_t, MAX_ENTRIES> log_stream_array{};
@@ -37,23 +37,17 @@ int main() {
               << duration_cast<microseconds>(writer_start.time_since_epoch()).count()
               << " µs\n";
 
-    constexpr std::array<std::string_view, 5> event_messages = {
-        "[INFO]  Processing request",
-        "[WARN]  Resource usage high",
-        "[ERROR] Connection failed",
-        "[INFO]  Cache hit ratio 98%",
-        "[DEBUG] Thread pool active"
-    };
-
     for (int t = 0; t < WRITER_THREADS; ++t) {
         writers.emplace_back([&, t]() {
             for (int i = 0; i < OPS_PER_THREAD; ++i) {
                 // Now matches verify_test_payloads() expectations
 
-                std::string_view extra = event_messages[t % event_messages.size()];
-                std::string payload = store.generateTestPayload(t,  i, extra);
-
-                auto [ok, id] = store.save_event(t, payload, "STRESS", "TAIL", true);
+                std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
+                if (payload.size() < LogxStore::kMaxStoredPayloadLength) payload.append(LogxStore::kMaxStoredPayloadLength - payload.size(), '.');
+                std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
+                std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
+                bool is_debug = true;
+                auto [ok, id] = store.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
                 if (ok) {
                     size_t pos = log_stream_write_pos.fetch_add(1, std::memory_order_relaxed);
                     if (pos < MAX_ENTRIES) {

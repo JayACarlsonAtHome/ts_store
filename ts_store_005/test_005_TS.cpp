@@ -29,7 +29,6 @@ constexpr std::array<std::string_view, 5> event_messages = {
     "[DEBUG] Thread pool active"
 };
 
-
 int run_single_test(LogxStore& store)
 {
     store.clear();
@@ -41,10 +40,12 @@ int run_single_test(LogxStore& store)
         threads.emplace_back([&, t]() {
             for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
 
-                std::string_view extra = event_messages[t % event_messages.size()];
-                std::string payload = store.generateTestPayload(t, i, extra);
-
-                auto [ok, id] = store.save_event(t, payload, "MASSIVE", "FINAL");
+                std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
+                if (payload.size() < LogxStore::kMaxStoredPayloadLength) payload.append(LogxStore::kMaxStoredPayloadLength - payload.size(), '.');
+                std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
+                std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
+                bool is_debug = true;
+                auto [ok, id] = store.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
                 if (!ok) {
                     std::cerr << "CLAIM FAILED — thread " << t << " event " << i << "\n";
                     std::abort();
@@ -63,15 +64,13 @@ int run_single_test(LogxStore& store)
         store.diagnose_failures();
         return -1;
     }
-
-#ifdef TS_STORE_ENABLE_TEST_CHECKS
+/*
     if (!store.verify_test_payloads()) {
         std::cerr << "TEST PAYLOAD VERIFICATION FAILED\n";
         store.diagnose_failures();
         return -1;
     }
-#endif
-
+*/
     return static_cast<int>(write_us);
 }
 

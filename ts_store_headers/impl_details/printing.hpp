@@ -12,6 +12,7 @@
 #include <vector>
 #include <cstdint>
 #include <limits>
+#include <format>
 
 inline void print(std::ostream& os = std::cout,
                   size_t max_rows = 10'000) const
@@ -76,10 +77,16 @@ inline void print(std::ostream& os = std::cout,
             if (r.ts_us != 0) ts_str = std::to_string(r.ts_us);
         }
 
+        uint32_t t_padw = thread_id_width();
+        uint32_t e_padw = events_id_width();
+        std::string prefix = std::format("Test-Event: T={:>{}} W={:>{}} ",
+                                         r.thread_id, t_padw, r.event_id, e_padw);
+
         std::string_view type_sv    = r.type_storage;
         std::string_view cat_sv     = r.category_storage;
         std::string_view payload_sv = r.value_storage;
 
+        std::string full_line = prefix + std::string(payload_sv);
         os << std::left
            << std::setw(W_ID)     << id
            << std::setw(W_TIME)   << ts_str
@@ -90,7 +97,7 @@ inline void print(std::ostream& os = std::cout,
            << std::setw(W_THREAD) << r.thread_id
            << std::left
            << "   "
-           << payload_sv.substr(0, W_PAYLOAD) << "\n";
+           << full_line.substr(0, W_PAYLOAD) << "\n";
     }
 
     os << std::string(total_width, '=') << "\n";

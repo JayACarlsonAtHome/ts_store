@@ -22,15 +22,6 @@ using LogxStore = ts_store<LogConfigxMainx>;
 using LogConfigResult = ts_store_config<true>;
 using LogResult = ts_store<LogConfigResult>;
 
-constexpr std::array<std::string_view, 5> event_messages = {
-    "[INFO]  Processing request ",
-    "[WARN]  Resource usage high",
-    "[ERROR] Connection failed  ",
-    "[INFO]  Cache hit ratio 98%",
-    "[DEBUG] Thread pool active "
-};
-
-
 int main() {
     LogxStore  safepay(THREADS, EVENTS_PER_THREAD);
     LogResult  results(THREADS, 1);
@@ -39,17 +30,19 @@ int main() {
     std::atomic<int> total_successes{0};
     std::atomic<int> total_nulls{0};
 
-    auto worker = [&](int tid) {
+    auto worker = [&](int t) {
         int local_successes = 0;
         int local_nulls = 0;
 
         for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
-            std::string_view extra = event_messages[tid % event_messages.size()];
-            std::string payload = safepay.generateTestPayload(tid, i, extra);
 
-            auto [claim_ok, id] = safepay.save_event(tid, payload, extra, "MAIN");
-            if (!claim_ok) continue;
-
+            std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
+            if (payload.size() < LogxStore::kMaxStoredPayloadLength) payload.append(LogxStore::kMaxStoredPayloadLength - payload.size(), '.');
+            std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
+            std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
+            bool is_debug = true;
+            auto [ok, id] = safepay.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
+            if (!ok) continue;
             std::this_thread::yield();
 
             auto [val_ok, val_sv] = safepay.select(id);
@@ -63,10 +56,10 @@ int main() {
         total_successes += local_successes;
         total_nulls     += local_nulls;
 
-        std::string result_payload = std::format("RESULT: thread={:>3}  successes={:>6}  nulls={:>4}  total_events={:>6}", tid, local_successes, local_nulls, EVENTS_PER_THREAD);
-        auto [ok, _] = results.save_event(tid, result_payload, "RESULT", "STATS");
+        std::string result_payload = std::format("RESULT: thread={:>3}  successes={:>6}  nulls={:>4}  total_events={:>6}", t, local_successes, local_nulls, EVENTS_PER_THREAD);
+        auto [ok, _] = results.save_event(t, local_successes, std::move(result_payload), "RESULT", "STATS");
         if (!ok) {
-            std::cerr << "Results claim failed for thread " << tid << "\n";
+            std::cerr << "Results claim failed for thread " << t << "\n";
         }
     };
 

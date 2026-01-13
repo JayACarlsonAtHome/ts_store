@@ -1,26 +1,9 @@
 // ts_store/ts_store_headers/ts_store.hpp
-// FINAL v15 — PERFECT, COMPLETE, BEAUTIFUL, UNBREAKABLE
-// C++20 — GCC 15 — December 2025
+// C++23 — GCC 15 — December 2025
 #pragma once
 
-#include <thread>
-#include <mutex>
-#include <shared_mutex>
-#include <atomic>
-#include <chrono>
-#include <format>
-#include <string>
-#include <string_view>
-#include <type_traits>
-#include <array>
-#include <vector>
-#include <cstring>
-#include <iomanip>
-#include <iostream>
-#include <cmath> // for std::log10
-#include <sys/sysinfo.h>
-#include "ts_store_config.hpp"
-#include "../GTL/include/gtl/phmap.hpp"
+#include "includes.hpp"
+
 namespace jac::ts_store::inline_v001 {
 // ——————————————————————— CONCEPTS ———————————————————————
 template<typename Config>
@@ -29,10 +12,11 @@ class ts_store
 private:
     struct row_data {
         unsigned int thread_id{0};
+        unsigned int event_id{0};   // ← new: local per-thread sequence number
         bool is_debug{false};
         std::string type_storage;
         std::string category_storage;
-        std::string value_storage;
+        std::string value_storage;  // ← will now hold only the pure message/filler
         std::conditional_t<Config::use_timestamps, uint64_t, std::monostate> ts_us{};
     };
 
@@ -41,19 +25,21 @@ private:
 public:
     // ——— GETTERS ———
     constexpr uint32_t get_max_threads() const noexcept { return max_threads_; }
-    // Perfect thread ID width — mathematically exact, zero-cost
-      uint32_t thread_id_width() const noexcept {
+
+    uint32_t thread_id_width() const noexcept {
         const uint32_t n = get_max_threads();
         if (n == 0) return 1;
         return static_cast<uint32_t>(std::log10(static_cast<double>(n - 1))) + 2;
     }
 
     constexpr uint32_t get_max_events() const noexcept { return events_per_thread_; }
+
     uint32_t events_id_width() const noexcept {
         const uint32_t n = get_max_events();
         if (n == 0) return 1;
         return static_cast<uint32_t>(std::log10(static_cast<double>(n - 1))) + 2;
     }
+
     [[nodiscard]] uint64_t expected_size() const noexcept {
         return uint64_t(max_threads_) * events_per_thread_;
     }
@@ -75,6 +61,7 @@ public:
                 s_epoch_base.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
         }
     }
+
 private:
     static inline std::atomic<std::chrono::steady_clock::time_point> s_epoch_base{
         std::chrono::steady_clock::time_point::min()
@@ -84,13 +71,14 @@ private:
     mutable std::shared_mutex data_mtx_;
 public:
     static constexpr bool debug_mode_v = Config::debug_mode;
-#include "impl_details/core.hpp"
-#include "impl_details/testing.hpp"
-#include "impl_details/printing.hpp"
-#include "impl_details/duration.hpp"
-#include "impl_details/sorting.hpp"
-#include "impl_details/press_to_cont.hpp"
-#include "impl_details/verify_checks.hpp"
-#include "impl_details/diagnostic.hpp"
+    #include "impl_details/core.hpp"
+    #include "impl_details/test_constants.hpp"
+    #include "impl_details/testing.hpp"
+    #include "impl_details/printing.hpp"
+    #include "impl_details/duration.hpp"
+    #include "impl_details/sorting.hpp"
+    #include "impl_details/press_to_cont.hpp"
+    #include "impl_details/verify_checks.hpp"
+    #include "impl_details/diagnostic.hpp"
 };
 }; // namespace jac::ts_store::inline_v001
