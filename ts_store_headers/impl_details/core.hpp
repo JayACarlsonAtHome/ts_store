@@ -1,13 +1,5 @@
 // ts_store/ts_store_headers/impl_details/core.hpp
 // Updated for dynamic std::string storage (no fixed buffers, no copy_from, no size limits)
-
-#pragma once
-
-#include <string>
-#include <string_view>
-#include <chrono>
-#include <memory>  // for unique_lock/shared_lock if needed elsewhere
-
 // NO namespace — this file is included inside ts_store class
 
 inline std::pair<bool, std::uint64_t>
@@ -18,7 +10,6 @@ save_event(unsigned int thread_id,
            Config::CategoryT&& category,
            bool debug = false)
 {
-    std::unique_lock lock(data_mtx_);
     const std::uint64_t id = next_id_.fetch_add(1, std::memory_order_relaxed);
 
     row_data row{};
@@ -44,11 +35,9 @@ save_event(unsigned int thread_id,
         }
         row.ts_us = std::chrono::duration_cast<std::chrono::microseconds>(now - base).count();
     }
-
-    rows_.insert_or_assign(id, std::move(row));
+    rows_[id] = std::move(row);
     return {true, id};
 }
-
 
 inline std::pair<bool, std::uint64_t>
 save_event(unsigned int thread_id,
@@ -57,7 +46,6 @@ save_event(unsigned int thread_id,
            Config::CategoryT&& category,
            bool debug = false)
 {
-    std::unique_lock lock(data_mtx_);
     const std::uint64_t id = next_id_.fetch_add(1, std::memory_order_relaxed);
 
     row_data row{};
@@ -103,18 +91,15 @@ save_event(unsigned int thread_id,
 // select() — returns string_view into stored std::string
 inline auto select(std::uint64_t id) const
 {
-    std::shared_lock lock(data_mtx_);
-    auto it = rows_.find(id);
-    if (it == rows_.end()) {
+    if (id >= rows_.size()) {
         return std::pair<bool, std::string_view>{false, {}};
     }
-    return std::pair{true, std::string_view(it->second.value_storage)};
+    return std::pair{true, std::string_view(rows_[id].value_storage)};
 }
 
 // get_all_ids
 inline std::vector<std::uint64_t> get_all_ids() const
 {
-    std::shared_lock lock(data_mtx_);
     std::vector<std::uint64_t> ids;
     ids.reserve(rows_.size());
     for (const auto& p : rows_) {
@@ -129,10 +114,8 @@ inline std::pair<bool, uint64_t> get_timestamp_us(std::uint64_t id) const
     if constexpr (!Config::use_timestamps) {
         return {false, 0};
     }
-    std::shared_lock lock(data_mtx_);
-    auto it = rows_.find(id);
-    if (it == rows_.end()) {
+    if (id >= rows_.size()) {
         return {false, 0};
     }
-    return {true, it->second.ts_us};
+    return {true, rows_[id].ts_us};
 }

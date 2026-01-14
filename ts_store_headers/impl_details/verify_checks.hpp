@@ -11,7 +11,6 @@
 #include "test_constants.hpp"
 
 [[nodiscard]] inline bool verify_integrity() const {
-    std::shared_lock lock(data_mtx_);
     const uint64_t current = rows_.size();
     const uint64_t expected = expected_size();
 
@@ -23,7 +22,8 @@
 
     std::vector<std::vector<bool>> seen(max_threads_, std::vector<bool>(events_per_thread_, false));
 
-    for (const auto& [id, row] : rows_) {
+    for (uint64_t id = 0; id < rows_.size(); ++id) {
+        const auto& row = rows_[id];
         if (row.thread_id >= max_threads_ || row.event_id >= events_per_thread_) {
             std::cout << std::format("\033[1;31m     [VERIFY] OUT-OF-RANGE — thread_id {} or event_id {} at ID {}\033[0m\n",
                                      row.thread_id, row.event_id, id);
@@ -44,10 +44,10 @@
 
 [[nodiscard]] inline bool verify_test_payloads() const {
 
-    std::shared_lock lock(data_mtx_);
     bool all_good = true;
 
-    for (const auto& [id, row] : rows_) {
+    for (uint64_t id = 0; id < rows_.size(); ++id) {
+        const auto& row = rows_[id];
         bool valid = false;
         std::string pay_load = row.value_storage;
         std::string expected = std::string(test_messages[row.event_id % test_messages.size()]);

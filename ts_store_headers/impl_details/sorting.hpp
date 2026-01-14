@@ -9,8 +9,6 @@
 
 inline std::vector<std::uint64_t> get_all_ids_sorted(int mode = 0) const
 {
-    std::shared_lock lock(data_mtx_);
-
     std::vector<std::uint64_t> ids;
     ids.reserve(rows_.size());
     for (const auto& [id, _] : rows_)
@@ -42,10 +40,7 @@ inline std::vector<std::uint64_t> get_all_ids_sorted(int mode = 0) const
 // Bonus: helper if you ever want sorted timestamps
 inline std::vector<std::uint64_t> get_ids_sorted_by_timestamp() const
 {
-    if constexpr (!Config::UseTimestamps)
-        return {};
-
-    std::shared_lock lock(data_mtx_);
+    if constexpr (!Config::UseTimestamps) return {};
     std::vector<std::uint64_t> ids;
     ids.reserve(rows_.size());
     for (const auto& [id, row] : rows_)

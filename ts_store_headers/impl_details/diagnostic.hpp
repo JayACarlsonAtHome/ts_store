@@ -15,8 +15,6 @@
 
 inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::max()) const
 {
-    std::shared_lock lock(data_mtx_);
-
     if (rows_.size() != expected_size()) {
         std::cout << std::format("\033[1;31m[DIAGNOSE] SIZE MISMATCH — expected {:>10}, got {:>10}\033[0m\n",
                                  expected_size(), rows_.size());
@@ -33,7 +31,9 @@ inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::m
     std::vector<Failure> failures;
     failures.reserve(std::min(rows_.size(), max_report));
 
-    for (const auto& [id, row] : rows_) {
+    for (uint64_t id = 0; id < rows_.size(); ++id) {
+
+        const auto& row = rows_[id];
         if (failures.size() >= max_report) break;
 
         std::string_view payload = row.value_storage;

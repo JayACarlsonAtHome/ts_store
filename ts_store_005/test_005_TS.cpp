@@ -21,14 +21,6 @@ constexpr int      RUNS              = 50;
 using LogConfig = ts_store_config<true>;
 using LogxStore = ts_store<LogConfig>;
 
-constexpr std::array<std::string_view, 5> event_messages = {
-    "[INFO]  Processing request",
-    "[WARN]  Resource usage high",
-    "[ERROR] Connection failed",
-    "[INFO]  Cache hit ratio 98%",
-    "[DEBUG] Thread pool active"
-};
-
 int run_single_test(LogxStore& store)
 {
     store.clear();

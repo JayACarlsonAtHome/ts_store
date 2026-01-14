@@ -20,12 +20,12 @@ inline void print(std::ostream& os = std::cout,
     if (max_rows == 0) {
         max_rows = std::numeric_limits<size_t>::max();
     }
-    std::shared_lock lock(data_mtx_);
 
     std::vector<std::uint64_t> ids;
     ids.reserve(rows_.size());
-    for (const auto& [id, _] : rows_)
+    for (uint64_t id = 0; id < rows_.size(); ++id) {
         ids.push_back(id);
+    }
 
     std::sort(ids.begin(), ids.end());  // chronological order by ID
 
@@ -65,12 +65,8 @@ inline void print(std::ostream& os = std::cout,
 
     os << std::string(total_width, '-') << "\n";
 
-    for (size_t i = 0; i < total && (max_rows == 0 || i < max_rows); ++i) {
-        const auto id = ids[i];
-        auto it = rows_.find(id);
-        if (it == rows_.end()) continue;
-
-        const auto& r = it->second;
+    for (uint64_t id = 0; id < total && (max_rows == 0 || id < max_rows); ++id) {
+        const auto& r = rows_[id];
 
         std::string ts_str = "-";                                     // default when no timestamp
         if constexpr (Config::use_timestamps) {

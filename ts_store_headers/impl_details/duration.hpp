@@ -14,7 +14,8 @@ inline void show_duration(const std::string& name) const {
         uint64_t first_ts = 0;
         uint64_t last_ts  = 0;
 
-        for (const auto& [id, row] : rows_) {
+        for (uint64_t id = 0; id < rows_.size(); ++id) {
+            const auto& row = rows_[id];
             if (row.ts_us == 0) continue;
 
             if (first_ts == 0 || row.ts_us < first_ts) first_ts = row.ts_us;

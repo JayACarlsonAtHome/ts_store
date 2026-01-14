@@ -44,17 +44,17 @@ public:
         return uint64_t(max_threads_) * events_per_thread_;
     }
     void clear() {
-        std::unique_lock lock(data_mtx_);
-        rows_.clear();
         next_id_.store(0, std::memory_order_relaxed);
+        // Remove any rows_.clear() if present
     }
+
     explicit ts_store(uint32_t max_threads, uint32_t events_per_thread)
         : max_threads_(max_threads)
         , events_per_thread_(events_per_thread)
     {
         if (max_threads == 0 || events_per_thread == 0)
             throw std::invalid_argument("ts_store: thread/event count must be > 0");
-        rows_.reserve(expected_size() * 2);
+        rows_.resize(expected_size());
         if constexpr (Config::use_timestamps) {
             const auto min_time = std::chrono::steady_clock::time_point::min();
             if (auto cur = s_epoch_base.load(std::memory_order_relaxed); cur == min_time)
@@ -67,8 +67,8 @@ private:
         std::chrono::steady_clock::time_point::min()
     };
     std::atomic<std::uint64_t> next_id_{0};
-    gtl::parallel_flat_hash_map<std::uint64_t, row_data> rows_;
-    mutable std::shared_mutex data_mtx_;
+    std::vector<row_data> rows_;
+
 public:
     static constexpr bool debug_mode_v = Config::debug_mode;
     #include "impl_details/core.hpp"
