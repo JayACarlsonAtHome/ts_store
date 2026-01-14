@@ -24,8 +24,8 @@ All 10 stress tests pass 100% on g++ 15.1.1 (RHEL 9/10)
 | Environment         | Compiler   | Cores | Timestamps | Writes/sec (1M events)      |
 |---------------------|------------|-------|------------|-----------------------------|
 |                     |            |       |            | High    | Low     | Avg     |
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | -----   | -----   | -----   | Untested at this time
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | -----   | -----   | -----   | Untested at this time
+| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | 24.18M  | 12.44M  | 21.01M  | 
+| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | 24.48M  | 13.16M  | 22.05M  | 
 | Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | On         | 19.54M  | 16.05M  | 18.37M  |
 | Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | Off        | 24.74M  | 17.66M  | 23.62M  |
 
