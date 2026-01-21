@@ -4,19 +4,42 @@
 
 #pragma once
 
-#include <iostream>
-#include <iomanip>
-#include <string>
-#include <string_view>
-#include <algorithm>
-#include <vector>
-#include <cstdint>
-#include <limits>
-#include <format>
+//#include <iostream>
+//#include <iomanip>
+//#include <string>
+//#include <string_view>
+//#include <algorithm>
+//#include <vector>
+//#include <cstdint>
+//#include <limits>
+//#include <format>
+//#include "ansi_colors.hpp"
 
 inline void print(std::ostream& os = std::cout,
                   size_t max_rows = 10'000) const
 {
+    const uint32_t w_id     = id_width();
+    const uint32_t w_time   = Config::use_timestamps ? 18 : 10;
+    const uint32_t w_type   = 5;
+    const uint32_t w_cat    = 5;
+    const uint32_t w_thread = thread_id_width();
+    const uint32_t w_event  = events_id_width();
+
+
+    constexpr size_t kBufferTweek = 31;  // "Test-Event: T=" (11) + " W=" (4) + " " (1) + safety
+    const size_t total_width =
+        static_cast<size_t>(w_id)     +
+        static_cast<size_t>(w_time)   +
+        static_cast<size_t>(w_type)   +
+        static_cast<size_t>(w_cat)    +
+        static_cast<size_t>(w_thread) +
+        static_cast<size_t>(w_thread) +   // Yes, we really need this twice...
+        static_cast<size_t>(w_event)  +
+
+kMaxStoredPayloadLength +
+        kBufferTweek;
+
+
     if (max_rows == 0) {
         max_rows = std::numeric_limits<size_t>::max();
     }
@@ -36,71 +59,63 @@ inline void print(std::ostream& os = std::cout,
         return;
     }
 
-    constexpr int W_ID       = 12;
-    constexpr int W_TIME     = 14;
-    constexpr int W_THREAD   = 10;
-    constexpr int PAD        = 2;
-
-    // Fixed widths suitable for std::string (dynamic) usage
-    constexpr int W_TYPE     = 10;
-    constexpr int W_CAT      = 10;
-    constexpr int W_PAYLOAD = 120;
-
-    const int total_width = W_ID + PAD + W_TIME + PAD + W_TYPE + PAD + W_CAT + PAD + W_THREAD + PAD + W_PAYLOAD + 10;
-
-    os << "ts_store <\n"
-       << "   Threads    = " << max_threads_ << "\n"
-       << "   Events     = " << events_per_thread_ << "\n"
+    os << ansi::bold_white << "ts_store <" << ansi::reset << '\n'
+       << "   Threads    = " << get_max_threads() << '\n'
+       << "   Events     = " << get_max_events() << '\n'
        << "   ValueT     = std::string (dynamic allocation)\n"
        << "   Time Stamp = " << (Config::use_timestamps ? "On" : "Off") << ">\n";
-    os << std::string(total_width, '=') << "\n";
 
-    os << std::left
-       << std::setw(W_ID)     << "ID"
-       << std::setw(W_TIME)   << "TIME (µs)"
-       << std::setw(W_TYPE)   << " TYPE"
-       << std::setw(W_CAT)    << " CATEGORY"
-       << std::setw(W_THREAD) << " THREAD"
-       << " PAYLOAD\n";
+    os << ansi::dim << std::string(total_width, '=') << ansi::reset << '\n';
 
-    os << std::string(total_width, '-') << "\n";
+    os << ansi::bold << std::right << std::setw(w_id)   << "ID"
+       << "  "  << std::setw(static_cast<int>(w_time))   << "TIME (µs)"
+       << "  "  << std::setw(static_cast<int>(w_type))   << "TYPE"
+       << "   " << std::setw(static_cast<int>(w_cat))    << "CATEGORY"
+       << "   "  << std::setw(static_cast<int>(w_thread)) << "THREAD"
+       << "   "  << std::setw(static_cast<int>(w_event))  << "EVENT"
+       << "     PAYLOAD"
+       << ansi::reset << '\n';
 
+    os << ansi::dim << std::string(total_width, '-') << ansi::reset << '\n';
     for (uint64_t id = 0; id < total && (max_rows == 0 || id < max_rows); ++id) {
         const auto& r = rows_[id];
 
-        std::string ts_str = "-";                                     // default when no timestamp
+        std::string ts_str = "-";
         if constexpr (Config::use_timestamps) {
             if (r.ts_us != 0) ts_str = std::to_string(r.ts_us);
         }
-
-        uint32_t t_padw = thread_id_width();
-        uint32_t e_padw = events_id_width();
-        std::string prefix = std::format("Test-Event: T={:>{}} W={:>{}} ",
-                                         r.thread_id, t_padw, r.event_id, e_padw);
 
         std::string_view type_sv    = r.type_storage;
         std::string_view cat_sv     = r.category_storage;
         std::string_view payload_sv = r.value_storage;
 
-        std::string full_line = prefix + std::string(payload_sv);
-        os << std::left
-           << std::setw(W_ID)     << id
-           << std::setw(W_TIME)   << ts_str
-           << std::setw(W_TYPE)   << type_sv
-           << std::setw(W_CAT)    << cat_sv
-           << "   "
-           << std::right
-           << std::setw(W_THREAD) << r.thread_id
-           << std::left
-           << "   "
-           << full_line.substr(0, W_PAYLOAD) << "\n";
+        os << ansi::bold_white << std::right << std::setw(static_cast<int>(w_id))     << id          << ansi::reset
+           << ansi::gray       << " "                                                                << ansi::reset
+           << ansi::cyan       << std::right << std::setw(static_cast<int>(w_time))   << ts_str      << ansi::reset
+           << ansi::gray       << "  "                                                                << ansi::reset
+           << ansi::green      << std::left  << std::setw(static_cast<int>(w_type))   << type_sv     << ansi::reset
+           << ansi::gray       << "  "                                                               << ansi::reset
+           << ansi::magenta    << std::left  << std::setw(static_cast<int>(w_cat))    << cat_sv      << ansi::reset
+           << ansi::gray       << "     "                                                            << ansi::reset
+           << ansi::magenta    << std::right << std::setw(static_cast<int>(w_thread)) << r.thread_id << ansi::reset
+           << ansi::gray       << "     "                                                            << ansi::reset
+           << ansi::magenta    << std::right << std::setw(static_cast<int>(w_event))  << r.event_id  << ansi::reset
+           << ansi::gray       << "     "                                                            << ansi::reset
+           << ansi::yellow     << payload_sv                                                         << ansi::reset
+           << '\n';
+    }
+    os << ansi::dim << std::string(total_width, '=') << ansi::reset << '\n';
+
+
+    const size_t display_limit = max_rows;
+    if (max_rows == 0) {
+        max_rows = std::numeric_limits<size_t>::max();
+    }
+    if (display_limit != 0 && display_limit < total) {
+        os << ansi::dim << "Output Truncated to " << display_limit << " rows (of " << total << ")." << ansi::reset << '\n';
     }
 
-    os << std::string(total_width, '=') << "\n";
-    if (max_rows == 0) {
-        os << "Output Truncated to " << max_rows << ".\n";
-    }
-    os << "Note: Output is zero indexed, so it is expected that last entry is " << expected_size()-1 << ".\n";
-    os << "Total entries: " << total << " (expected: " << expected_size() << ")\n";
+    os << ansi::dim << "Note: Output is zero indexed, so it is expected that last entry is " << (expected_size() - 1) << "." << ansi::reset << '\n';
+    os << ansi::dim << "Total entries: " << total << " (expected: " << expected_size() << ")" << ansi::reset << '\n';
     os << std::endl;
 }

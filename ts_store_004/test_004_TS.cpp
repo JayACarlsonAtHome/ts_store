@@ -1,13 +1,6 @@
-// test_004.cpp — Full stress test with per-thread success tracking + results store
-// FINAL — 100% CORRECT, 100% COMPILING, 100% PASSING
+//ts_store_004/Test_004_TS.CPP
 
 #include "../ts_store_headers/ts_store.hpp"
-#include <atomic>
-//#include <chrono>
-#include <iostream>
-#include <thread>
-#include <vector>
-#include <format>
 
 using namespace jac::ts_store::inline_v001;
 
@@ -38,15 +31,15 @@ int main() {
 
             std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
             if (payload.size() < LogxStore::kMaxStoredPayloadLength) payload.append(LogxStore::kMaxStoredPayloadLength - payload.size(), '.');
+            std::string_view payload_copy = payload;
+
             std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
             std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
             bool is_debug = true;
-            auto [ok, id] = safepay.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
-            if (!ok) continue;
-            std::this_thread::yield();
 
+            auto [ok, id] = safepay.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
             auto [val_ok, val_sv] = safepay.select(id);
-            if (val_ok && std::string_view(val_sv) == payload) {
+            if (val_ok && std::string_view(val_sv) == payload_copy) {
                 ++local_successes;
             } else if (!val_ok) {
                 ++local_nulls;
@@ -78,7 +71,7 @@ int main() {
               << "  (" << (total_successes == TOTAL_EVENTS ? "PASS" : "FAIL") << ")\n";
     std::cout << "Null reads (races): " << total_nulls << "\n\n";
 
-    if (!safepay.verify_integrity()) {
+    if (!safepay.verify_level01()) {
         std::cerr << "INTEGRITY VERIFICATION FAILED\n";
         safepay.diagnose_failures();
         return 1;

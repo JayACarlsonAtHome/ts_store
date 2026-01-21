@@ -6,9 +6,25 @@
 #include <array>
 #include <string_view>
 
-inline static constexpr std::array<std::string_view, 5> types = {"INFO", "WARN", "ERROR", "TRACE", "DEBUG"};
-inline static constexpr std::array<std::string_view, 5> categories = {"NET", "DB", "UI", "SYS", "GFX"};
+inline static constexpr std::array<std::string_view, 5> types = {
+    //Make sure these are all the same size
+    "INFO ",
+    "WARN ",
+    "ERROR",
+    "TRACE",
+    "DEBUG"
+};
+
+inline static constexpr std::array<std::string_view, 5> categories = {
+    //Make sure these are all the same size
+    "NET",
+    "DB ",
+    "UI ",
+    "SYS",
+    "GFX"
+};
 inline static constexpr std::array<std::string_view, 5> test_messages = {
+    //Make sure these are all the same size
     "[INFO]  Processing request ",
     "[WARN]  Resource usage high",
     "[ERROR] Connection failed  ",

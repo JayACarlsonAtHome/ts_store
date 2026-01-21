@@ -1,14 +1,6 @@
-// final_massive_test.cpp — 250 threads × 4000 events = 1,000,000 entries
-// 50-run benchmark with min/max/avg — FINAL, UNBREAKABLE, PERFECT
+//ts_store_005/Test_005_XS.CPP
 
 #include "../ts_store_headers/ts_store.hpp"
-#include <thread>
-#include <vector>
-#include <iostream>
-#include <chrono>
-#include <iomanip>
-#include <format>
-#include <algorithm>
 
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
@@ -18,16 +10,8 @@ constexpr uint32_t EVENTS_PER_THREAD = 4000;
 //constexpr uint64_t TOTAL           = uint64_t(THREADS) * EVENTS_PER_THREAD;
 constexpr int      RUNS              = 50;
 
-using LogConfig = ts_store_config<false>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogConfig = ts_store_config<false>;
 using LogxStore = ts_store<LogConfig>;
-
-constexpr std::array<std::string_view, 5> event_messages = {
-    "[INFO]  Processing request",
-    "[WARN]  Resource usage high",
-    "[ERROR] Connection failed",
-    "[INFO]  Cache hit ratio 98%",
-    "[DEBUG] Thread pool active"
-};
 
 int run_single_test(LogxStore& store)
 {
@@ -35,6 +19,7 @@ int run_single_test(LogxStore& store)
     auto start = high_resolution_clock::now();
     std::vector<std::thread> threads;
     threads.reserve(THREADS);
+
     for (uint32_t t = 0; t < THREADS; ++t) {
         threads.emplace_back([&, t]() {
             for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
@@ -46,7 +31,7 @@ int run_single_test(LogxStore& store)
                 bool is_debug = true;
                 auto [ok, id] = store.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
                 if (!ok) {
-                    std::cerr << "CLAIM FAILED — thread " << t << " event " << i << "\n";
+                    std::cerr << ansi::red << "CLAIM FAILED — thread " << t << " event " << i << ansi::reset << "\n" ;
                     std::abort();
                 }
             }
@@ -58,26 +43,29 @@ int run_single_test(LogxStore& store)
     auto end = high_resolution_clock::now();
     auto write_us = duration_cast<microseconds>(end - start).count();
 
-    if (!store.verify_integrity()) {
+    if (!store.verify_level01()) {
         std::cerr << "STRUCTURAL VERIFICATION FAILED\n";
         store.diagnose_failures();
         return -1;
     }
 
-/*
-    if (!store.verify_test_payloads()) {
+    /*
+    // Only activate this is you want to run for a very long time
+    //   or you change the threads, and event numbers to something
+    //   reasonable
+    //
+
+    if (!store.verify_level02()) {
         std::cerr << "TEST PAYLOAD VERIFICATION FAILED\n";
         store.diagnose_failures();
         return -1;
     }
 */
-
     return static_cast<int>(write_us);
 }
 
 int main()
 {
-
     LogxStore  store(THREADS, EVENTS_PER_THREAD);
 
     long long total_write_us = 0;

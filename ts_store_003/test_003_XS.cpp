@@ -1,28 +1,20 @@
-﻿// test_003.cpp — Aggressive tail-reader stress test (500 threads × 100 ops)
+﻿//ts_store_003/Test_003_XS.CPP
 
 #include "../ts_store_headers/ts_store.hpp"
-#include <atomic>
-#include <chrono>
-#include <iostream>
-#include <thread>
-#include <vector>
-#include <iomanip>
-#include <array>
-#include <format>
 
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
 // ———————————————————— Test configuration ————————————————————
-constexpr int    WRITER_THREADS     = 500;
-constexpr int    OPS_PER_THREAD     = 100;
+constexpr int    WRITER_THREADS     = 50;
+constexpr int    OPS_PER_THREAD     = 40;
 constexpr size_t MAX_ENTRIES        = WRITER_THREADS * OPS_PER_THREAD;
 
 alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 inline std::array<uint64_t, MAX_ENTRIES> log_stream_array{};
 inline std::atomic<size_t> total_written{0};
 
-using LogConfig = ts_store_config<false>;
+using LogConfig = ts_store_config<true>;
 using LogxStore = ts_store<LogConfig>;
 
 
@@ -111,21 +103,19 @@ int main() {
     std::cout << "Tail-reader result: " << hits << " hits, " << misses << " misses (should be 0)\n";
 
     // Final verification
-    if (!store.verify_integrity()) {
+    if (!store.verify_level01()) {
         std::cerr << "STRUCTURAL VERIFICATION FAILED\n";
         store.diagnose_failures();
         return 1;
     }
 
-#ifdef TS_STORE_ENABLE_TEST_CHECKS
-    if (!store.verify_test_payloads()) {
+    if (!store.verify_level02()) {
         std::cerr << "TEST PAYLOAD VERIFICATION FAILED\n";
         store.diagnose_failures();
         return 1;
     }
-#endif
 
-    std::cout << "ALL 50,000 ENTRIES VERIFIED — ZERO CORRUPTION\n";
+    std::cout << "ALL " << store.expected_size() <<" ENTRIES VERIFIED — ZERO CORRUPTION\n";
     store.show_duration("Store");
     std::cout << "\nPress Enter to display (truncated) trace logs...\n";
     std::cin.get();

@@ -22,4 +22,5 @@
 #include <memory>
 #include <sys/sysinfo.h>
 #include "ts_store_config.hpp"
+#include "impl_details/ansi_colors.hpp"
 

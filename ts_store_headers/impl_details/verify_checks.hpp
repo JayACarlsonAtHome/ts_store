@@ -3,20 +3,15 @@
 
 #pragma once
 
-#include <format>
-#include <iostream>
-#include <string_view>
-#include <algorithm>
-#include <vector>
-#include "test_constants.hpp"
-
-[[nodiscard]] inline bool verify_integrity() const {
+[[nodiscard]] inline bool verify_level01() const {
     const uint64_t current = rows_.size();
     const uint64_t expected = expected_size();
 
     if (current != expected || next_id_.load(std::memory_order_acquire) != expected) {
-        std::cout << std::format("\033[1;31m     [VERIFY] SIZE/MISMATCH — entries {} (expected {}), next_id {} (expected {})\033[0m\n",
-                                 current, expected, next_id_.load(), expected);
+        std::cout << ansi::bold << ansi::red
+                  << std::format("     [VERIFY] SIZE/MISMATCH — entries {} (expected {}), next_id {} (expected {})\n",
+                                 current, expected, next_id_.load(), expected)
+                  << ansi::reset;
         return false;
     }
 
@@ -25,24 +20,27 @@
     for (uint64_t id = 0; id < rows_.size(); ++id) {
         const auto& row = rows_[id];
         if (row.thread_id >= max_threads_ || row.event_id >= events_per_thread_) {
-            std::cout << std::format("\033[1;31m     [VERIFY] OUT-OF-RANGE — thread_id {} or event_id {} at ID {}\033[0m\n",
-                                     row.thread_id, row.event_id, id);
+            std::cout  << ansi::bold << ansi::red
+                       << std::format("[VERIFY] OUT-OF-RANGE — thread_id {} or event_id {} at ID {}\033[0m\n",
+                                     row.thread_id, row.event_id, id)
+                       << ansi::reset;
             return false;
         }
         if (seen[row.thread_id][row.event_id]) {
-            std::cout << std::format("\033[1;31m     [VERIFY] DUPLICATE (thread {}, event {}) at ID {}\033[0m\n",
-                                     row.thread_id, row.event_id, id);
+            std::cout  << ansi::bold << ansi::red
+                       << std::format("[VERIFY] DUPLICATE (thread {}, event {}) at ID {}\n", row.thread_id, row.event_id, id)
+                       << ansi::reset;
             return false;
         }
         seen[row.thread_id][row.event_id] = true;
     }
 
-    std::cout << std::format("\033[1;32m     [VERIFY] ALL {} ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE\033[0m\n", expected);
+    std::cout  << ansi::green << std::format("[VERIFY] ALL {} ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE\033[0m\n", expected) << ansi::reset;
     return true;
 }
 
 
-[[nodiscard]] inline bool verify_test_payloads() const {
+[[nodiscard]] inline bool verify_level02() const {
 
     bool all_good = true;
 
@@ -54,19 +52,22 @@
         if (expected.size() < kMaxStoredPayloadLength) expected.append(kMaxStoredPayloadLength - expected.size(), '.');
         if ((pay_load == expected) && (pay_load.size() == kMaxStoredPayloadLength))  valid = true;
         if (!valid) {
-            std::cout << std::format("\033[31m[TEST-VERIFY] CORRUPTED PAYLOAD at ID:{}  Thread_ID:{}  Event_ID:{} \n"
-                                     "              Actual   (len {}): {}\n"
-                                     "              Expected (len {}): {}\033[0m\n",
-                                  id, row.thread_id, row.event_id, pay_load.size(), pay_load, expected.size(), expected);
+            std::cout  << ansi::bold << ansi::red
+                       << std::format("[TEST-VERIFY] CORRUPTED PAYLOAD at ID:{}  Thread_ID:{}  Event_ID:{} \n"
+                                      "              Actual   (len {}): {}\n"
+                                      "              Expected (len {}): {}\n",
+                                  id, row.thread_id, row.event_id, pay_load.size(), pay_load, expected.size(), expected)
+                       << ansi::reset;
             all_good = false;
         }
         if (all_good) {
-            std::cout << std::format("\033[1;32m[TEST-VERIFY] TEST PAYLOADS VALID  ID:{}  Thread_ID:{}  Event_ID:{} \n"
+            std::cout << ansi::green << std::format("[TEST-VERIFY] TEST PAYLOADS VALID  ID:{}  Thread_ID:{}  Event_ID:{} \n"
                                                 "                  Actual   Len({}): {}\n"
                                                 "                  Expected Len({}): {}\033[0m\n",
-                                id, row.thread_id, row.event_id, pay_load.size(), pay_load, expected.size(), expected);
+                                id, row.thread_id, row.event_id, pay_load.size(), pay_load, expected.size(), expected)
+                      << ansi::reset;
         } else {
-            std::cout << std::format("\033[1;31m[TEST-VERIFY] ONE OR MORE CORRUPTED\033[0m\n");
+            std::cout  << ansi::bold << ansi::red << std::format("[TEST-VERIFY] ONE OR MORE CORRUPTED\n") << ansi::reset;
         }
     }
     return all_good;

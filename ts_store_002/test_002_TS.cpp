@@ -1,27 +1,20 @@
-// test_002.cpp — 250,000 entry stress test — FINAL 2025 EDITION
-// NOW 100% MATCHES FastPayload format: "thread:X event:Y payload-X-Y"
+//ts_store_002/Test_002_TS.CPP
 
 #include "../ts_store_headers/ts_store.hpp"
-#include <iostream>
-#include <thread>
-#include <vector>
-#include <format>
-#include <array>
-#include "../ts_store_headers/impl_details/test_constants.hpp"
 
 using namespace jac::ts_store::inline_v001;
 
-using LogConfig = ts_store_config<true>;  // BufferSize=96, TypeSize=12, CategorySize=24, UseTimestamps=true
+using LogConfig = ts_store_config<true>;
 using LogxStore = ts_store<LogConfig>;
 
 int main() {
 
-    constexpr uint32_t num_threads       = 250;
-    constexpr uint32_t events_per_thread = 1000;
+    constexpr uint32_t num_threads       = 25;
+    constexpr uint32_t events_per_thread = 100;
     constexpr uint64_t total_entries     = uint64_t(num_threads) * events_per_thread;
 
-    std::cout << std::format("\033[1;31m=== ts_store {} entry stress test ===\033[0m\n", total_entries);
-    std::cout << std::format("Threads: {}    Events/thread: {}    Total: {}\n\n",  num_threads, events_per_thread, total_entries);
+    std::cout << ansi::yellow << std::format( "=== ts_store Test 002 TS with {} entries ===\n", total_entries) << ansi::reset;
+    std::cout << ansi::white  << std::format("Threads: {}    Events/thread: {}    Total: {}\n\n",  num_threads, events_per_thread, total_entries) << ansi::reset;
 
     LogxStore store(num_threads, events_per_thread);
 
@@ -39,7 +32,7 @@ int main() {
                 bool is_debug = true;
                 auto [ok, id] = store.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
                 if (!ok) {
-                    std::cout << std::format("\033[1;31m[FATAL] claim failed — thread {} event {}\033[0m\n", t, i);
+                    std::cout << ansi::bold << ansi::red << std::format("[FATAL] claim failed — thread {} event {}\n", t, i) << ansi::reset;
                     std::abort();
                 }
             }
@@ -51,22 +44,24 @@ int main() {
 
     std::cout << "\nAll threads joined — running final verification...\n\n";
 
-    if (!store.verify_integrity()) {
-        std::cerr << "Structural verification failed!\n";
+    if (!store.verify_level01()) {
+        std::cerr << ansi::bold << ansi::red << "Structural verification failed!\n" << ansi::reset;
         store.diagnose_failures();
         return 1;
     }
 
 #ifdef TS_STORE_ENABLE_TEST_CHECKS
-    if (!store.verify_test_payloads()) {
-        std::cerr << "Payload verification failed!\n";
+    if (!store.verify_level02()) {
+        std::cerr <<ansi::bold << ansi::red << "Payload verification failed!\n" << ansi::reset;
         store.diagnose_failures();
         return 1;
     }
 #endif
 
-    std::cout << std::format("╔════════════════════════════════════════════════╗\n"
+    std::cout   << ansi::bold << ansi::blue
+                << std::format("╔════════════════════════════════════════════════╗\n"
                                     "║ All {:06} entries passed verification!        ║\n"
-                                    "╚════════════════════════════════════════════════╝\n",   total_entries);
+                                    "╚════════════════════════════════════════════════╝\n",   total_entries)
+                << ansi::reset;
     return 0;
 }

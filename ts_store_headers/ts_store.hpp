@@ -24,17 +24,23 @@ private:
     const uint32_t events_per_thread_;
 public:
     // ——— GETTERS ———
-    constexpr uint32_t get_max_threads() const noexcept { return max_threads_; }
+[[nodiscard]] constexpr uint32_t id_width() const noexcept {
+        const uint64_t max_id = expected_size() ? expected_size() - 1 : 0;
+        if (max_id == 0) return 1;
+        return static_cast<uint32_t>(std::log10(static_cast<double>(max_id))) + 2;
+    }
 
-    uint32_t thread_id_width() const noexcept {
+    [[nodiscard]] constexpr uint32_t get_max_threads() const noexcept { return max_threads_; }
+
+    [[nodiscard]] uint32_t thread_id_width() const noexcept {
         const uint32_t n = get_max_threads();
         if (n == 0) return 1;
         return static_cast<uint32_t>(std::log10(static_cast<double>(n - 1))) + 2;
     }
 
-    constexpr uint32_t get_max_events() const noexcept { return events_per_thread_; }
+    [[nodiscard]] constexpr uint32_t get_max_events() const noexcept { return events_per_thread_; }
 
-    uint32_t events_id_width() const noexcept {
+    [[nodiscard]] constexpr uint32_t events_id_width() const noexcept {
         const uint32_t n = get_max_events();
         if (n == 0) return 1;
         return static_cast<uint32_t>(std::log10(static_cast<double>(n - 1))) + 2;
@@ -82,3 +88,4 @@ public:
     #include "impl_details/diagnostic.hpp"
 };
 }; // namespace jac::ts_store::inline_v001
+

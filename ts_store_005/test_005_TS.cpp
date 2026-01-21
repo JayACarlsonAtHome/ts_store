@@ -1,14 +1,6 @@
-// final_massive_test.cpp — 250 threads × 4000 events = 1,000,000 entries
-// 50-run benchmark with min/max/avg — FINAL, UNBREAKABLE, PERFECT
+//ts_store_005/Test_005_TS.CPP
 
 #include "../ts_store_headers/ts_store.hpp"
-#include <thread>
-#include <vector>
-#include <iostream>
-#include <chrono>
-#include <iomanip>
-#include <format>
-#include <algorithm>
 
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
@@ -39,7 +31,7 @@ int run_single_test(LogxStore& store)
                 bool is_debug = true;
                 auto [ok, id] = store.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
                 if (!ok) {
-                    std::cerr << "CLAIM FAILED — thread " << t << " event " << i << "\n";
+                    std::cerr << ansi::red << "CLAIM FAILED — thread " << t << " event " << i << ansi::reset << "\n" ;
                     std::abort();
                 }
             }
@@ -51,13 +43,19 @@ int run_single_test(LogxStore& store)
     auto end = high_resolution_clock::now();
     auto write_us = duration_cast<microseconds>(end - start).count();
 
-    if (!store.verify_integrity()) {
+    if (!store.verify_level01()) {
         std::cerr << "STRUCTURAL VERIFICATION FAILED\n";
         store.diagnose_failures();
         return -1;
     }
-/*
-    if (!store.verify_test_payloads()) {
+
+    /*
+    // Only activate this is you want to run for a very long time
+    //   or you change the threads, and event numbers to something
+    //   reasonable
+    //
+
+    if (!store.verify_level02()) {
         std::cerr << "TEST PAYLOAD VERIFICATION FAILED\n";
         store.diagnose_failures();
         return -1;
