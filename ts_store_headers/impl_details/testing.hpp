@@ -23,9 +23,6 @@ inline void test_run(bool is_debug = false) noexcept
 
                 std::string_view msg_sv = test_messages[i % test_messages.size()];
                 std::string payload = std::string(msg_sv);
-                if (payload.size() < kMaxStoredPayloadLength) {
-                    payload.append(kMaxStoredPayloadLength - payload.size(), '.');
-                }
                 std::string_view type_sv = types[i % types.size()];
                 std::string_view cat_sv  = categories[t % categories.size()];
 

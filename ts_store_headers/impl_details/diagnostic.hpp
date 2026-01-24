@@ -40,10 +40,7 @@ inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::m
 
         bool valid = false;
         for (auto msg : test_messages) {
-            std::string expected(msg);
-            if (expected.size() < kMaxStoredPayloadLength) {
-                expected.append(kMaxStoredPayloadLength - expected.size(), '.');
-            }
+            std::string expected = std::string { msg.substr(0,Config::max_payload_length)};
             if (payload == std::string_view(expected)) {
                 valid = true;
                 break;

@@ -1,4 +1,4 @@
-//ts_store_002/Test_002_TS.CPP
+//ts_store_002/Test_002_XS.CPP
 
 #include "../ts_store_headers/ts_store.hpp"
 
@@ -26,7 +26,6 @@ int main() {
             for (uint32_t i = 0; i < events_per_thread; ++i) {
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
-                if (payload.size() < LogxStore::kMaxStoredPayloadLength) payload.append(LogxStore::kMaxStoredPayloadLength - payload.size(), '.');
                 std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
                 std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
                 bool is_debug = true;

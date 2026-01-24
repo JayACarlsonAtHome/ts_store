@@ -4,23 +4,16 @@
 #pragma once
 #include <algorithm>
 #include <thread>
-#include <mutex>
-#include <shared_mutex>
-#include <atomic>
 #include <chrono>
-#include <format>
 #include <string>
 #include <string_view>
-#include <type_traits>
-#include <array>
 #include <vector>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <cmath>
-#include <ranges>
 #include <memory>
 #include <sys/sysinfo.h>
+#include "ansi_colors.hpp"
 #include "ts_store_config.hpp"
-#include "impl_details/ansi_colors.hpp"
 

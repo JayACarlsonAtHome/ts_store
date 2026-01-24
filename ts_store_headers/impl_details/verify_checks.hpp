@@ -48,9 +48,10 @@
         const auto& row = rows_[id];
         bool valid = false;
         std::string pay_load = row.value_storage;
-        std::string expected = std::string(test_messages[row.event_id % test_messages.size()]);
-        if (expected.size() < kMaxStoredPayloadLength) expected.append(kMaxStoredPayloadLength - expected.size(), '.');
-        if ((pay_load == expected) && (pay_load.size() == kMaxStoredPayloadLength))  valid = true;
+        std::string expected = std::string(test_messages[row.event_id % test_messages.size()]).substr(0,Config::max_payload_length);
+        //Todo Remove this
+
+        if ((pay_load == expected) && (pay_load.size() <= Config::max_payload_length))  valid = true;
         if (!valid) {
             std::cout  << ansi::bold << ansi::red
                        << std::format("[TEST-VERIFY] CORRUPTED PAYLOAD at ID:{}  Thread_ID:{}  Event_ID:{} \n"

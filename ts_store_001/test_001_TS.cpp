@@ -27,7 +27,7 @@ int main() {
     }
     std::cout << "PRODUCTION SIMULATION PASSED — 100% clean\n";
     prod.press_any_key();
-    prod.print();
+    prod.print(std::cout,0);
     std::cout << "\n=== ALL TESTS COMPLETED SUCCESSFULLY ===\n";
     return 0;
 }

@@ -37,7 +37,6 @@ int main() {
                 // Now matches verify_test_payloads() expectations
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
-                if (payload.size() < LogxStore::kMaxStoredPayloadLength) payload.append(LogxStore::kMaxStoredPayloadLength - payload.size(), '.');
                 std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
                 std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
                 bool is_debug = true;

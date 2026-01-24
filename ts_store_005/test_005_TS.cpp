@@ -8,7 +8,7 @@ using namespace std::chrono;
 constexpr uint32_t THREADS           = 250;
 constexpr uint32_t EVENTS_PER_THREAD = 4000;
 //constexpr uint64_t TOTAL           = uint64_t(THREADS) * EVENTS_PER_THREAD;
-constexpr int      RUNS              = 50;
+constexpr int      RUNS              = 1000;
 
 using LogConfig = ts_store_config<true>;
 using LogxStore = ts_store<LogConfig>;
@@ -25,7 +25,6 @@ int run_single_test(LogxStore& store)
             for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
-                if (payload.size() < LogxStore::kMaxStoredPayloadLength) payload.append(LogxStore::kMaxStoredPayloadLength - payload.size(), '.');
                 std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
                 std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
                 bool is_debug = true;

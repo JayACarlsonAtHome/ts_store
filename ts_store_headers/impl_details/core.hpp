@@ -17,9 +17,9 @@ save_event(unsigned int thread_id,
     row.event_id  = event_id;                      // ← store it
     row.is_debug  = debug;
 
-    row.value_storage     = std::forward<typename Config::ValueT>(value);
-    row.type_storage      = std::forward<typename Config::TypeT>(type);
-    row.category_storage  = std::forward<typename Config::CategoryT>(category);
+    row.value_storage     = std::forward<typename Config::ValueT>(value.substr(0,Config::max_payload_length));
+    row.type_storage      = std::forward<typename Config::TypeT>(type.substr(0,Config::max_type_length));
+    row.category_storage  = std::forward<typename Config::CategoryT>(category.substr(0,Config::max_category_length));
 
     // — TIMESTAMP —
     if constexpr (Config::use_timestamps) {
@@ -60,12 +60,12 @@ save_event(unsigned int thread_id,
 
     row.type_storage = std::forward<typename Config::TypeT>(type);
     if (row.type_storage.empty()) {
-        row.type_storage = "UNKNOWN";
+        row.type_storage = "None";
     }
 
     row.category_storage = std::forward<typename Config::CategoryT>(category);
     if (row.category_storage.empty()) {
-        row.category_storage = "UNKNOWN";
+        row.category_storage = "None";
     }
 
     // — TIMESTAMP —

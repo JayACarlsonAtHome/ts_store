@@ -30,9 +30,7 @@ int main() {
         for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
 
             std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
-            if (payload.size() < LogxStore::kMaxStoredPayloadLength) payload.append(LogxStore::kMaxStoredPayloadLength - payload.size(), '.');
             std::string_view payload_copy = payload;
-
             std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
             std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
             bool is_debug = true;

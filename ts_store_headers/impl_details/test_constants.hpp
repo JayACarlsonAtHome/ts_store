@@ -7,30 +7,27 @@
 #include <string_view>
 
 inline static constexpr std::array<std::string_view, 5> types = {
-    //Make sure these are all the same size
-    "INFO ",
-    "WARN ",
+    "INFO",
+    "WARN",
     "ERROR",
     "TRACE",
     "DEBUG"
 };
 
 inline static constexpr std::array<std::string_view, 5> categories = {
-    //Make sure these are all the same size
     "NET",
-    "DB ",
-    "UI ",
+    "DB",
+    "UI",
     "SYS",
     "GFX"
 };
 inline static constexpr std::array<std::string_view, 5> test_messages = {
-    //Make sure these are all the same size
-    "[INFO]  Processing request ",
+    "[INFO]  Processing request",
     "[WARN]  Resource usage high",
-    "[ERROR] Connection failed  ",
+    "[ERROR] Connection failed",
     "[INFO]  Cache hit ratio 98%",
-    "[DEBUG] Thread pool active "
+    "[DEBUG] Thread pool active"
 };
 
-inline static constexpr size_t kMaxStoredPayloadLength = 120;
+
 
