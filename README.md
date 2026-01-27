@@ -36,20 +36,20 @@ All 10 stress tests pass 100% on g++ 15.1.1 (RHEL 9/10)
 *Note 2: Test only run on GCC G++ version 15.1.1, no tests on LLVM\Clang or ZIG Build of LLVM C++ on this run."
 
 
-### Performance (measured 2026-01-24) -- Potentially thermally throttled...
-| Environment         | Compiler   | Cores | Timestamps | Writes/sec (1M events)      |
-|---------------------|------------|-------|------------|-----------------------------|
-|                     |            |       |            | High    | Low     | Avg     |
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | 17.15M  | 10.38M  | 16.03M  | 
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | 18.70M  | 12.47M  | 17.65M  | 
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | On         | 17.74M  | 13.36M  | 16.83M  |
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | Off        | 19.49M  | 14.90M  | 18.59M  |
+### Performance (measured 2026-01-26) -- Fastest Run in a while
+| Environment         | Compiler   | Cores | Timestamps | Writes/sec (1M events) 
+|---------------------|------------|-------|------------|-------------|---------|---------|
+|                     |            |       |            | High        | Low     | Avg     |
+| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | 17.15M      | 10.38M  | 16.03M  | 
+| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | 18.70M      | 12.47M  | 17.65M  | 
+| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | On         | 28.85M      | 18.68M  | 25.83M  |
+| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | Off        | 27.20M      | 20.43M  | 24.78M  |
 
 *Writes: 250 threads × 4000 events (1,000,000) over 1000 runs (real data from test_005).*
 *Average over 16 million operations per second with or without timestamps*
 *Not Measured -- bulk validation of payload timing at end of test.
-*Note 1: More validation, lead to slightly slower code, but safer.
-*Note 2: Test only run on GCC G++ version 15.1.1, no tests on LLVM\Clang or Zig Build of LLVM C++ on this run."
+*Note 1: Test only run on GCC G++ version 15.1.1, no tests on LLVM\Clang or Zig Build of LLVM C++ on this run."
+*Note 2: While Average speed is almost always over 15M ops/sec aver, there can be a big difference on runs. 
 
 
 ### Planned Features
