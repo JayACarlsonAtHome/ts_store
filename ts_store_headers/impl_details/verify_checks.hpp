@@ -4,8 +4,8 @@
 #pragma once
 
 [[nodiscard]] inline bool verify_level01() const {
-    const uint64_t current = rows_.size();
-    const uint64_t expected = expected_size();
+    const size_t current = rows_.size();
+    const size_t expected = expected_size();
 
     if (current != expected || next_id_.load(std::memory_order_acquire) != expected) {
         std::cout << ansi::bold << ansi::red
@@ -17,7 +17,7 @@
 
     std::vector<std::vector<bool>> seen(max_threads_, std::vector<bool>(events_per_thread_, false));
 
-    for (uint64_t id = 0; id < rows_.size(); ++id) {
+    for (size_t id = 0; id < rows_.size(); ++id) {
         const auto& row = rows_[id];
         if (row.thread_id >= max_threads_ || row.event_id >= events_per_thread_) {
             std::cout  << ansi::bold << ansi::red
@@ -44,13 +44,11 @@
 
     bool all_good = true;
 
-    for (uint64_t id = 0; id < rows_.size(); ++id) {
+    for (size_t id = 0; id < rows_.size(); ++id) {
         const auto& row = rows_[id];
         bool valid = false;
         std::string pay_load = row.value_storage;
         std::string expected = std::string(test_messages[row.event_id % test_messages.size()]).substr(0,Config::max_payload_length);
-        //Todo Remove this
-
         if ((pay_load == expected) && (pay_load.size() <= Config::max_payload_length))  valid = true;
         if (!valid) {
             std::cout  << ansi::bold << ansi::red

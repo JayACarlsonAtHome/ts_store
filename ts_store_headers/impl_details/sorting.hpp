@@ -9,7 +9,7 @@
 
 inline std::vector<std::uint64_t> get_all_ids_sorted(int mode = 0) const
 {
-    std::vector<std::uint64_t> ids;
+    std::vector<size_t> ids;
     ids.reserve(rows_.size());
     for (const auto& [id, _] : rows_)
         ids.push_back(id);
@@ -47,7 +47,7 @@ inline std::vector<std::uint64_t> get_ids_sorted_by_timestamp() const
         if (row.ts_us != 0)
             ids.push_back(id);
 
-    std::sort(ids.begin(), ids.end(), [this](uint64_t a, uint64_t b) {
+    std::sort(ids.begin(), ids.end(), [this](size_t a, size_t b) {
         auto ita = rows_.find(a);
         auto itb = rows_.find(b);
         if (ita == rows_.end() || itb == rows_.end()) return false;

@@ -16,12 +16,12 @@ namespace jac::ts_store::inline_v001 {
 template<typename ValueT, typename TypeT, typename CategoryT,
          size_t BufferSize, size_t TypeSize, size_t CategorySize, bool UseTimestamps>
 struct memory_guard {
-    memory_guard(uint32_t max_threads, uint32_t events_per_thread)
+    memory_guard(size_t max_threads, size_t events_per_thread)
     {
-        const uint64_t N = uint64_t(max_threads) * events_per_thread;
+        const size_t N = size_t(max_threads) * events_per_thread;
 
         // Hardcoded logic — no concepts, no circular deps
-        const u_int32_t totalEvents = max_threads * events_per_thread;
+        const size_t totalEvents = max_threads * events_per_thread;
         constexpr bool value_trivial = std::is_trivially_copyable_v<ValueT> &&
             requires { std::string_view(std::declval<ValueT>()); };
 
@@ -32,8 +32,8 @@ struct memory_guard {
         constexpr size_t type_bytes  = type_trivial  ? sizeof(TypeT)  : TypeSize;
         constexpr size_t cat_bytes   = cat_trivial   ? sizeof(CategoryT) : CategorySize;
 
-        const uint64_t row_bytes = 8 + type_bytes + cat_bytes + value_bytes + (UseTimestamps ? 8 : 0);
-        const uint64_t total_bytes = totalEvents * (row_bytes + 40) + (150ULL << 20);
+        const size_t row_bytes = 8 + type_bytes + cat_bytes + value_bytes + (UseTimestamps ? 8 : 0);
+        const size_t total_bytes = totalEvents * (row_bytes + 40) + (150ULL << 20);
 
         std::cout << "Memory guard: Threads: " << max_threads << ", " << "Events: " << events_per_thread << ",  ("
                   << (N/1000) << "k) \n"
@@ -43,7 +43,7 @@ struct memory_guard {
                   << "  Total Bytes: " << std::setw(7) << (total_bytes >> 20) << " MiB (Padded for safety) \n\n";
 
         struct sysinfo info{};
-        uint64_t avail = 8ULL << 30;
+        size_t avail = 8ULL << 30;
         if (sysinfo(&info) == 0)
             avail = info.freeram + info.bufferram + info.sharedram;
 

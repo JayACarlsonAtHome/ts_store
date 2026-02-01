@@ -8,12 +8,12 @@ using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
 // ———————————————————— Test configuration ————————————————————
-constexpr int    WRITER_THREADS     = 50;
-constexpr int    OPS_PER_THREAD     = 40;
+constexpr size_t WRITER_THREADS     = 50;
+constexpr size_t OPS_PER_THREAD     = 400;
 constexpr size_t MAX_ENTRIES        = WRITER_THREADS * OPS_PER_THREAD;
 
 alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
-inline std::array<uint64_t, MAX_ENTRIES> log_stream_array{};
+inline std::array<size_t, MAX_ENTRIES> log_stream_array{};
 inline std::atomic<size_t> total_written{0};
 
 using LogConfig = ts_store_config<true>;
@@ -21,8 +21,11 @@ using LogxStore = ts_store<LogConfig>;
 
 
 int main() {
-    LogxStore store(WRITER_THREADS, OPS_PER_THREAD);
+    if (std::cin.rdbuf()->in_avail() > 0) {
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
 
+    LogxStore store(WRITER_THREADS, OPS_PER_THREAD);
     std::vector<std::thread> writers;
     writers.reserve(WRITER_THREADS);
 
@@ -31,9 +34,9 @@ int main() {
               << duration_cast<microseconds>(writer_start.time_since_epoch()).count()
               << " µs\n";
 
-    for (int t = 0; t < WRITER_THREADS; ++t) {
+    for (size_t t = 0; t < WRITER_THREADS; ++t) {
         writers.emplace_back([&, t]() {
-            for (int i = 0; i < OPS_PER_THREAD; ++i) {
+            for (size_t i = 0; i < OPS_PER_THREAD; ++i) {
                 // Now matches verify_test_payloads() expectations
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
@@ -120,6 +123,6 @@ int main() {
     store.show_duration("Store");
     std::cout << "\nPress Enter to display (truncated) trace logs...\n";
     std::cin.get();
-    store.print(std::cout, 0);
+    store.print(0);
     return 0;
 }

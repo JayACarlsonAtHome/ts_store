@@ -1,28 +1,29 @@
 //ts_store_005/Test_005_TS.CPP
 
 #include "../ts_store_headers/ts_store.hpp"
+#include <utility>
 
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
-constexpr uint32_t THREADS           = 250;
-constexpr uint32_t EVENTS_PER_THREAD = 4000;
-//constexpr uint64_t TOTAL           = uint64_t(THREADS) * EVENTS_PER_THREAD;
-constexpr int      RUNS              = 1000;
+constexpr size_t THREADS           = 250;
+constexpr size_t EVENTS_PER_THREAD = 4000;
+constexpr size_t TOTAL             = size_t(THREADS) * EVENTS_PER_THREAD;
+constexpr size_t RUNS              = 50;
 
 using LogConfig = ts_store_config<true>;
 using LogxStore = ts_store<LogConfig>;
 
-int run_single_test(LogxStore& store)
+std::pair<bool, long int> run_single_test(LogxStore& store)
 {
     store.clear();
-    auto start = high_resolution_clock::now();
     std::vector<std::thread> threads;
     threads.reserve(THREADS);
+    auto start = high_resolution_clock::now();
 
-    for (uint32_t t = 0; t < THREADS; ++t) {
+    for (size_t t = 0; t < THREADS; ++t) {
         threads.emplace_back([&, t]() {
-            for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
+            for (size_t i = 0; i < EVENTS_PER_THREAD; ++i) {
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
                 std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
@@ -40,12 +41,12 @@ int run_single_test(LogxStore& store)
     for (auto& th : threads) th.join();
 
     auto end = high_resolution_clock::now();
-    auto write_us = duration_cast<microseconds>(end - start).count();
+    long int write_us = duration_cast<microseconds>(end - start).count();
 
     if (!store.verify_level01()) {
         std::cerr << "STRUCTURAL VERIFICATION FAILED\n";
         store.diagnose_failures();
-        return -1;
+        return {false, -1};
     }
 
     /*
@@ -60,39 +61,46 @@ int run_single_test(LogxStore& store)
         return -1;
     }
 */
-    return static_cast<int>(write_us);
+    return { true, write_us };
 }
 
 int main()
 {
+    if (std::cin.rdbuf()->in_avail() > 0) {
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
     LogxStore  store(THREADS, EVENTS_PER_THREAD);
-
-    long long total_write_us = 0;
-    int64_t   durations[RUNS] = {};  // ← FIXED NAME
-    int       failed_runs = 0;
+    size_t total_write_us = 0;
+    size_t durations[RUNS] = {};  // ← FIXED NAME
+    size_t failed_runs = 0;
 
     std::cout << "=== FINAL MASSIVE TEST — 1,000,000 entries × " << RUNS << " runs ===\n";
     std::cout << "Using store.clear() — fastest, most realistic reuse\n\n";
 
-    for (int run = 0; run < RUNS; ++run) {
+    for (size_t run = 0; run < RUNS; ++run) {
         std::cout << "Run " << std::setw(2) << (run + 1) << " / " << RUNS << "\n";
 
-        int result = run_single_test(store);
+        auto [status, microseconds] = run_single_test(store);
 
-        if (result < 0) {
+        if (!status) {
             std::cout << "FAILED\n";
             ++failed_runs;
-        } else {
-            total_write_us += result;
-            durations[run] = result;  // ← FIXED
+        } else
+        {
+            total_write_us += microseconds;
+            durations[run] = microseconds;  // ← FIXED
 
-            double ops_per_sec = 1'000'000.0 * 1'000'000.0 / result;
-
-            std::cout << "PASS — "
-                      << std::setw(8) << result << " µs → "
-                      << std::fixed << std::setprecision(0)
-                      << std::setw(9) << static_cast<uint64_t>(ops_per_sec + 0.5)
-                      << " ops/sec\n\n";
+            if (microseconds == 0) {
+                std::cout << "PASS — 0 µs (too fast to measure)\n\n";
+            } else
+            {
+                double ops_per_sec = 1'000'000.0 * 1'000'000.0 / static_cast<double>(microseconds);
+                std::cout << "PASS — "
+                          << std::setw(8) << microseconds << " µs → "
+                          << std::fixed << std::setprecision(0)
+                          << std::setw(9) << static_cast<size_t>(ops_per_sec + 0.5)
+                          << " ops/sec\n\n";
+            }
         }
     }
 
@@ -103,8 +111,8 @@ int main()
 
     auto [min_it, max_it] = std::minmax_element(std::begin(durations), std::end(durations));
     double avg_us = static_cast<double>(total_write_us) / RUNS;
-    double min_ops_sec = 1'000'000.0 * 1'000'000.0 / *max_it;
-    double max_ops_sec = 1'000'000.0 * 1'000'000.0 / *min_it;
+    double max_ops_sec = 1'000'000.0 * 1'000'000.0 / static_cast<double>(*min_it);
+    double min_ops_sec = 1'000'000.0 * 1'000'000.0 / static_cast<double>(*max_it);
     double avg_ops_sec = 1'000'000.0 * 1'000'000.0 / avg_us;
 
     std::cout << "\n";

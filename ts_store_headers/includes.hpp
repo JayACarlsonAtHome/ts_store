@@ -13,6 +13,10 @@
 #include <iostream>
 #include <cmath>
 #include <memory>
+#include <print>
+#include <format>
+#include <utility>
+#include <cctype>
 #include <sys/sysinfo.h>
 #include "ansi_colors.hpp"
 #include "ts_store_config.hpp"

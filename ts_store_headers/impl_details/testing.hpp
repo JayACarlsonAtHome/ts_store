@@ -16,10 +16,10 @@ inline void test_run(bool is_debug = false) noexcept
     std::vector<std::thread> threads;
     threads.reserve(max_threads_);
 
-    for (uint32_t t = 0; t < max_threads_; ++t) {
+    for (size_t t = 0; t < max_threads_; ++t) {
 
         threads.emplace_back([this, t, is_debug] {
-            for (uint32_t i = 0; i < events_per_thread_; ++i) {
+            for (size_t i = 0; i < events_per_thread_; ++i) {
 
                 std::string_view msg_sv = test_messages[i % test_messages.size()];
                 std::string payload = std::string(msg_sv);

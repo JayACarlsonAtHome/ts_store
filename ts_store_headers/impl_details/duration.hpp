@@ -11,10 +11,10 @@
 
 inline void show_duration(const std::string& name) const {
     if constexpr (Config::use_timestamps) {
-        uint64_t first_ts = 0;
-        uint64_t last_ts  = 0;
+        size_t first_ts = 0;
+        size_t last_ts  = 0;
 
-        for (uint64_t id = 0; id < rows_.size(); ++id) {
+        for (size_t id = 0; id < rows_.size(); ++id) {
             const auto& row = rows_[id];
             if (row.ts_us == 0) continue;
 
@@ -31,4 +31,5 @@ inline void show_duration(const std::string& name) const {
     } else {
         std::cout << std::format("{} duration: timestamps disabled (UseTimestamps=false)\n", name);
     }
+
 }

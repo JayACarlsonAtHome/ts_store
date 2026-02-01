@@ -8,10 +8,13 @@ using LogConfig = ts_store_config<true>;
 using LogxStore = ts_store<LogConfig>;
 
 int main() {
+    if (std::cin.rdbuf()->in_avail() > 0) {
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
 
-    constexpr uint32_t num_threads       = 25;
-    constexpr uint32_t events_per_thread = 100;
-    constexpr uint64_t total_entries     = uint64_t(num_threads) * events_per_thread;
+    constexpr size_t num_threads       = 25;
+    constexpr size_t events_per_thread = 100;
+    constexpr size_t total_entries     = uint64_t(num_threads) * events_per_thread;
 
     std::cout << ansi::yellow << std::format( "=== ts_store Test 002 TS with {} entries ===\n", total_entries) << ansi::reset;
     std::cout << ansi::white  << std::format("Threads: {}    Events/thread: {}    Total: {}\n\n",  num_threads, events_per_thread, total_entries) << ansi::reset;
@@ -21,9 +24,9 @@ int main() {
     std::vector<std::thread> threads;
     threads.reserve(num_threads);
 
-    for (uint32_t t = 0; t < num_threads; ++t) {
+    for (size_t t = 0; t < num_threads; ++t) {
         threads.emplace_back([t, &store ] {
-            for (uint32_t i = 0; i < events_per_thread; ++i) {
+            for (size_t i = 0; i < events_per_thread; ++i) {
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
                 std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);

@@ -5,7 +5,7 @@
 using namespace jac::ts_store::inline_v001;
 
 constexpr uint32_t THREADS           = 250;
-constexpr uint32_t EVENTS_PER_THREAD = 100;
+constexpr uint32_t EVENTS_PER_THREAD = 400;
 constexpr uint64_t TOTAL_EVENTS      = uint64_t(THREADS) * EVENTS_PER_THREAD;
 
 
@@ -16,6 +16,10 @@ using LogConfigResult = ts_store_config<true>;
 using LogResult = ts_store<LogConfigResult>;
 
 int main() {
+    if (std::cin.rdbuf()->in_avail() > 0) {
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+
     LogxStore  safepay(THREADS, EVENTS_PER_THREAD);
     LogResult  results(THREADS, 1);
 
@@ -54,7 +58,6 @@ int main() {
         }
     };
 
-
     for (uint32_t t = 0; t < THREADS; ++t) {
         threads.emplace_back(worker, t);
     }
@@ -75,13 +78,14 @@ int main() {
         return 1;
     }
 
-    std::cout << "\nALL " << TOTAL_EVENTS << " ENTRIES + RESULTS VERIFIED — ZERO CORRUPTION\n\n";
-    std::cout << "Per-thread results:\n";
+    //results.debug_print_widths();
+    std::cout << "\nResult store contents:\n";
     results.print();
-
+    std::cout << "\nALL " << TOTAL_EVENTS << " ENTRIES + RESULTS VERIFIED — ZERO CORRUPTION\n\n";
     safepay.press_any_key();
-    std::cout << "\nMain store contents:\n";
-    safepay.print(std::cout, 0);
 
+    //safepay.debug_print_widths();
+    std::cout << "Per-thread results:\n";
+    safepay.print( 0);
     return 0;
 }

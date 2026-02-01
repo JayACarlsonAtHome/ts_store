@@ -8,8 +8,12 @@ using LogConfig = ts_store_config<false>;
 using LogxStore = ts_store<LogConfig>;
 
 int main() {
-    constexpr uint32_t threads = 5;
-    constexpr uint32_t events = 3;
+    if (std::cin.rdbuf()->in_avail() > 0) {
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+
+    constexpr size_t threads = 5;
+    constexpr size_t events = 3;
     std::cout << ansi::blue << "=== ts_store — Simple Test 001 TS "
                                "-- Equivalent to MultiThread Hello World  ===" << ansi::reset << "\n\n";
 
@@ -27,7 +31,7 @@ int main() {
     }
     std::cout << "PRODUCTION SIMULATION PASSED — 100% clean\n";
     prod.press_any_key();
-    prod.print(std::cout,0);
+    prod.print(0);
     std::cout << "\n=== ALL TESTS COMPLETED SUCCESSFULLY ===\n";
     return 0;
 }

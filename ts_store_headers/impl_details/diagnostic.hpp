@@ -5,67 +5,54 @@
 #pragma once
 //#include "test_constants.hpp"
 
-
 inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::max()) const
 {
     if (rows_.size() != expected_size()) {
-        std::cout << ansi::bold_red
-                  << std::format("[DIAGNOSE] SIZE MISMATCH — expected {:>10}, got {:>10}\n",
-                                 expected_size(), rows_.size())
-                  << ansi::reset;
+        std::println("{}[DIAGNOSE] SIZE MISMATCH — expected {:>10}, got {:>10}{}",
+             ansi::bold_red, expected_size(), rows_.size(), ansi::reset);
         return;
     }
 
     struct Failure {
-        std::uint64_t id;
-        unsigned int thread_id;
-        unsigned int event_id;
+        size_t id;
+        size_t thread_id;
+        size_t event_id;
         std::string_view payload;
+        std::string_view expected;
     };
 
     std::vector<Failure> failures;
     failures.reserve(std::min(rows_.size(), max_report));
 
-    for (uint64_t id = 0; id < rows_.size(); ++id) {
+    for (size_t id = 0; id < rows_.size(); ++id) {
         if (failures.size() >= max_report) break;
 
         const auto& row = rows_[id];
-        std::string_view payload = row.value_storage;
+        std::string_view payload  = row.value_storage;
+        std::string_view expected = test_messages[row.event_id % test_messages.size()];
 
         bool valid = false;
-        for (const auto& msg : test_messages) {
-            std::string_view expected = msg.substr(0, Config::max_payload_length);
-            if (payload == expected) {
-                valid = true;
-                break;
-            }
-        }
-
+        if (payload == expected)  valid = true;
         if (!valid) {
-            failures.emplace_back(Failure{id, row.thread_id, row.event_id, payload});
+            failures.emplace_back(id, row.thread_id, row.event_id, row.value_storage, expected);
         }
     }
 
     std::sort(failures.begin(), failures.end(),
               [](const auto& a, const auto& b) { return a.id < b.id; });
 
-    const int w = thread_id_width();
-    const int e = events_id_width();
+    const size_t w = thread_id_width();
+    const size_t e = events_id_width();
 
     // Print individual failures
     for (const auto& f : failures) {
-        std::cout << ansi::bold_red << "[DIAGNOSE] ID "
-                  << std::format("{:>10}", f.id) << ansi::reset
-                  << ansi::gray << " | " << ansi::reset
-                  << "thread:" << ansi::magenta << std::format("{:>{}}", f.thread_id, w) << ansi::reset
-                  << " event:" << ansi::magenta << std::format("{:>{}}", f.event_id, e) << ansi::reset
-                  << ansi::gray << " |\n" << ansi::reset;
 
-        std::cout << "              Actual   (len " << f.payload.size() << "): '"
-                  << ansi::yellow << f.payload << ansi::reset << "'\n";
-
-        std::cout << "              Expected (len " << f.payload.size() << "): '"
-                  << ansi::yellow << "expected value here" << ansi::reset << "'\n\n";  // ← replace with actual expected if needed
+        std::print(  "{}[DIAGNOSE] ID: {:>10}{}{} | {}",     ansi::bold_red, f.id,           ansi::reset, ansi::gray, ansi::reset );
+        std::print(  "{}[DIAGNOSE] Thread: {:>{}}{}{} | {}", ansi::magenta,  f.thread_id, w, ansi::reset, ansi::gray, ansi::reset );
+        std::print(  "{}[DIAGNOSE] Event:  {:>{}}{}{} | {}", ansi::magenta,  f.event_id,  e, ansi::reset, ansi::gray, ansi::reset );
+        std::println("{}     Actual   (len {:>4} Payload: {}{})", ansi::yellow,  f.payload.size(), f.payload,  ansi::reset );
+        std::println("{}     Expected (len {:>4} Payload: {}{})", ansi::yellow,  f.payload.size(), f.expected, ansi::reset );
+        std::println("");
     }
 
     // Summary box — centered and safe for large numbers
@@ -73,19 +60,16 @@ inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::m
 
     if (failures.empty()) {
         std::string msg = std::format("ALL {} ENTRIES PASS DIAGNOSTICS", expected_size());
-        std::cout << ansi::bold_green
-                  << "╔═══════════════════════════════════════════════════════════════════════════════╗\n"
-                  << "║" << std::format("{:^{}}", msg, box_width) << "║\n"
-                  << "╚═══════════════════════════════════════════════════════════════════════════════╝\n"
-                  << ansi::reset;
+        std::print("{}╔═══════════════════════════════════════════════════════════════════════════════╗{}",ansi::bold_green, ansi::reset);
+        std::print("{}{:^{}}{}",ansi::bold_green, msg, box_width, ansi::reset);
+        std::print("{}╚═══════════════════════════════════════════════════════════════════════════════╝{}",ansi::bold_green, ansi::reset);
+
     } else {
         std::string header = "CORRUPTED TEST PAYLOADS";
         std::string report = std::format("REPORTED {} TEST PAYLOAD FAILURE(S)", failures.size());
-        std::cout << ansi::bold_red
-                  << "╔═══════════════════════════════════════════════════════════════════════════════╗\n"
-                  << "║" << std::format("{:^{}}", header, box_width) << "║\n"
-                  << "║" << std::format("{:^{}}", report, box_width) << "║\n"
-                  << "╚═══════════════════════════════════════════════════════════════════════════════╝\n"
-                  << ansi::reset;
+        std::print("{}╔═══════════════════════════════════════════════════════════════════════════════╗{}",ansi::bold_red, ansi::reset);
+        std::print("{}{:^{}}{}",ansi::bold_red, header, box_width, ansi::reset);
+        std::print("{}{:^{}}{}",ansi::bold_red, report, box_width, ansi::reset);
+        std::print("{}╚═══════════════════════════════════════════════════════════════════════════════╝{}",ansi::bold_red, ansi::reset);
     }
 }

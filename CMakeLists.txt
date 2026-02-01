@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(ts_store LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -40,7 +40,7 @@ foreach(num IN LISTS TEST_NUMBERS)
     foreach(target ${ts_target} ${xs_target})
        
         target_compile_options(${target} PRIVATE
-            -Werror -Wall -Wextra -Wpedantic
+            -Werror -Wall -Wextra -Wpedantic -Wconversion
             -fno-sanitize=undefined -fno-sanitize=all
             $<$<CXX_COMPILER_ID:GNU>:-Wno-interference-size>
         )
