@@ -10,59 +10,23 @@
 All 10 stress tests pass 100% on g++ 15.1.1 (RHEL 9/10)  
 
 **Not production-ready yet** — API is in flux and will change before final lock-down.
-
 ### Performance (measured 2026-01-12)</br>
-| Environment         | Compiler   | Cores | Timestamps | Writes/sec (1M events)      |</br>
-|---------------------|------------|-------|------------|-----------------------------|</br>
-|                     |            |       |            | High    | Low     | Avg     |</br>
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | -----   | -----   | -----   | Untested at this time</br>
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | -----   | -----   | -----   | Untested at this time</br>
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | On         | 2.09M   | 1.11M   | 1.68M   |</br>
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | Off        | 2.16M   | 0.89M   | 1.76M   |</br>
+<img width="662" height="135" alt="image" src="https://github.com/user-attachments/assets/b64778fc-c8b5-4a18-99ca-55077a73b818" />
 </br>
-
-### Performance (measured 2026-01-13) -- Short Runs --</br>
-| Environment         | Compiler   | Cores | Timestamps | Writes/sec (1M events)      |</br>
-|---------------------|------------|-------|------------|-----------------------------|</br>
-|                     |            |       |            | High    | Low     | Avg     |</br>
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | 24.18M  | 12.44M  | 21.01M  |</br>
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | 24.48M  | 13.16M  | 22.05M  |</br>
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | On         | 19.54M  | 16.05M  | 18.37M  |</br>
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | Off        | 24.74M  | 17.66M  | 23.62M  |</br>
-</br>
-*Writes: 250 threads × 4000 events over 50 runs (real data from test_005).*</br>
-*Average over 18 million operations per second with or without time stamps*</br>
-*Not Measured -- bulk validation of payload timing at end of test.</br>
-*Note 1: The simplification of code came at a 10 X speed improvement.*</br>
-*Note 2: Test only run on GCC G++ version 15.1.1, no tests on LLVM\Clang or ZIG Build of LLVM C++ on this run."</br>
-
 ### Performance (measured 2026-01-26) -- Fastest Run in a while</br>
-| Environment         | Compiler   | Cores | Timestamps | Writes/sec (1M events) </br>
-|---------------------|------------|-------|------------|-------------|---------|---------|</br>
-|                     |            |       |            | High        | Low     | Avg     |</br>
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | 17.15M      | 10.38M  | 16.03M  |</br>
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | 18.70M      | 12.47M  | 17.65M  |</br>
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | On         | 28.85M      | 18.68M  | 25.83M  |</br>
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | Off        | 27.20M      | 20.43M  | 24.78M  |</br>
+<img width="662" height="117" alt="image" src="https://github.com/user-attachments/assets/1a660830-217b-4007-a7a2-8cfa6f75f543" />
 </br>
 *Writes: 250 threads × 4000 events (1,000,000) over 1000 runs (real data from test_005).*</br>
 *Average over 16 million operations per second with or without timestamps*</br>
 *Not Measured -- bulk validation of payload timing at end of test.</br>
 *Note 1: Test only run on GCC G++ version 15.1.1, no tests on LLVM\Clang or Zig Build of LLVM C++ on this run."</br>
 *Note 2: While Average speed is almost always over 15M ops/sec aver, there can be a big difference on runs. </br>
-
-
+</br>
 ### Performance (measured 2026-01-31) -- Back to Slow Mode...Will fix on next version...</br>
-| Environment         | Compiler   | Cores | Timestamps | Writes/sec (1M events) </br>
-|---------------------|------------|-------|------------|-------------|---------|---------|</br>
-|                     |            |       |            | High        | Low     | Avg     |</br>
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | On         | 15.73M      | 13.79M  | 15.25M  |</br>
-| RHEL 10.1 VM        | g++ 15.1.1 | 4     | Off        | 16.67M      | 13.72M  | 16.04M  |</br> 
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | On         | 18.10M      | 14.83M  | 17.17M  |</br>
-| Bare metal RHEL 9.7 | g++ 15.1.1 | 20    | Off        | 18.31M      | 14.72M  | 17.61M  |</br>
-
+<img width="662" height="117" alt="image" src="https://github.com/user-attachments/assets/e2c3b2ee-f676-4458-a479-46655a3f6298" />
+</br>
 *Writes: 250 threads × 4000 events (1,000,000) over 50 runs (real data from test_005).*</br>
-*Average over 16 million operations per second with or without timestamps*</br>
+*Average over 15 million operations per second with or without timestamps*</br>
 *Not Measured -- bulk validation of payload timing at end of test.</br>
 *Note 1: Test only run on GCC G++ version 15.1.1, no tests on LLVM\Clang or Zig Build of LLVM C++ on this run."</br>
 *Note 2: While Average speed is almost always over 15M ops/sec aver, there can be a big difference on runs. </br>
