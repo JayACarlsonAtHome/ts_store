@@ -4,9 +4,9 @@
 
 using namespace jac::ts_store::inline_v001;
 
-constexpr uint32_t THREADS           = 250;
-constexpr uint32_t EVENTS_PER_THREAD = 400;
-constexpr uint64_t TOTAL_EVENTS      = uint64_t(THREADS) * EVENTS_PER_THREAD;
+constexpr size_t THREADS           = 250;
+constexpr size_t EVENTS_PER_THREAD = 400;
+constexpr size_t TOTAL_EVENTS      = size_t(THREADS) * EVENTS_PER_THREAD;
 
 
 using LogConfigxMainx = ts_store_config<true>;
@@ -24,14 +24,14 @@ int main() {
     LogResult  results(THREADS, 1);
 
     std::vector<std::thread> threads;
-    std::atomic<int> total_successes{0};
-    std::atomic<int> total_nulls{0};
+    std::atomic<size_t> total_successes{0};
+    std::atomic<size_t> total_nulls{0};
 
-    auto worker = [&](int t) {
-        int local_successes = 0;
-        int local_nulls = 0;
+    auto worker = [&](size_t t) {
+        size_t local_successes = 0;
+        size_t local_nulls = 0;
 
-        for (uint32_t i = 0; i < EVENTS_PER_THREAD; ++i) {
+        for (size_t i = 0; i < EVENTS_PER_THREAD; ++i) {
 
             std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
             std::string_view payload_copy = payload;

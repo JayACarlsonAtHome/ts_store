@@ -71,7 +71,7 @@ int main()
     }
     LogxStore  store(THREADS, EVENTS_PER_THREAD);
     size_t total_write_us = 0;
-    size_t durations[RUNS] = {};  // ← FIXED NAME
+    size_t durations[RUNS] = {};
     size_t failed_runs = 0;
 
     std::cout << "=== FINAL MASSIVE TEST — 1,000,000 entries × " << RUNS << " runs ===\n";
@@ -87,8 +87,8 @@ int main()
             ++failed_runs;
         } else
         {
-            total_write_us += microseconds;
-            durations[run] = microseconds;  // ← FIXED
+            total_write_us += static_cast<decltype(total_write_us)>(microseconds);
+            durations[run] = static_cast<size_t>(microseconds);
 
             if (microseconds == 0) {
                 std::cout << "PASS — 0 µs (too fast to measure)\n\n";

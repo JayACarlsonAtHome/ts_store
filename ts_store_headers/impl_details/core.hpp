@@ -33,7 +33,8 @@ save_event(size_t thread_id,
                 base = s_epoch_base.load(std::memory_order_relaxed);
             }
         }
-        row.ts_us = std::chrono::duration_cast<std::chrono::microseconds>(now - base).count();
+        row.ts_us = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(now - base).count()
+    );
     }
     rows_[id] = std::move(row);
     return {true, id};
