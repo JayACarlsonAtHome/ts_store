@@ -11,10 +11,10 @@ class ts_store
 {
 private:
     struct row_data {
+        size_t event_flags{0};
         size_t thread_id{0};
         size_t event_id{0};
         bool is_debug{false};
-        std::string type_storage;
         std::string category_storage;
         std::string value_storage;
         std::conditional_t<Config::use_timestamps, uint64_t, std::monostate> ts_us{};

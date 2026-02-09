@@ -26,10 +26,12 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
             for (size_t i = 0; i < EVENTS_PER_THREAD; ++i) {
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
-                std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
+                size_t event_flags = (1ULL << TsStoreFlags<8>::Bit_LogConsole);
+                event_flags |= TsStoreFlags<8>::get_severity_mask_from_index(i % 8);
+                if (!payload.empty()) event_flags |= (1ULL << TsStoreFlags<8>::Bit_HasData);
                 std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
                 bool is_debug = true;
-                auto [ok, id] = store.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
+                auto [ok, id] = store.save_event(t, i, std::move(payload), event_flags, std::move(cat), is_debug);
                 if (!ok) {
                     std::cerr << ansi::red << "CLAIM FAILED — thread " << t << " event " << i << ansi::reset << "\n" ;
                     std::abort();
@@ -125,7 +127,7 @@ int main()
               << std::setw(10) << static_cast<uint64_t>(min_ops_sec + 0.5) << " ops/sec\n";
     std::cout << "  Average            : " << std::setw(9) << avg_us     << " µs  → "
               << std::setw(10) << static_cast<uint64_t>(avg_ops_sec + 0.5) << " ops/sec\n";
-    std::cout << "  (1,000,000 events per run, 100% verified, zero corruption)\n";
+    std::cout << "  (" << TOTAL << " events per run, 100% verified, zero corruption)\n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";
 
     return 0;

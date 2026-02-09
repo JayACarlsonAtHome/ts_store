@@ -6,14 +6,6 @@
 #include <array>
 #include <string_view>
 
-inline static constexpr std::array<std::string_view, 5> types = {
-    "INFO",
-    "WARN",
-    "ERROR",
-    "TRACE",
-    "DEBUG"
-};
-
 inline static constexpr std::array<std::string_view, 5> categories = {
     "NET",
     "DB",
@@ -21,12 +13,17 @@ inline static constexpr std::array<std::string_view, 5> categories = {
     "SYS",
     "GFX"
 };
-inline static constexpr std::array<std::string_view, 5> test_messages = {
-    "[INFO]  Processing request",
-    "[WARN]  Resource usage high",
-    "[ERROR] Connection failed",
-    "[INFO]  Cache hit ratio 98%",
-    "[DEBUG] Thread pool active"
+
+inline static constexpr std::array<std::string_view, 8> test_messages = {
+    "No value selected, default payload",
+    "Trace processing request",
+    "Debug processing request",
+    "Info processing request",
+    "Warning in processing notifiation",
+    "Error in processing notification",
+    "Critical processing request",
+    "Fatal error in processing notification",
+
 };
 
 

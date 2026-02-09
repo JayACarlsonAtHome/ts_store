@@ -12,8 +12,8 @@ int main() {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 
-    constexpr size_t threads = 5;
-    constexpr size_t events = 3;
+    constexpr size_t threads = 8;
+    constexpr size_t events = 8;
     std::cout << ansi::blue << "=== ts_store — Simple Test 001 TS "
                                "-- Equivalent to MultiThread Hello World  ===" << ansi::reset << "\n\n";
 

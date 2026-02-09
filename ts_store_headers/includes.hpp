@@ -3,6 +3,7 @@
 //
 #pragma once
 #include <algorithm>
+#include <bitset>
 #include <thread>
 #include <chrono>
 #include <string>
@@ -18,6 +19,7 @@
 #include <utility>
 #include <cctype>
 #include <sys/sysinfo.h>
+#include "ts_store_flags.hpp"
 #include "ansi_colors.hpp"
 #include "ts_store_config.hpp"
 

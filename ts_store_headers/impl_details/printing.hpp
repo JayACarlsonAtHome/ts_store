@@ -16,13 +16,13 @@ private:
 struct ColumnWidths {
     size_t id;
     size_t time;
-    size_t type;
+    size_t severity;
     size_t category;
     size_t thread;
     size_t event;
     size_t payload;
     size_t total() const {
-        return id + time + type + category + thread + event + payload + 6 * 3; // 6 gaps × 3 spaces
+        return id + time + severity + category + thread + event + payload + 6 * 3; // 6 gaps × 3 spaces
     }
 };
 
@@ -30,13 +30,13 @@ ColumnWidths set_effective_widths() const
 {
     ColumnWidths w;
 
-    w.id      = std::max(id_width(),      3ul);
-    w.time    = std::max(Config::use_timestamps ? 18ul : 10ul, 10ul);
-    w.type    = std::max(Config::max_type_length,     4ul);
-    w.category= std::max(Config::max_category_length, 8ul);
-    w.thread  = std::max(thread_id_width(),           6ul);
-    w.event   = std::max(events_id_width(),           5ul);
-    w.payload = Config::max_payload_length;
+    w.id       = std::max(id_width(),      3ul);
+    w.time     = std::max(Config::use_timestamps ? 18ul : 10ul, 10ul);
+    w.severity = TsStoreFlags<8>::get_severity_string_width();
+    w.category = std::max(Config::max_category_length, 8ul);
+    w.thread   = std::max(thread_id_width(),           6ul);
+    w.event    = std::max(events_id_width(),           5ul);
+    w.payload  = Config::max_payload_length;
     return w;
 }
 
@@ -46,23 +46,24 @@ void print_table_separator_line(const ColumnWidths& w) const {
 
 void print_table_header(const ColumnWidths& w, std::string_view space_pad) const
 {
-    std::string h_type    = "TYPE";     h_type.resize(w.type,     '.');
-    std::string h_cat     = "CATEGORY"; h_cat.resize(w.category,  '.');
-    std::string h_payload = "PAYLOAD";  h_payload.resize(w.payload, '.');
+    std::string h_severity = "SEVERITY"; h_severity.resize(w.severity, '.');
+    std::string h_cat      = "CATEGORY"; h_cat.resize(w.category,      '.');
+    std::string h_payload  = "PAYLOAD";  h_payload.resize(w.payload,   '.');
 
     std::print("{}{:>{}}{}", ansi::bold,         "ID",          w.id,      space_pad);
     std::print("{:>{}}{}",                       "TIME (µs)",   w.time,    space_pad);
-    std::print("{:>{}}{}",   h_type,             w.type,        space_pad);
+    std::print("{:>{}}{}",   h_severity,         w.severity,    space_pad);
     std::print("{:>{}}{}",   h_cat,              w.category,    space_pad);
     std::print("{:>{}}{}",   "Thread",           w.thread,      space_pad);
     std::print("{:>{}}{}",   "Event",            w.event,       space_pad);
     std::print("{:<{}}{}",   h_payload,          w.payload,     space_pad);
+
     std::println("");
 }
 
 void print_single_row(size_t id, const row_data& r,
                       const ColumnWidths& widths,
-                      std::string_view space_pad) const
+                      std::string_view space_pad ) const
 {
     // ID
     std::print("{}{:>{}}{}", ansi::cyan, id, widths.id, space_pad);
@@ -75,9 +76,13 @@ void print_single_row(size_t id, const row_data& r,
     }
 
     // TYPE (padded)
-    std::string type_padded = r.type_storage;
-    type_padded.resize(widths.type, '.');
-    std::print("{}{:<{}}{}", ansi::bold_magenta, type_padded, widths.type, space_pad);
+    TsStoreFlags<8> row_flags;
+    row_flags.load_from_host(r.event_flags);
+    init_event_flag_descriptions(row_flags);
+    std::string severity = row_flags.get_severity_string();
+    std::string severity_padded = severity;
+    severity_padded.resize(widths.severity, '.');
+    std::print("{}{:<{}}{}", ansi::bold_magenta, severity_padded, widths.severity, space_pad);
 
     // CATEGORY (padded)
     std::string cat_padded = r.category_storage;
@@ -92,6 +97,10 @@ void print_single_row(size_t id, const row_data& r,
     std::string payload_padded = r.value_storage;
     payload_padded.resize(widths.payload, '.');
     std::print("{}{:<{}}", ansi::blue, payload_padded, widths.payload);
+
+    row_flags.load_from_host(r.event_flags);
+    init_event_flag_descriptions(row_flags);
+    std::print(" FLAGS: {} | Severity: {}", row_flags.to_string(), severity);
 
     std::println();
 }
@@ -153,11 +162,14 @@ inline void print(size_t max_rows = 10'000) const
 
     //const size_t total = ids.size();
 
+
+
     std::println("{}ts_store <{}", ansi::bold_white, ansi::reset);
     std::println("   Threads    = {}", get_max_threads());
     std::println("   Events     = {}", get_max_events());
     std::println("   ValueT     = std::string(max len={})", Config::max_payload_length);
     std::println("   Time Stamp = {}>", Config::use_timestamps ? "On" : "Off");
+
 
     print_table_separator_line(widths);
     print_table_header(widths, space_pad);

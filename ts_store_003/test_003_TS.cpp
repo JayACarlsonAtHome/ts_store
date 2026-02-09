@@ -40,10 +40,12 @@ int main() {
                 // Now matches verify_test_payloads() expectations
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
-                std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
+                size_t event_flags = (1ULL << TsStoreFlags<8>::Bit_LogConsole);
+                event_flags |= TsStoreFlags<8>::get_severity_mask_from_index(i % 8);
+                if (!payload.empty()) event_flags |= (1ULL << TsStoreFlags<8>::Bit_HasData);
                 std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
                 bool is_debug = true;
-                auto [ok, id] = store.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
+                auto [ok, id] = store.save_event(t, i, std::move(payload), event_flags, std::move(cat), is_debug);
                 if (ok) {
                     size_t pos = log_stream_write_pos.fetch_add(1, std::memory_order_relaxed);
                     if (pos < MAX_ENTRIES) {

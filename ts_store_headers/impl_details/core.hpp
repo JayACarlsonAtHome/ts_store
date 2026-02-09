@@ -4,22 +4,29 @@
 
 inline std::pair<bool, size_t>
 save_event(size_t thread_id,
-           size_t event_id,                  // ← new
+           size_t event_id,
            Config::ValueT&& value,
-           Config::TypeT&& type,
-           Config::CategoryT&& category,
-           bool debug = false)
+           size_t event_flag_param = 0,
+           Config::CategoryT&& category = "",
+           bool debug = false
+           //size_t user_flags = 0
+)
 {
     const size_t id = next_id_.fetch_add(1, std::memory_order_relaxed);
 
     row_data row{};
     row.thread_id = thread_id;
-    row.event_id  = event_id;                      // ← store it
+    row.event_id  = event_id;
     row.is_debug  = debug;
 
     row.value_storage     = std::forward<typename Config::ValueT>(value.substr(0,Config::max_payload_length));
-    row.type_storage      = std::forward<typename Config::TypeT>(type.substr(0,Config::max_type_length));
     row.category_storage  = std::forward<typename Config::CategoryT>(category.substr(0,Config::max_category_length));
+    row.event_flags = event_flag_param;
+    if (!row.value_storage.empty()) {
+        row.event_flags |= (1ULL << TsStoreFlags<8>::Bit_HasData);
+    }
+
+    if (!row.value_storage.empty()) row.event_flags |= (1ULL << TsStoreFlags<8>::Bit_HasData);
 
     // — TIMESTAMP —
     if constexpr (Config::use_timestamps) {
@@ -36,6 +43,7 @@ save_event(size_t thread_id,
         row.ts_us = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(now - base).count()
     );
     }
+
     rows_[id] = std::move(row);
     return {true, id};
 }

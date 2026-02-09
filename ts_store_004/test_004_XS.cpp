@@ -12,7 +12,7 @@ constexpr size_t TOTAL_EVENTS      = size_t(THREADS) * EVENTS_PER_THREAD;
 using LogConfigxMainx = ts_store_config<false>;
 using LogxStore = ts_store<LogConfigxMainx>;
 
-using LogConfigResult = ts_store_config<true>;
+using LogConfigResult = ts_store_config<false>;
 using LogResult = ts_store<LogConfigResult>;
 
 int main() {
@@ -35,11 +35,14 @@ int main() {
 
             std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
             std::string_view payload_copy = payload;
-            std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
+            size_t event_flags = (1ULL << TsStoreFlags<8>::Bit_LogConsole);
+            event_flags |= TsStoreFlags<8>::get_severity_mask_from_index(i % 8);
+            if (!payload.empty()) event_flags |= (1ULL << TsStoreFlags<8>::Bit_HasData);
+
             std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
             bool is_debug = true;
 
-            auto [ok, id] = safepay.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
+            auto [ok, id] = safepay.save_event(t, i, std::move(payload), event_flags, std::move(cat), is_debug);
             auto [val_ok, val_sv] = safepay.select(id);
             if (val_ok && std::string_view(val_sv) == payload_copy) {
                 ++local_successes;
@@ -52,7 +55,10 @@ int main() {
         total_nulls     += local_nulls;
 
         std::string result_payload = std::format("RESULT: thread={:>3}  successes={:>6}  nulls={:>4}  total_events={:>6}", t, local_successes, local_nulls, EVENTS_PER_THREAD);
-        auto [ok, _] = results.save_event(t, local_successes, std::move(result_payload), "RESULT", "STATS");
+        size_t event_flags = (1ULL << TsStoreFlags<8>::Bit_LogConsole);
+        event_flags |= TsStoreFlags<8>::get_severity_mask_from_enum(TsStoreFlags<8>::Severity::Info);
+        event_flags |= (1ULL << TsStoreFlags<8>::Bit_IsResultData);
+        auto [ok, _] = results.save_event(t, local_successes, std::move(result_payload), event_flags, "STATS");
         if (!ok) {
             std::cerr << "Results claim failed for thread " << t << "\n";
         }

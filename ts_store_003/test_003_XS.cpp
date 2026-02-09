@@ -2,6 +2,8 @@
 
 #include "../ts_store_headers/ts_store.hpp"
 
+// — Aggressive tail-reader stress test (500 threads × 100 ops)
+
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
@@ -38,10 +40,12 @@ int main() {
                 // Now matches verify_test_payloads() expectations
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
-                std::string type = std::string(LogxStore::types[i % LogxStore::types.size()]);
+                size_t event_flags = (1ULL << TsStoreFlags<8>::Bit_LogConsole);
+                event_flags |= TsStoreFlags<8>::get_severity_mask_from_index(i % 8);
+                if (!payload.empty()) event_flags |= (1ULL << TsStoreFlags<8>::Bit_HasData);
                 std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
                 bool is_debug = true;
-                auto [ok, id] = store.save_event(t, i, std::move(payload), std::move(type), std::move(cat), is_debug);
+                auto [ok, id] = store.save_event(t, i, std::move(payload), event_flags, std::move(cat), is_debug);
                 if (ok) {
                     size_t pos = log_stream_write_pos.fetch_add(1, std::memory_order_relaxed);
                     if (pos < MAX_ENTRIES) {
@@ -63,8 +67,8 @@ int main() {
               << " µs\n";
     std::cout << "Reader start lag  : " << lag_us << " µs\n";
 
-    std::atomic<size_t> hits{0};
-    std::atomic<size_t> misses{0};
+    std::atomic<long long> hits{0};
+    std::atomic<long long> misses{0};
 
     std::thread tail_reader([&]() {
         size_t last_read = 0;
@@ -75,7 +79,7 @@ int main() {
             size_t current_end = log_stream_write_pos.load(std::memory_order_acquire);
 
             while (last_read < current_end && last_read < MAX_ENTRIES) {
-                size_t id = log_stream_array[last_read++];
+                uint64_t id = log_stream_array[last_read++];
                 auto [ok, _] = store.select(id);
                 (ok ? hits : misses).fetch_add(1, std::memory_order_relaxed);
             }
