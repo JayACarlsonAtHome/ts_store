@@ -15,16 +15,14 @@ inline static constexpr std::array<std::string_view, 5> categories = {
 };
 
 inline static constexpr std::array<std::string_view, 8> test_messages = {
-    "Not Set, default payload",
-    "Trace processing request",
-    "Debug processing request",
-    "Info processing request",
-    "Warning in processing notifiation",
-    "Error in processing notification",
-    "Critical processing request",
-    "Fatal error in processing notification",
-
+    "Not Set, default payload 😎",
+    "Trace processing request 😎",
+    "Debug processing request 😎",
+    "Info processing request 😊",
+    "Warning in processing notification 😕",
+    "Error in processing notification 😣",
+    "Critical processing request 😣",
+    "Fatal error in processing notification 💀"
 };
-
 
 

@@ -19,8 +19,8 @@ save_event(size_t thread_id,
     row.event_id  = event_id;
     row.is_debug  = debug;
 
-    row.value_storage     = std::forward<typename Config::ValueT>(value.substr(0,Config::max_payload_length));
-    row.category_storage  = std::forward<typename Config::CategoryT>(category.substr(0,Config::max_category_length));
+    row.value_storage = Config::utf8_truncate(value, Config::max_payload_length);
+    row.category_storage = Config::utf8_truncate(category, Config::max_category_length);
 
     if (!row.value_storage.empty()) {
         flags_set_has_data(event_flag_param);
