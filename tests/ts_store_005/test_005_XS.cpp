@@ -1,7 +1,8 @@
-//ts_store_005/Test_005_TS.CPP
+//ts_store_005/Test_005_XS.CPP
 
-#include "../ts_store_headers/ts_store.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 #include <utility>
+
 
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
@@ -11,7 +12,7 @@ constexpr size_t EVENTS_PER_THREAD = 4000;
 constexpr size_t TOTAL             = size_t(THREADS) * EVENTS_PER_THREAD;
 constexpr size_t RUNS              = 50;
 
-using LogConfig = ts_store_config<true>;
+using LogConfig = ts_store_config<false>;
 using LogxStore = ts_store<LogConfig>;
 
 std::pair<bool, long int> run_single_test(LogxStore& store)

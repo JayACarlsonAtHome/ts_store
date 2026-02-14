@@ -1,6 +1,6 @@
-//ts_store_004/Test_004_XS.CPP
+//ts_store_004/Test_004_TS.CPP
 
-#include "../ts_store_headers/ts_store.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 
 using namespace jac::ts_store::inline_v001;
 
@@ -9,10 +9,10 @@ constexpr size_t EVENTS_PER_THREAD = 400;
 constexpr size_t TOTAL_EVENTS      = size_t(THREADS) * EVENTS_PER_THREAD;
 
 
-using LogConfigxMainx = ts_store_config<false>;
+using LogConfigxMainx = ts_store_config<true>;
 using LogxStore = ts_store<LogConfigxMainx>;
 
-using LogConfigResult = ts_store_config<false>;
+using LogConfigResult = ts_store_config<true>;
 using LogResult = ts_store<LogConfigResult>;
 
 int main() {

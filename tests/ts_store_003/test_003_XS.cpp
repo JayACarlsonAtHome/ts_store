@@ -1,6 +1,6 @@
 ﻿//ts_store_003/Test_003_XS.CPP
 
-#include "../ts_store_headers/ts_store.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 
 // — Aggressive tail-reader stress test (500 threads × 100 ops)
 

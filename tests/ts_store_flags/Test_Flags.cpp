@@ -1,7 +1,7 @@
 //ts_store_flags/Test_Flags.cpp
 // Standalone unit test for TsStoreFlags — completely independent of ts_store
 
-#include "../ts_store_headers/ts_store_flags.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/ts_store_flags.hpp"
 #include <iostream>
 #include <cassert>
 #include <string>

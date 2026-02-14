@@ -1,6 +1,6 @@
 //ts_store_004/Test_004_TS.CPP
 
-#include "../ts_store_headers/ts_store.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 
 using namespace jac::ts_store::inline_v001;
 

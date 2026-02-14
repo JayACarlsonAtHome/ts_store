@@ -92,14 +92,16 @@ private:
 public:
     static constexpr bool debug_mode_v = Config::debug_mode;
     #include "impl_details/core.hpp"
-    #include "impl_details/test_constants.hpp"
-    #include "impl_details/testing.hpp"
-    #include "impl_details/press_to_cont.hpp"
-    #include "impl_details/printing.hpp"
-    #include "impl_details/duration.hpp"
-    #include "impl_details/sorting.hpp"
-    #include "impl_details/verify_checks.hpp"
-    #include "impl_details/diagnostic.hpp"
+
+#include "impl_details/test_constants.hpp"
+#include "impl_details/testing.hpp"
+#include "impl_details/press_to_cont.hpp"
+#include "impl_details/printing.hpp"
+#include "impl_details/duration.hpp"
+#include "impl_details/sorting.hpp"
+#include "impl_details/verify_checks.hpp"
+#include "impl_details/diagnostic.hpp"
+
 };
 }; // namespace jac::ts_store::inline_v001
 
