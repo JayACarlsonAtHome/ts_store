@@ -43,9 +43,21 @@ endif()
 # Custom Clang/libc++ setup (only when requested)
 if(ENABLE_CUSTOM_LLVM)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_compile_options(project_options INTERFACE
-                -nostdinc++ -nostdinc
-        )
+        if(ENABLE_LTO)
+            target_compile_options(project_options INTERFACE
+                    $$   <   $$<CONFIG:Release>:$$   <   $$<CXX_COMPILER_ID:Clang>:-flto=thin>$$   <   $$<CXX_COMPILER_ID:GNU>:-flto=auto> -ffat-lto-objects>
+            )
+            target_link_options(project_options INTERFACE
+                    $$   <   $$<CONFIG:Release>:$$   <   $$<CXX_COMPILER_ID:Clang>:-flto=thin>$$   <   $$<CXX_COMPILER_ID:GNU>:-flto>>
+            )
+            if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+                target_link_options(project_options INTERFACE
+                        $$   <   $$<CONFIG:Release>:-fuse-ld=lld>
+                )
+                message(STATUS "Clang + LTO detected — using ThinLTO and lld linker")
+            endif()
+        endif()
+
         target_include_directories(project_options SYSTEM INTERFACE
                 /home/jay/Tools/llvm-full_release_22_0_0/include/c++/v1
                 /home/jay/Tools/llvm-full_release_22_0/lib/clang/22/include
@@ -53,15 +65,18 @@ if(ENABLE_CUSTOM_LLVM)
         target_link_directories(project_options INTERFACE
                 /home/jay/Tools/llvm-full_release_22_0/lib
         )
-        target_link_options(project_options INTERFACE
-                -stdlib=libc++
-        )
     endif()
 endif()
 
 # Disable sanitizers globally (keep your preference)
 add_compile_options(-fno-sanitize=undefined -fno-sanitize=all)
 add_link_options(-fno-sanitize=undefined -fno-sanitize=all)
+
+set(ts_source "ts_store_flags/Test_Flags.cpp")
+set(ts_target "ts_store_flags")
+add_executable(${ts_target} ${ts_source})
+target_include_directories(${ts_target} PRIVATE ../ts_store_headers)
+target_link_libraries(${ts_target} PRIVATE project_warnings project_options)
 
 set(TEST_NUMBERS 001 002 003 004 005)
 

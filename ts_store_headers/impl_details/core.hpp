@@ -21,12 +21,13 @@ save_event(size_t thread_id,
 
     row.value_storage     = std::forward<typename Config::ValueT>(value.substr(0,Config::max_payload_length));
     row.category_storage  = std::forward<typename Config::CategoryT>(category.substr(0,Config::max_category_length));
-    row.event_flags = event_flag_param;
-    if (!row.value_storage.empty()) {
-        row.event_flags |= (1ULL << TsStoreFlags<8>::Bit_HasData);
-    }
 
-    if (!row.value_storage.empty()) row.event_flags |= (1ULL << TsStoreFlags<8>::Bit_HasData);
+    if (!row.value_storage.empty()) {
+        flags_set_has_data(event_flag_param);
+    } else {
+        flags_clear_has_data(event_flag_param);
+    }
+    row.event_flags = event_flag_param;
 
     // — TIMESTAMP —
     if constexpr (Config::use_timestamps) {

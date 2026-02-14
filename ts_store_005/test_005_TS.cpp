@@ -26,12 +26,16 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
             for (size_t i = 0; i < EVENTS_PER_THREAD; ++i) {
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
-                size_t event_flags = (1ULL << TsStoreFlags<8>::Bit_LogConsole);
-                event_flags |= TsStoreFlags<8>::get_severity_mask_from_index(i % 8);
-                if (!payload.empty()) event_flags |= (1ULL << TsStoreFlags<8>::Bit_HasData);
                 std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
+
+                uint64_t raw_flags = 0;
+                raw_flags = set_user_flag(raw_flags, TsStoreFlags::UserFlag::LogConsole);
+                raw_flags = set_user_flag(raw_flags, TsStoreFlags::UserFlag::KeeperRecord);
+                raw_flags = set_user_flag(raw_flags, TsStoreFlags::UserFlag::HotCacheHint);
+                raw_flags = set_severity(raw_flags, static_cast<TsStoreFlags::Severity>(i % 8));
+
                 bool is_debug = true;
-                auto [ok, id] = store.save_event(t, i, std::move(payload), event_flags, std::move(cat), is_debug);
+                auto [ok, id] = store.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug);
                 if (!ok) {
                     std::cerr << ansi::red << "CLAIM FAILED — thread " << t << " event " << i << ansi::reset << "\n" ;
                     std::abort();

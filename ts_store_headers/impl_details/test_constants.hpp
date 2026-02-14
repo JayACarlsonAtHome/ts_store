@@ -15,7 +15,7 @@ inline static constexpr std::array<std::string_view, 5> categories = {
 };
 
 inline static constexpr std::array<std::string_view, 8> test_messages = {
-    "No value selected, default payload",
+    "Not Set, default payload",
     "Trace processing request",
     "Debug processing request",
     "Info processing request",

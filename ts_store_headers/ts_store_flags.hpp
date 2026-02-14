@@ -1,30 +1,46 @@
+#pragma once
+
 #include <bitset>
 #include <array>
 #include <string>
+#include <string_view>
+#include <cstdint>
 #include <vector>
 #include <sstream>
-#include <stdexcept>
-#include <initializer_list>
 
-template<size_t Bytes>
 class TsStoreFlags {
 public:
 
-    static constexpr size_t Bits = Bytes * 8;
-    static constexpr size_t Bit_LogConsole     =  0;
-    static constexpr size_t Bit_KeeperRecord   =  1;
-    static constexpr size_t Bit_DatabaseEntry  =  2;
-    static constexpr size_t Bit_SendNetwork    =  3;
-    static constexpr size_t Bit_HotCacheHint   =  5;
-    static constexpr size_t Bit_Severity_LSB   =  6;  // 3-bit field (6-8)
-    static constexpr size_t Bit_IsResultData   = 59;
-    static constexpr size_t Bit_HasData        = 60;
-    static constexpr size_t Bit_IsExplicitNull = 61;
-    static constexpr size_t Bit_IsInvalid      = 62;
+    static constexpr size_t FlagBytes = sizeof(uint64_t);
+    static constexpr size_t Bits = FlagBytes * 8;
+    static_assert(FlagBytes == 8, "TsStoreFlags requires 64-bit uint64_t");
 
-    enum class Severity : uint8_t
-    {
-        No_Value_Selected = 0,
+    explicit TsStoreFlags(uint64_t raw = 0) {
+        flags = std::bitset<Bits>(raw);
+    }
+
+    size_t raw() const { return flags.to_ullong(); }
+
+    // User-controlled flags (bits 0-6)
+    enum class UserFlag : size_t {
+        LogConsole     = 0,
+        KeeperRecord   = 1,
+        DatabaseEntry  = 2,
+        SendNetwork    = 3,
+        HotCacheHint   = 4,
+        IsResult       = 5,
+        IsExplicitNull = 6
+    };
+
+    // ts_store internal flags (bits 16-17)
+    enum class InternalFlag : size_t {
+        HasData   = 16,
+        IsInvalid = 17
+    };
+
+    // Severity (bits 32-34)
+    enum class Severity : uint8_t {
+        NotSet = 0,
         Trace,
         Debug,
         Info,
@@ -34,75 +50,82 @@ public:
         Fatal
     };
 
+    static constexpr size_t Severity_LSB = 32;  // Only constant needed for masking
+
+    // Generic accessors for UserFlag and InternalFlag
+    template<typename FlagT>
+    requires (std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>)
+    void set(FlagT f, bool value = true) noexcept {
+        flags.set(static_cast<size_t>(f), value);
+    }
+
+    template<typename FlagT>
+    requires (std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>)
+    void clear(FlagT f) noexcept {
+        flags.reset(static_cast<size_t>(f));
+    }
+
+    template<typename FlagT>
+    requires (std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>)
+    [[nodiscard]] bool is_set(FlagT f) const noexcept {
+        return flags.test(static_cast<size_t>(f));
+    }
+
+    // All describable flags (user + internal)
+    static constexpr size_t DescribableCount = 9;
+    static constexpr std::array<std::pair<size_t, std::string_view>, DescribableCount> describable_flags = {{
+        {static_cast<size_t>(UserFlag::LogConsole),     "LogConsole"},
+        {static_cast<size_t>(UserFlag::KeeperRecord),   "KeeperRecord"},
+        {static_cast<size_t>(UserFlag::DatabaseEntry),  "DatabaseEntry"},
+        {static_cast<size_t>(UserFlag::SendNetwork),    "SendNetwork"},
+        {static_cast<size_t>(UserFlag::HotCacheHint),   "HotCacheHint"},
+        {static_cast<size_t>(UserFlag::IsResult),       "IsResult"},
+        {static_cast<size_t>(UserFlag::IsExplicitNull), "IsExplicitNull"},
+        {static_cast<size_t>(InternalFlag::HasData),    "HasData"},
+        {static_cast<size_t>(InternalFlag::IsInvalid),  "IsInvalid"}
+    }};
+
+        // Severity methods
+    void set_severity(Severity sev) noexcept {
+        uint64_t raw = flags.to_ullong();
+        raw &= ~(0b111ULL << Severity_LSB);
+        raw |= (static_cast<uint64_t>(sev) << Severity_LSB);
+        flags = std::bitset<Bits>(raw);
+    }
+
+    [[nodiscard]] Severity get_severity() const noexcept {
+        return static_cast<Severity>((flags.to_ullong() >> Severity_LSB) & 0b111);
+    }
+
+    static constexpr std::array<std::string_view, 8> severity_strings = {
+        "Not Set", "Trace", "Debug", "Info", "Warn", "Error", "Critical", "Fatal"
+    };
+
     std::string get_severity_string() const {
-        uint8_t sev = static_cast<uint8_t>((flags.to_ullong() >> Bit_Severity_LSB) & 0b111);
-        switch (sev) {
-        case 0: return  "No Value Selected";
-        case 1: return  "Trace";
-        case 2: return  "Debug";
-        case 3: return  "Info";
-        case 4: return  "Warn";
-        case 5: return  "Error";
-        case 6: return  "Critical";
-        case 7: return  "Fatal";
-        default: return  "No Value Selected";
-        }
+        return std::string(severity_strings[static_cast<size_t>(get_severity())]);
     }
 
-    static size_t get_severity_string_width()  { return 10
-
-        ; };
-
-    using EventFlags = TsStoreFlags<8>;
-
-    // Set a description for a specific bit position (0 to Bits-1)
-    void set_description(size_t pos, std::string desc) {
-        if (pos >= Bits) {
-            throw std::out_of_range("Flag position out of range");
-        }
-        descriptions[pos] = std::move(desc);
+    static constexpr uint64_t get_severity_mask_from_index(size_t index) noexcept {
+        return (index & 0b111) << Severity_LSB;
     }
 
-    // Individual bit operations
-    void set_flag(size_t pos, bool value = true) {
-        if (pos >= Bits) throw std::out_of_range("Flag position out of range");
-        flags.set(pos, value);
+    void set_severity_from_index(size_t index) noexcept {
+        set_severity(static_cast<Severity>(index & 0b111));
     }
 
-    void clear_flag(size_t pos) {
-        set_flag(pos, false);
-    }
-
-    void toggle_flag(size_t pos) {
-        if (pos >= Bits) throw std::out_of_range("Flag position out of range");
-        flags.flip(pos);
-    }
-
-    // Set multiple flags at once from a list of positions
-    void set_flags_from_positions(std::initializer_list<size_t> positions) {
-        for (size_t pos : positions) {
-            set_flag(pos);
-        }
-    }
-
-    // Get descriptions of all currently set flags, lowest → highest bit
+    // Printing helpers
     std::vector<std::string> get_set_flags() const {
         std::vector<std::string> set_descs;
-        set_descs.reserve(flags.count());  // Pre-reserve for efficiency
+        set_descs.reserve(DescribableCount);
 
-        for (size_t i = 0; i < Bits; ++i) {
-            if (flags.test(i)) {
-                const auto& desc = descriptions[i];
-                // Only include if a description was explicitly set (skip empty)
-                if (!desc.empty()) {
-                    set_descs.push_back(desc);
-                }
+        for (const auto& pair : describable_flags) {
+            if (flags.test(pair.first)) {
+                set_descs.emplace_back(pair.second);
             }
         }
         return set_descs;
     }
 
-    // Convenience: pretty-print set flags as a comma-separated string
     std::string to_string() const {
         auto set_flags = get_set_flags();
         if (set_flags.empty()) return "<none>";
@@ -112,82 +135,61 @@ public:
             if (i > 0) oss << ", ";
             oss << set_flags[i];
         }
+        oss << " | Severity: " << get_severity_string();
         return oss.str();
     }
 
-    // Raw access (if needed)
-    const std::bitset<Bits>& raw_flags() const { return flags; }
-    void set_raw_flags(const std::bitset<Bits>& new_flags) { flags = new_flags; }
+    // Serialization
+    std::array<uint8_t, FlagBytes> to_bytes() const {
+        uint64_t val = flags.to_ullong();
+        std::array<uint8_t, FlagBytes> bytes{};
 
-    std::vector<uint8_t> to_bytes() const {
-        std::vector<uint8_t> bytes(Bytes, 0);
-        for (size_t global_bit = 0; global_bit < Bits; ++global_bit) {
-            if (flags.test(global_bit)) {
-                size_t rev_bit = Bits - 1 - global_bit;
-                size_t byte_idx = rev_bit / 8;
-                size_t bit_pos = 7 - (rev_bit % 8);
-                bytes[byte_idx] |= uint8_t(1) << bit_pos;
-            }
+        for (size_t i = 0; i < FlagBytes; ++i) {
+            bytes[i] = static_cast<uint8_t>(val >> ((FlagBytes - 1 - i) * 8));
         }
         return bytes;
     }
 
-    void from_bytes(const std::vector<uint8_t>& bytes) {
-        if (bytes.size() != Bytes) {
-            throw std::invalid_argument("Byte vector size must equal Bytes template parameter");
+    void from_bytes(const std::array<uint8_t, FlagBytes>& bytes) {
+        size_t val = 0;
+        for (size_t i = 0; i < FlagBytes; ++i) {
+            val = (val << 8) | bytes[i];
         }
-        flags.reset();
-        for (size_t byte_idx = 0; byte_idx < Bytes; ++byte_idx) {
-            uint8_t b = bytes[byte_idx];
-            for (size_t bit_pos = 0; bit_pos < 8; ++bit_pos) {
-                if (b & (uint8_t(1) << bit_pos)) {
-                    size_t rev_bit = byte_idx * 8 + (7 - bit_pos);
-                    if (rev_bit >= Bits) continue;  // safety (should not happen)
-                    size_t global_bit = Bits - 1 - rev_bit;
-                    flags.set(global_bit);
-                }
-            }
-        }
+        flags = std::bitset<Bits>(val);
     }
 
-    void from_host_uint64(uint64_t host_value) {
-        flags.reset();
-        for (size_t i = 0; i < 64 && i < Bits; ++i) {
-            if (host_value & (1ULL << i)) flags.set(i);
-        }
-    }
-
-    void load_from_host(uint64_t host_value) {
-        flags.reset();
-        for (size_t i = 0; i < 64 && i < Bits; ++i) {
-            if (host_value & (1ULL << i)) {
-                flags.set(i);
-            }
-        }
-    }
-
-    static constexpr size_t get_severity_mask_from_enum(Severity sev) noexcept {
-        return static_cast<uint64_t>(sev) << Bit_Severity_LSB;
-    }
-
-    static constexpr size_t get_severity_mask_from_index(size_t index) noexcept {
-        return (index & 0b111) << Bit_Severity_LSB;  // clamps to 3 bits
+    static constexpr size_t get_severity_string_width() noexcept {
+        size_t max = 0;
+        for (const auto& str : severity_strings) max = std::max(max, str.size());
+        return max;
     }
 
 private:
     std::bitset<Bits> flags{};
-    std::array<std::string, Bits> descriptions{};
 };
 
-template<size_t Bytes>
-void init_event_flag_descriptions(TsStoreFlags<Bytes>& f) {
-    f.set_description(TsStoreFlags<Bytes>::Bit_LogConsole,    "LogConsole");
-    f.set_description(TsStoreFlags<Bytes>::Bit_KeeperRecord,  "KeeperRecord");
-    f.set_description(TsStoreFlags<Bytes>::Bit_DatabaseEntry, "DatabaseEntry");
-    f.set_description(TsStoreFlags<Bytes>::Bit_SendNetwork,   "SendNetwork");
-    f.set_description(TsStoreFlags<Bytes>::Bit_HotCacheHint,  "HotCacheHint");
-    f.set_description(TsStoreFlags<Bytes>::Bit_HasData,       "HasData");
-    f.set_description(TsStoreFlags<Bytes>::Bit_IsExplicitNull,"IsExplicitNull");
-    f.set_description(TsStoreFlags<Bytes>::Bit_IsInvalid,     "IsInvalid");
-    f.set_description(TsStoreFlags<Bytes>::Bit_IsResultData,  "IsResultData");
+//Free standing function...do not put in class...
+inline uint64_t flags_set_has_data(uint64_t raw_flags, bool const enable = true) noexcept {
+    constexpr uint64_t mask = 1ULL << static_cast<size_t>(TsStoreFlags::InternalFlag::HasData);
+    return enable ? (raw_flags | mask) : (raw_flags & ~mask);
+}
+
+inline uint64_t flags_clear_has_data(uint64_t const raw_flags) noexcept {
+    return flags_set_has_data(raw_flags, false);
+}
+
+inline uint64_t set_user_flag(uint64_t raw, TsStoreFlags::UserFlag f, bool const value = true) noexcept {
+    uint64_t mask = 1ULL << static_cast<size_t>(f);
+    return value ? (raw | mask) : (raw & ~mask);
+}
+
+inline uint64_t set_internal_flag(uint64_t raw, TsStoreFlags::InternalFlag f, bool const value = true) noexcept {
+    uint64_t mask = 1ULL << static_cast<size_t>(f);
+    return value ? (raw | mask) : (raw & ~mask);
+}
+
+inline uint64_t set_severity(uint64_t raw, TsStoreFlags::Severity sev) noexcept {
+    raw &= ~(0b111ULL << TsStoreFlags::Severity_LSB);
+    raw |= (static_cast<uint64_t>(sev) << TsStoreFlags::Severity_LSB);
+    return raw;
 }

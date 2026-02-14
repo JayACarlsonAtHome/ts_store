@@ -32,7 +32,7 @@ ColumnWidths set_effective_widths() const
 
     w.id       = std::max(id_width(),      3ul);
     w.time     = std::max(Config::use_timestamps ? 18ul : 10ul, 10ul);
-    w.severity = TsStoreFlags<8>::get_severity_string_width();
+    w.severity = TsStoreFlags::get_severity_string_width();
     w.category = std::max(Config::max_category_length, 8ul);
     w.thread   = std::max(thread_id_width(),           6ul);
     w.event    = std::max(events_id_width(),           5ul);
@@ -76,9 +76,7 @@ void print_single_row(size_t id, const row_data& r,
     }
 
     // TYPE (padded)
-    TsStoreFlags<8> row_flags;
-    row_flags.load_from_host(r.event_flags);
-    init_event_flag_descriptions(row_flags);
+    TsStoreFlags row_flags(r.event_flags);
     std::string severity = row_flags.get_severity_string();
     std::string severity_padded = severity;
     severity_padded.resize(widths.severity, '.');
@@ -98,10 +96,7 @@ void print_single_row(size_t id, const row_data& r,
     payload_padded.resize(widths.payload, '.');
     std::print("{}{:<{}}", ansi::blue, payload_padded, widths.payload);
 
-    row_flags.load_from_host(r.event_flags);
-    init_event_flag_descriptions(row_flags);
-    std::print(" FLAGS: {} | Severity: {}", row_flags.to_string(), severity);
-
+    std::print(" FLAGS: {} ", row_flags.to_string());
     std::println();
 }
 
