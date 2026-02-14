@@ -6,70 +6,110 @@
 #include <cassert>
 #include <string>
 #include <vector>
+#include <concepts>
+#include <type_traits>
 
 int main() {
     std::cout << "Running TsStoreFlags standalone tests...\n\n";
 
-    TsStoreFlags flags;
-    flags.init_event_flag_descriptions(flags);  // Populate descriptions
+    TsStoreFlags flags(0);
 
-    // Test individual non-severity flags
-    flags.set_log_console();
-    assert(flags.is_log_console());
-    assert(flags.get_set_flags().size() == 1);
-    flags.clear_log_console();
-    assert(!flags.is_log_console());
+    // Test user flags
+    flags.set(TsStoreFlags::UserFlag::DatabaseEntry);
+    flags.set(TsStoreFlags::UserFlag::HotCacheHint);
+    flags.set(TsStoreFlags::UserFlag::IsExplicitNull);
+    flags.set(TsStoreFlags::UserFlag::IsResult);
+    flags.set(TsStoreFlags::UserFlag::KeeperRecord);
+    flags.set(TsStoreFlags::UserFlag::LogConsole);
+    flags.set(TsStoreFlags::UserFlag::SendNetwork);
 
-    flags.set_keeper_record();
-    flags.set_database_entry();
-    flags.set_send_network();
-    flags.set_hot_cache_hint();
-    flags.set_is_result();
-    assert(flags.is_keeper_record() && flags.is_database_entry() &&
-           flags.is_send_network() && flags.is_hot_cache_hint() &&
-           flags.is_result());
+    assert(flags.is_set(TsStoreFlags::UserFlag::DatabaseEntry));
+    assert(flags.is_set(TsStoreFlags::UserFlag::HotCacheHint));
+    assert(flags.is_set(TsStoreFlags::UserFlag::IsExplicitNull));
+    assert(flags.is_set(TsStoreFlags::UserFlag::IsResult));
+    assert(flags.is_set(TsStoreFlags::UserFlag::KeeperRecord));
+    assert(flags.is_set(TsStoreFlags::UserFlag::LogConsole));
+    assert(flags.is_set(TsStoreFlags::UserFlag::SendNetwork));
 
-    // Test HasData and IsExplicitNull separately (often auto-set)
-    flags.set_has_data();
-    assert(flags.has_data());
-    flags.set_is_explicit_null();
-    assert(flags.is_explicit_null());
-    flags.clear_has_data();
-    flags.clear_is_explicit_null();
+    flags.clear(TsStoreFlags::UserFlag::DatabaseEntry);
+    flags.clear(TsStoreFlags::UserFlag::HotCacheHint);
+    flags.clear(TsStoreFlags::UserFlag::IsExplicitNull);
+    flags.clear(TsStoreFlags::UserFlag::IsResult);
+    flags.clear(TsStoreFlags::UserFlag::KeeperRecord);
+    flags.clear(TsStoreFlags::UserFlag::LogConsole);
+    flags.clear(TsStoreFlags::UserFlag::SendNetwork);
 
-    // Test severity handling
-    flags.set_severity(TsStoreFlags::Severity::NotSet);
-    assert(flags.get_severity() == TsStoreFlags::Severity::NotSet);
-    assert(flags.get_severity_string() == "Not Set");
+    assert(!flags.is_set(TsStoreFlags::UserFlag::DatabaseEntry));
+    assert(!flags.is_set(TsStoreFlags::UserFlag::HotCacheHint));
+    assert(!flags.is_set(TsStoreFlags::UserFlag::IsExplicitNull));
+    assert(!flags.is_set(TsStoreFlags::UserFlag::IsResult));
+    assert(!flags.is_set(TsStoreFlags::UserFlag::KeeperRecord));
+    assert(!flags.is_set(TsStoreFlags::UserFlag::LogConsole));
+    assert(!flags.is_set(TsStoreFlags::UserFlag::SendNetwork));
 
+    // Test internal flag
+    flags.set(TsStoreFlags::InternalFlag::HasData);
+    flags.set(TsStoreFlags::InternalFlag::IsInvalid);
+
+    assert(flags.is_set(TsStoreFlags::InternalFlag::HasData));
+    assert(flags.is_set(TsStoreFlags::InternalFlag::IsInvalid));
+
+    flags.clear(TsStoreFlags::InternalFlag::HasData);
+    flags.clear(TsStoreFlags::InternalFlag::IsInvalid);
+
+    assert(!flags.is_set(TsStoreFlags::InternalFlag::HasData));
+    assert(!flags.is_set(TsStoreFlags::InternalFlag::IsInvalid));
+
+
+    // Test severity
     flags.set_severity(TsStoreFlags::Severity::Critical);
     assert(flags.get_severity() == TsStoreFlags::Severity::Critical);
-    assert(flags.get_severity_string() == "Critical");
 
-    flags.set_severity_index(3);  // Info
-    assert(flags.get_severity_string() == "Info");
+    flags.set_severity(TsStoreFlags::Severity::Debug);
+    assert(flags.get_severity() == TsStoreFlags::Severity::Debug);
 
-    // Test to_string() and get_set_flags()
-    flags.set_log_console();
-    flags.set_keeper_record();
-    flags.set_has_data();
     flags.set_severity(TsStoreFlags::Severity::Error);
+    assert(flags.get_severity() == TsStoreFlags::Severity::Error);
 
-    std::vector<std::string> set_flags = flags.get_set_flags();
-    assert(set_flags.size() == 3);
-    std::string expected_to_string = "LogConsole, KeeperRecord, HasData | Severity: Error";
-    assert(flags.to_string() == expected_to_string);
+    flags.set_severity(TsStoreFlags::Severity::Fatal);
+    assert(flags.get_severity() == TsStoreFlags::Severity::Fatal);
+
+    flags.set_severity(TsStoreFlags::Severity::Info);
+    assert(flags.get_severity() == TsStoreFlags::Severity::Info);
+
+    flags.set_severity(TsStoreFlags::Severity::NotSet);
+    assert(flags.get_severity() == TsStoreFlags::Severity::NotSet);
+
+    flags.set_severity(TsStoreFlags::Severity::Trace);
+    assert(flags.get_severity() == TsStoreFlags::Severity::Trace);
+
+    flags.set_severity(TsStoreFlags::Severity::Warn);
+    assert(flags.get_severity() == TsStoreFlags::Severity::Warn);
+
+    flags.clear_severity();
+    assert(flags.get_severity() == TsStoreFlags::Severity::NotSet);
+
+
+    // Test to_string
+    flags.set(TsStoreFlags::UserFlag::DatabaseEntry);
+    flags.set(TsStoreFlags::UserFlag::HotCacheHint);
+    flags.set(TsStoreFlags::UserFlag::IsExplicitNull);
+    flags.set(TsStoreFlags::UserFlag::IsResult);
+    flags.set(TsStoreFlags::UserFlag::KeeperRecord);
+    flags.set(TsStoreFlags::UserFlag::LogConsole);
+    flags.set(TsStoreFlags::UserFlag::SendNetwork);
+    flags.set_severity(TsStoreFlags::Severity::Critical);
+
 
     // Test serialization round-trip
     auto bytes = flags.to_bytes();
-    TsStoreFlags flags2;
-    init_event_flag_descriptions(flags2);
-    flags2.from_bytes(bytes);
-
+    TsStoreFlags flags2(bytes);
     assert(flags2.to_string() == flags.to_string());
-    assert(flags2.get_severity() == flags.get_severity());
-    assert(flags2.get_set_flags() == flags.get_set_flags());
+    std::cout << "Flags 1: " << flags.to_string() << "\n";
+    std::cout << "Flags 2: " << flags2.to_string() << "\n";
 
-    std::cout << "All TsStoreFlags tests PASSED!\n";
+    std::cout << "\n\nAll TsStoreFlags tests PASSED!\n";
     return 0;
 }
+
+

@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <vector>
 #include <sstream>
+#include <concepts>
+#include <type_traits>
 
 class TsStoreFlags {
 public:
@@ -17,6 +19,14 @@ public:
 
     explicit TsStoreFlags(uint64_t raw = 0) {
         flags = std::bitset<Bits>(raw);
+    }
+
+    explicit TsStoreFlags(const std::array<uint8_t, FlagBytes>& bytes) {
+        size_t val = 0;
+        for (size_t i = 0; i < FlagBytes; ++i) {
+            val = (val << 8) | bytes[i];
+        }
+        flags = std::bitset<Bits>(val);
     }
 
     size_t raw() const { return flags.to_ullong(); }
@@ -54,19 +64,19 @@ public:
 
     // Generic accessors for UserFlag and InternalFlag
     template<typename FlagT>
-    requires (std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>)
+    requires std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>
     void set(FlagT f, bool value = true) noexcept {
         flags.set(static_cast<size_t>(f), value);
     }
 
     template<typename FlagT>
-    requires (std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>)
+    requires std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>
     void clear(FlagT f) noexcept {
         flags.reset(static_cast<size_t>(f));
     }
 
     template<typename FlagT>
-    requires (std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>)
+    requires std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>
     [[nodiscard]] bool is_set(FlagT f) const noexcept {
         return flags.test(static_cast<size_t>(f));
     }
@@ -95,6 +105,10 @@ public:
 
     [[nodiscard]] Severity get_severity() const noexcept {
         return static_cast<Severity>((flags.to_ullong() >> Severity_LSB) & 0b111);
+    }
+
+    void clear_severity() noexcept {
+        set_severity(Severity::NotSet);  // Resets to 0 (NotSet)
     }
 
     static constexpr std::array<std::string_view, 8> severity_strings = {

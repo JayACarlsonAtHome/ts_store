@@ -72,11 +72,12 @@ endif()
 add_compile_options(-fno-sanitize=undefined -fno-sanitize=all)
 add_link_options(-fno-sanitize=undefined -fno-sanitize=all)
 
-set(ts_source "ts_store_flags/Test_Flags.cpp")
-set(ts_target "ts_store_flags")
-add_executable(${ts_target} ${ts_source})
-target_include_directories(${ts_target} PRIVATE ../ts_store_headers)
-target_link_libraries(${ts_target} PRIVATE project_warnings project_options)
+set(ts_flags_source "ts_store_flags/Test_Flags.cpp")
+set(ts_flags_target "ts_store_flags")
+target_compile_features(${ts_flags_target} PRIVATE cxx_std_23)
+target_include_directories(${ts_flags_target} PRIVATE ../ts_store_headers)
+target_link_libraries(${ts_flags_target} PRIVATE project_warnings project_options)
+add_executable(${ts_flags_target} ${ts_flags_source})
 
 set(TEST_NUMBERS 001 002 003 004 005)
 
