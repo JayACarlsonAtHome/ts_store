@@ -8,8 +8,8 @@ namespace jac::ts_store::inline_v001 {
         bool UseTimestamps = true,
         bool DebugMode = false,
         size_t MaxTypeLength     = 6,
-        size_t MaxCategoryLength = 25,
-        size_t MaxPayloadLength  = 100
+        size_t MaxCategoryLength = 20,
+        size_t MaxPayloadLength  = 80
     >
     struct ts_store_config {
         static_assert(MaxTypeLength     >=  5, "MaxTypeLength must be at least 5");
