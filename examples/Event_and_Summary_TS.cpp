@@ -1,6 +1,7 @@
-//ts_store_004/Test_004_TS.CPP
+//examples/Event_and_Summary_TS.cpp
+//same as //tests/ts_store_004/Test_004_TS.CPP
 
-#include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
+#include "../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 
 using namespace jac::ts_store::inline_v001;
 
