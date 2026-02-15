@@ -17,7 +17,6 @@ private:
         int64_t  int_metric{0};
         double   dbl_metric{0.0};
         bool     is_debug{false};
-
         std::string category_storage;
         std::string value_storage;
         std::conditional_t<Config::use_timestamps, uint64_t, std::monostate> ts_us{};
