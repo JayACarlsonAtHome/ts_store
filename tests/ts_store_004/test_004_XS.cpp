@@ -8,11 +8,10 @@ constexpr size_t THREADS           = 250;
 constexpr size_t EVENTS_PER_THREAD = 400;
 constexpr size_t TOTAL_EVENTS      = size_t(THREADS) * EVENTS_PER_THREAD;
 
-
-using LogConfigxMainx = ts_store_config<false>;
+using LogConfigxMainx = ts_store_config<false, 6, 20, 75, 1, 1, false>;
 using LogxStore = ts_store<LogConfigxMainx>;
 
-using LogConfigResult = ts_store_config<false>;
+using LogConfigResult = ts_store_config<false, 6, 20, 75, 1, 1, false>;
 using LogResult = ts_store<LogConfigResult>;
 
 int main() {

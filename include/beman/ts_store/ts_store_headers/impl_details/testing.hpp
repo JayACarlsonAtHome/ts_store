@@ -2,17 +2,7 @@
 
 #pragma once
 
-#include <array>
-#include <format>
-#include <string>
-
-#include <string_view>
-#include <thread>
-#include <vector>
-#include "test_constants.hpp"
-
 inline void test_run(bool is_debug = false) noexcept
-
 {
     std::vector<std::thread> threads;
     threads.reserve(max_threads_);
@@ -35,7 +25,8 @@ inline void test_run(bool is_debug = false) noexcept
                     raw_flags = set_internal_flag(raw_flags, TsStoreFlags::InternalFlag::HasData);
                 }
 
-                auto [ok, id] = save_event(t, i, std::move(payload), raw_flags, std::string(cat_sv), is_debug);if (!ok) continue;
+                auto [ok, id] = save_event(t, i, std::move(payload), raw_flags, std::string(cat_sv), is_debug);
+                if (!ok) continue;
 
                 std::this_thread::yield();
 

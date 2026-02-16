@@ -43,7 +43,7 @@ add_executable(ts_store_flags tests/ts_store_flags/Test_Flags.cpp)
 target_include_directories(ts_store_flags PRIVATE ../ts_store_headers)
 target_link_libraries(ts_store_flags PRIVATE project_warnings project_options)
 
-set(TEST_NUMBERS 001 002 003 004 005)
+set(TEST_NUMBERS 001 002 003 004 005 006 007)
 
 foreach(num IN LISTS TEST_NUMBERS)
     # TS version

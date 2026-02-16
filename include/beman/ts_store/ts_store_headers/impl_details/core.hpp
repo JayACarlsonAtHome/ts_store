@@ -23,9 +23,9 @@ save_event(size_t thread_id,
     row.category_storage = Config::utf8_truncate(category, Config::max_category_length);
 
     if (!row.value_storage.empty()) {
-        flags_set_has_data(event_flag_param);
+        event_flag_param = flags_set_has_data(event_flag_param);
     } else {
-        flags_clear_has_data(event_flag_param);
+        event_flag_param = flags_clear_has_data(event_flag_param);
     }
     row.event_flags = event_flag_param;
 
