@@ -1,4 +1,4 @@
-﻿//tests/ts_store_003/Test_003_TS.CPP
+//tests/ts_store_006/Test_006_TS.CPP
 
 #include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 

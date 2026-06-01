@@ -3,7 +3,9 @@
 
 #pragma once
 
+
 [[nodiscard]] inline bool verify_level01() const {
+
     const size_t current = rows_.size();
     const size_t expected = expected_size();
 
@@ -48,14 +50,16 @@
         const auto& row = rows_[id];
         bool valid = false;
         std::string pay_load = row.value_storage;
-        std::string expected = std::string(test_messages[row.event_id % test_messages.size()]).substr(0,Config::max_payload_length);
-        if ((pay_load == expected) && (pay_load.size() <= Config::max_payload_length))  valid = true;
+        std::string expected = Config::utf8_truncate(std::string(test_messages[row.event_id % test_messages.size()]), Config::max_payload_length);
+        size_t utf8_xactualx_len = Config::utf8_length(pay_load);
+        size_t utf8_expected_len = Config::utf8_length(expected);
+        if ((pay_load == expected) && (utf8_xactualx_len <= Config::max_payload_length))  valid = true;
         if (!valid) {
             std::cout  << ansi::bold << ansi::red
                        << std::format("[TEST-VERIFY] CORRUPTED PAYLOAD at ID:{}  Thread_ID:{}  Event_ID:{} \n"
                                       "              Actual   (len {}): {}\n"
                                       "              Expected (len {}): {}\n",
-                                  id, row.thread_id, row.event_id, pay_load.size(), pay_load, expected.size(), expected)
+                       id, row.thread_id, row.event_id, utf8_xactualx_len, pay_load, utf8_expected_len, expected)
                        << ansi::reset;
             all_good = false;
         }
@@ -63,7 +67,7 @@
             std::cout << ansi::green << std::format("[TEST-VERIFY] TEST PAYLOADS VALID  ID:{}  Thread_ID:{}  Event_ID:{} \n"
                                                 "                  Actual   Len({}): {}\n"
                                                 "                  Expected Len({}): {}\033[0m\n",
-                                id, row.thread_id, row.event_id, pay_load.size(), pay_load, expected.size(), expected)
+                      id, row.thread_id, row.event_id, utf8_xactualx_len, pay_load, utf8_expected_len, expected)
                       << ansi::reset;
         } else {
             std::cout  << ansi::bold << ansi::red << std::format("[TEST-VERIFY] ONE OR MORE CORRUPTED\n") << ansi::reset;

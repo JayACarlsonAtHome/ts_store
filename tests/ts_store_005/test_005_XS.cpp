@@ -12,7 +12,7 @@ constexpr size_t EVENTS_PER_THREAD = 4000;
 constexpr size_t TOTAL             = size_t(THREADS) * EVENTS_PER_THREAD;
 constexpr size_t RUNS              = 50;
 
-using LogConfig = ts_store_config<false>;
+using LogConfig = ts_store_config<false, 6, 20, 43, 1, 1, false>;
 using LogxStore = ts_store<LogConfig>;
 
 std::pair<bool, long int> run_single_test(LogxStore& store)

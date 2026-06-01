@@ -16,7 +16,7 @@ alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 inline std::array<size_t, MAX_ENTRIES> log_stream_array{};
 inline std::atomic<size_t> total_written{0};
 
-using LogConfig = ts_store_config<false>;
+using LogConfig = ts_store_config<false, 6, 20, 43, 1, 1, false>;
 using LogxStore = ts_store<LogConfig>;
 
 
