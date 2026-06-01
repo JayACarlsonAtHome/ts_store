@@ -5,44 +5,75 @@
 - All the complicated concurrency/details hidden away</br>
 - Powerful backend optimized for extreme throughput and correctness</br>
 
-### Current Status — February 2026
+### Current Status
 **Extensively tested — zero corruption observed across all runs**</br>  
-All 10 stress tests pass 100% on g++ 15.1.1 (RHEL 9/10) and Clang.</br>
+All stress tests pass 100% on g++ 15 (RHEL 9/10) and recent Clang.</br>
 
-**Not production-ready yet** — API is in flux and will change before final lock-down.</br>
+**Not production-ready yet** — API is still evolving (especially around persistence). Double-buffered background writing is in active development.</br>
 
 ### Recent Improvements
 - Payload and category truncation now UTF-8 aware (truncates on code point boundaries)</br>
 - Flag system redesigned with scoped enums for type safety</br>
 - Cross-compiler compatibility verified (GCC + Clang)</br>
+- Added high-performance persistence layer: human-readable jText split files (`JTextSplitEventLog`) and fast binary path (`BinaryEventLog`) with early header support and auto-batching</br>
 
-### Performance (measured 2026-01-12)</br>
-<img width="662" height="135" alt="image" src="https://github.com/user-attachments/assets/b64778fc-c8b5-4a18-99ca-55077a73b818" />
-</br>
-### Performance (measured 2026-01-26) -- Fastest Run in a while</br>
-<img width="662" height="117" alt="image" src="https://github.com/user-attachments/assets/1a660830-217b-4007-a7a2-8cfa6f75f543" />
-</br>
-### Performance (measured 2026-01-31)</br>
-<img width="662" height="117" alt="image" src="https://github.com/user-attachments/assets/e2c3b2ee-f676-4458-a479-46655a3f6298" />
-</br>
-*Writes: 250 threads × 4000 events (1,000,000) over 50-1000 runs (real data from test_005).*</br>
-*Average ~15-16 million operations per second with or without timestamps*</br>
-*Tests run on GCC 15.1.1; recent builds also verified on Clang.*</br>
+### Performance (mid-2026, Release builds)
+
+**Core in-memory performance** (the number that matters for the hot path):
+- **16 – 22+ million events per second** on realistic workloads, including 9 integer metrics + 6 double metrics per event.
+- This is the speed the in-memory buffer can sustain when persistence is handled asynchronously (the intended model).
+
+**Synchronous persistence throughput** (for reference when using the writers directly):
+- **jText** (split human-readable files for debugging): 1.5M – 2.1M+ events/sec depending on payload size and compiler.
+- **Binary** (mmap-based fast path): 1.1M – 6.7M+ events/sec, degrades more with larger payloads.
+
+See the detailed **Payload Size Impact** tables below for the full cross-compiler, cross-payload results (80 / 160 / 512 char payloads with 9+6 metrics).
+
+These numbers (and the detailed tables below) were measured using the dedicated benchmark programs:
+- `examples/jtext_payload_benchmark.cpp`
+- `examples/binary_payload_benchmark.cpp`
+
+You can re-run the full matrix (both compilers, all payload sizes) using `scripts/build_dual_compilers.sh`.
+
+### How to Reproduce These Numbers
+
+To get comparable results on your own machine:
+
+```bash
+# 1. Build both GCC (via devtoolset-15) and Clang variants with persistence enabled
+./scripts/build_dual_compilers.sh
+
+# 2. Run the payload scaling benchmarks:
+./build-dual/gcc/ts_store_jtext_payload_benchmark
+./build-dual/gcc/ts_store_binary_payload_benchmark
+
+./build-dual/clang/ts_store_jtext_payload_benchmark
+./build-dual/clang/ts_store_binary_payload_benchmark
+```
+
+All runs use:
+- 300,000 events per run
+- 9 integer metrics + 6 double metrics per event
+- Payload sizes: 80 / 160 / 512 characters
+- Release builds (`-DCMAKE_BUILD_TYPE=Release`)
+
+Results will vary significantly by hardware (especially storage speed for the persistence paths), but the relative performance between jText vs Binary, and between GCC vs Clang, should be reproducible.
+
+These are the exact programs used to generate the numbers in the tables below:
+- `examples/jtext_payload_benchmark.cpp`
+- `examples/binary_payload_benchmark.cpp`
 
 ### Performance Characteristics & Limitations
 
-**In-memory hot path**: ~15–18 million events/sec (pure `save_event` calls, no I/O).
+**Core design principle**: The in-memory path is designed to stay fast (16M+ events/sec) even when persistence is active. This only holds if you use **asynchronous / double-buffered persistence**.
 
-**Disk persistence (jText)**: Currently in the 900k – 1.6M events/sec range when writing synchronously with 10K auto-batching (human-readable debug path).
+**Synchronous persistence** (calling the writers directly from the hot path) will drop throughput to the 1–7M range depending on payload size and writer (see tables below).
 
-**Disk persistence (Binary)**: Fast binary path (length-prefixed records, mmap writer). Early measurements show 1.1M – 1.4M+ events/sec depending on payload size and buffer configuration. This is the production fast path when human readability is not required.
+**Important limitations**:
+- If you need to persist *every* event synchronously on the critical path, this is a poor fit for true High Frequency Trading (HFT) or other ultra-low-latency systems.
+- In any real deployment you will eventually become limited by **storage I/O bandwidth** (disk or network), not by the CPU cost of the writers.
 
-**Important caveat**:  
-If you need to persist *every* event synchronously on the critical path, this design will be a poor fit for true High Frequency Trading (HFT) or other ultra-low-latency systems. The in-memory core is fast, but writing to disk (even batched) is orders of magnitude slower than pure memory operations.
-
-The intended usage model is **asynchronous / double-buffered persistence** — the hot path stays in-memory at full speed while events are drained in the background.
-
-In real deployments you will eventually become limited by storage I/O (or network if writing remotely), not by the writer itself.
+The dedicated benchmark programs make it easy to measure exactly where your hardware hits the IO wall.
 
 ### Payload Size Impact (9 ints + 6 doubles, 300k events, Release builds)
 
@@ -68,11 +99,7 @@ In real deployments you will eventually become limited by storage I/O (or networ
 - **In real life, you will eventually become limited by storage I/O bandwidth** (or network if writing remotely), not by the writer CPU cost. At sufficiently high event rates or payload sizes, the disk becomes the real bottleneck.
 - Clang 21 shows a noticeable advantage over GCC 15 for the jText path on larger payloads in these tests.
 
-These numbers were produced by the dedicated benchmarks:
-- `examples/jtext_payload_benchmark.cpp`
-- `examples/binary_payload_benchmark.cpp`
-
-You can re-run them easily after changes (see `scripts/build_dual_compilers.sh` for building both compiler variants).
+You can re-run the exact same benchmarks after changes using `scripts/build_dual_compilers.sh`.
 
 ### Persistence Options
 
