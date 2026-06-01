@@ -220,6 +220,14 @@ Every significant decision (persistence split-file format, jText dependency stra
 
 ---
 
+## Planned
+
+- Double-buffered background IO — asynchronous draining from the in-memory hot path to the persistence writers
+- jText → SQL pathway in the future (easy extraction / loading of the human-readable split files into relational storage when needed)
+- Direct ts_store → SQL writer option (as a future alternative or complement to the current jText and Binary persistence layers)
+
+---
+
 ## There Are No Guarantees
 
 This code has been tested extensively on one platform and compiler family. Make and run your own validation tests before relying on it.
