@@ -8,8 +8,9 @@ save_event(size_t thread_id,
            Config::ValueT&& value,
            size_t event_flag_param = 0,
            Config::CategoryT&& category = "",
-           bool debug = false
-           //size_t user_flags = 0
+           bool debug = false,
+           std::array<int64_t, Config::the_IntMetrics> int_metrics = {},
+           std::array<double,  Config::the_DblMetrics> dbl_metrics = {}
 )
 {
     const size_t id = next_id_.fetch_add(1, std::memory_order_relaxed);
@@ -22,11 +23,27 @@ save_event(size_t thread_id,
     row.value_storage = Config::utf8_truncate(value, Config::max_payload_length);
     row.category_storage = Config::utf8_truncate(category, Config::max_category_length);
 
+    row.int_metrics = std::move(int_metrics);
+    row.dbl_metrics = std::move(dbl_metrics);
+
     if (!row.value_storage.empty()) {
         event_flag_param = flags_set_has_data(event_flag_param);
     } else {
         event_flag_param = flags_clear_has_data(event_flag_param);
     }
+
+    // Set metric presence flags (simple non-zero heuristic; callers can also set the flags explicitly)
+    if constexpr (Config::the_IntMetrics > 0) {
+        bool has = false;
+        for (auto v : row.int_metrics) { if (v != 0) { has = true; break; } }
+        if (has) event_flag_param = set_metric_flag(event_flag_param, TsStoreFlags::MetricFlag::HasIntData);
+    }
+    if constexpr (Config::the_DblMetrics > 0) {
+        bool has = false;
+        for (auto v : row.dbl_metrics) { if (v != 0.0) { has = true; break; } }
+        if (has) event_flag_param = set_metric_flag(event_flag_param, TsStoreFlags::MetricFlag::HasDblData);
+    }
+
     row.event_flags = event_flag_param;
 
     // — TIMESTAMP —
@@ -41,8 +58,7 @@ save_event(size_t thread_id,
                 base = s_epoch_base.load(std::memory_order_relaxed);
             }
         }
-        row.ts_us = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(now - base).count()
-    );
+        row.ts_us = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(now - base).count());
     }
 
     rows_[id] = std::move(row);

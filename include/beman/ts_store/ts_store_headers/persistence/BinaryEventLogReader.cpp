@@ -1,0 +1,125 @@
+#include "BinaryEventLogReader.hpp"
+
+#ifdef TS_STORE_ENABLE_JTEXT_PERSIST
+#include "jText.h"
+#endif
+
+#include <cstring>
+#include <stdexcept>
+
+namespace jac::ts_store::inline_v001 {
+
+BinaryEventLogReader::BinaryEventLogReader(std::string_view filepath)
+    : filepath_(filepath)
+{
+    file_.open(filepath_, std::ios::binary | std::ios::in);
+    if (!file_.is_open()) {
+        throw std::runtime_error("BinaryEventLogReader: failed to open " + std::string(filepath));
+    }
+}
+
+bool BinaryEventLogReader::next(BinaryRecord& out_record) {
+    return read_next_record(out_record);
+}
+
+void BinaryEventLogReader::rewind() {
+    file_.clear();
+    file_.seekg(0, std::ios::beg);
+    records_read_ = 0;
+    eof_reached_ = false;
+}
+
+bool BinaryEventLogReader::read_next_record(BinaryRecord& out) {
+    if (eof_reached_) return false;
+
+    uint32_t record_len = 0;
+    file_.read(reinterpret_cast<char*>(&record_len), sizeof(record_len));
+
+    if (file_.eof() || file_.fail()) {
+        eof_reached_ = true;
+        return false;
+    }
+
+    std::vector<char> buffer(record_len);
+    file_.read(buffer.data(), record_len);
+
+    if (file_.fail()) {
+        eof_reached_ = true;
+        return false;
+    }
+
+    size_t pos = 0;
+    auto read_u64 = [&](uint64_t& dst) {
+        std::memcpy(&dst, &buffer[pos], sizeof(uint64_t));
+        pos += sizeof(uint64_t);
+    };
+
+    auto read_u16 = [&](uint16_t& dst) {
+        std::memcpy(&dst, &buffer[pos], sizeof(uint16_t));
+        pos += sizeof(uint16_t);
+    };
+
+    read_u64(out.event_id);
+    read_u64(out.thread_id);
+    read_u64(out.per_thread_event_id);
+    read_u64(out.raw_flags);
+    read_u64(out.timestamp_us);
+
+    uint16_t cat_len = 0;
+    read_u16(cat_len);
+    out.category.assign(&buffer[pos], cat_len);
+    pos += cat_len;
+
+    uint16_t pay_len = 0;
+    read_u16(pay_len);
+    out.payload.assign(&buffer[pos], pay_len);
+    pos += pay_len;
+
+    uint16_t i_count = 0;
+    read_u16(i_count);
+    out.int_metrics.resize(i_count);
+    if (i_count > 0) {
+        std::memcpy(out.int_metrics.data(), &buffer[pos], i_count * sizeof(int64_t));
+        pos += i_count * sizeof(int64_t);
+    }
+
+    uint16_t d_count = 0;
+    read_u16(d_count);
+    out.dbl_metrics.resize(d_count);
+    if (d_count > 0) {
+        std::memcpy(out.dbl_metrics.data(), &buffer[pos], d_count * sizeof(double));
+    }
+
+    records_read_++;
+    return true;
+}
+
+#ifdef TS_STORE_ENABLE_JTEXT_PERSIST
+void BinaryEventLogReader::convert_to_jtext(std::string_view output_base_name,
+                                            size_t int_count,
+                                            size_t dbl_count) const
+{
+    JTextSplitEventLog jtext_log(output_base_name, int_count, dbl_count, PersistMode::All);
+
+    BinaryEventLogReader reader(filepath_);  // re-open for fresh iteration
+    BinaryRecord rec;
+
+    while (reader.next(rec)) {
+        jtext_log.append_event(
+            rec.event_id,
+            rec.thread_id,
+            rec.per_thread_event_id,
+            rec.raw_flags,
+            rec.category,
+            rec.payload,
+            rec.timestamp_us,
+            rec.int_metrics,
+            rec.dbl_metrics
+        );
+    }
+
+    jtext_log.finalize();
+}
+#endif
+
+} // namespace jac::ts_store::inline_v001
