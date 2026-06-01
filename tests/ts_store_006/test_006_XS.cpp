@@ -1,4 +1,4 @@
-﻿//tests/ts_store_003/Test_003_TS.CPP
+//tests/ts_store_006/Test_006_XS.CPP
 
 #include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 
@@ -16,7 +16,7 @@ alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 inline std::array<size_t, MAX_ENTRIES> log_stream_array{};
 inline std::atomic<size_t> total_written{0};
 
-using LogConfig = ts_store_config<true, 6, 20, 43, 1, 1, false>;
+using LogConfig = ts_store_config<false, 6, 20, 43, 1, 1, false>;
 using LogxStore = ts_store<LogConfig>;
 
 

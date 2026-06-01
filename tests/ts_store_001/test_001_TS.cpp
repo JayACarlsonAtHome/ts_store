@@ -4,7 +4,7 @@
 
 using namespace jac::ts_store::inline_v001;
 
-using LogConfig = ts_store_config<true>;
+using LogConfig = ts_store_config<true, 6, 20, 43, 1, 1, false>;
 using LogxStore = ts_store<LogConfig>;
 
 int main() {
@@ -13,7 +13,7 @@ int main() {
     }
 
     constexpr size_t threads = 8;
-    constexpr size_t events = 8;
+    constexpr size_t events  = 8;
     std::cout << ansi::blue << "=== ts_store — Simple Test 001 TS "
                                "-- Equivalent to MultiThread Hello World  ===" << ansi::reset << "\n\n";
 

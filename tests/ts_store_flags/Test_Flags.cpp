@@ -47,7 +47,7 @@ int main() {
     assert(!flags.is_set(TsStoreFlags::UserFlag::LogConsole));
     assert(!flags.is_set(TsStoreFlags::UserFlag::SendNetwork));
 
-    // Test internal flag
+    // Test internal flags
     flags.set(TsStoreFlags::InternalFlag::HasData);
     flags.set(TsStoreFlags::InternalFlag::IsInvalid);
 
@@ -60,6 +60,26 @@ int main() {
     assert(!flags.is_set(TsStoreFlags::InternalFlag::HasData));
     assert(!flags.is_set(TsStoreFlags::InternalFlag::IsInvalid));
 
+    // Test metric flags (bits 18-21)
+    flags.set(TsStoreFlags::MetricFlag::HasIntData);
+    flags.set(TsStoreFlags::MetricFlag::HasIntStats);
+    flags.set(TsStoreFlags::MetricFlag::HasDblData);
+    flags.set(TsStoreFlags::MetricFlag::HasDblStats);
+
+    assert(flags.is_set(TsStoreFlags::MetricFlag::HasIntData));
+    assert(flags.is_set(TsStoreFlags::MetricFlag::HasIntStats));
+    assert(flags.is_set(TsStoreFlags::MetricFlag::HasDblData));
+    assert(flags.is_set(TsStoreFlags::MetricFlag::HasDblStats));
+
+    flags.clear(TsStoreFlags::MetricFlag::HasIntData);
+    flags.clear(TsStoreFlags::MetricFlag::HasIntStats);
+    flags.clear(TsStoreFlags::MetricFlag::HasDblData);
+    flags.clear(TsStoreFlags::MetricFlag::HasDblStats);
+
+    assert(!flags.is_set(TsStoreFlags::MetricFlag::HasIntData));
+    assert(!flags.is_set(TsStoreFlags::MetricFlag::HasIntStats));
+    assert(!flags.is_set(TsStoreFlags::MetricFlag::HasDblData));
+    assert(!flags.is_set(TsStoreFlags::MetricFlag::HasDblStats));
 
     // Test severity
     flags.set_severity(TsStoreFlags::Severity::Critical);
@@ -87,11 +107,9 @@ int main() {
     assert(flags.get_severity() == TsStoreFlags::Severity::Warn);
 
     flags.clear_severity();
-
     assert(flags.get_severity() == TsStoreFlags::Severity::NotSet);
 
-
-    // Test to_string
+    // Test to_string and serialization round-trip with all flag types set
     flags.set(TsStoreFlags::UserFlag::DatabaseEntry);
     flags.set(TsStoreFlags::UserFlag::HotCacheHint);
     flags.set(TsStoreFlags::UserFlag::IsExplicitNull);
@@ -99,18 +117,24 @@ int main() {
     flags.set(TsStoreFlags::UserFlag::KeeperRecord);
     flags.set(TsStoreFlags::UserFlag::LogConsole);
     flags.set(TsStoreFlags::UserFlag::SendNetwork);
+
+    flags.set(TsStoreFlags::InternalFlag::HasData);
+    flags.set(TsStoreFlags::InternalFlag::IsInvalid);
+
+    flags.set(TsStoreFlags::MetricFlag::HasIntData);
+    flags.set(TsStoreFlags::MetricFlag::HasIntStats);
+    flags.set(TsStoreFlags::MetricFlag::HasDblData);
+    flags.set(TsStoreFlags::MetricFlag::HasDblStats);
+
     flags.set_severity(TsStoreFlags::Severity::Critical);
 
-
-    // Test serialization round-trip
     auto bytes = flags.to_bytes();
     TsStoreFlags flags2(bytes);
     assert(flags2.to_string() == flags.to_string());
+
     std::cout << "Flags 1: " << flags.to_string() << "\n";
     std::cout << "Flags 2: " << flags2.to_string() << "\n";
 
     std::cout << "\n\nAll TsStoreFlags tests PASSED!\n";
     return 0;
 }
-
-

@@ -1,14 +1,5 @@
 #pragma once
-
-#include <bitset>
-#include <array>
-#include <string>
-#include <string_view>
-#include <cstdint>
-#include <vector>
-#include <sstream>
-#include <concepts>
-#include <type_traits>
+#include "includes.hpp"
 
 class TsStoreFlags {
 public:
@@ -48,6 +39,14 @@ public:
         IsInvalid = 17
     };
 
+    // Metric-related user flags (bits 18-21)
+    enum class MetricFlag : size_t {
+        HasIntData   = 18,
+        HasIntStats  = 19,
+        HasDblData   = 20,
+        HasDblStats  = 21
+    };
+
     // Severity (bits 32-34)
     enum class Severity : uint8_t {
         NotSet = 0,
@@ -62,27 +61,27 @@ public:
 
     static constexpr size_t Severity_LSB = 32;  // Only constant needed for masking
 
-    // Generic accessors for UserFlag and InternalFlag
+    // Generic accessors for UserFlag, InternalFlag, and MetricFlag
     template<typename FlagT>
-    requires std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>
+    requires std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag> || std::is_same_v<FlagT, MetricFlag>
     void set(FlagT f, bool value = true) noexcept {
         flags.set(static_cast<size_t>(f), value);
     }
 
     template<typename FlagT>
-    requires std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>
+    requires std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag> || std::is_same_v<FlagT, MetricFlag>
     void clear(FlagT f) noexcept {
         flags.reset(static_cast<size_t>(f));
     }
 
     template<typename FlagT>
-    requires std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag>
+    requires std::is_same_v<FlagT, UserFlag> || std::is_same_v<FlagT, InternalFlag> || std::is_same_v<FlagT, MetricFlag>
     [[nodiscard]] bool is_set(FlagT f) const noexcept {
         return flags.test(static_cast<size_t>(f));
     }
 
-    // All describable flags (user + internal)
-    static constexpr size_t DescribableCount = 9;
+    // All describable flags (user + internal + metric)
+    static constexpr size_t DescribableCount = 13;
     static constexpr std::array<std::pair<size_t, std::string_view>, DescribableCount> describable_flags = {{
         {static_cast<size_t>(UserFlag::LogConsole),     "LogConsole"},
         {static_cast<size_t>(UserFlag::KeeperRecord),   "KeeperRecord"},
@@ -92,10 +91,14 @@ public:
         {static_cast<size_t>(UserFlag::IsResult),       "IsResult"},
         {static_cast<size_t>(UserFlag::IsExplicitNull), "IsExplicitNull"},
         {static_cast<size_t>(InternalFlag::HasData),    "HasData"},
-        {static_cast<size_t>(InternalFlag::IsInvalid),  "IsInvalid"}
+        {static_cast<size_t>(InternalFlag::IsInvalid),  "IsInvalid"},
+        {static_cast<size_t>(MetricFlag::HasIntData),   "HasIntData"},
+        {static_cast<size_t>(MetricFlag::HasIntStats),  "HasIntStats"},
+        {static_cast<size_t>(MetricFlag::HasDblData),   "HasDblData"},
+        {static_cast<size_t>(MetricFlag::HasDblStats),  "HasDblStats"}
     }};
 
-        // Severity methods
+    // Severity methods
     void set_severity(Severity sev) noexcept {
         uint64_t raw = flags.to_ullong();
         raw &= ~(0b111ULL << Severity_LSB);
@@ -182,27 +185,32 @@ private:
     std::bitset<Bits> flags{};
 };
 
-//Free standing function...do not put in class...
-inline uint64_t flags_set_has_data(uint64_t raw_flags, bool const enable = true) noexcept {
+//Free standing functions...
+[[nodiscard]] inline uint64_t flags_set_has_data(uint64_t raw_flags, bool const enable = true) noexcept {
     constexpr uint64_t mask = 1ULL << static_cast<size_t>(TsStoreFlags::InternalFlag::HasData);
     return enable ? (raw_flags | mask) : (raw_flags & ~mask);
 }
 
-inline uint64_t flags_clear_has_data(uint64_t const raw_flags) noexcept {
+[[nodiscard]] inline uint64_t flags_clear_has_data(uint64_t const raw_flags) noexcept {
     return flags_set_has_data(raw_flags, false);
 }
 
-inline uint64_t set_user_flag(uint64_t raw, TsStoreFlags::UserFlag f, bool const value = true) noexcept {
+[[nodiscard]] inline uint64_t set_user_flag(uint64_t raw, TsStoreFlags::UserFlag f, bool const value = true) noexcept {
     uint64_t mask = 1ULL << static_cast<size_t>(f);
     return value ? (raw | mask) : (raw & ~mask);
 }
 
-inline uint64_t set_internal_flag(uint64_t raw, TsStoreFlags::InternalFlag f, bool const value = true) noexcept {
+[[nodiscard]] inline uint64_t set_internal_flag(uint64_t raw, TsStoreFlags::InternalFlag f, bool const value = true) noexcept {
     uint64_t mask = 1ULL << static_cast<size_t>(f);
     return value ? (raw | mask) : (raw & ~mask);
 }
 
-inline uint64_t set_severity(uint64_t raw, TsStoreFlags::Severity sev) noexcept {
+[[nodiscard]] inline uint64_t set_metric_flag(uint64_t raw, TsStoreFlags::MetricFlag f, bool const value = true) noexcept {
+    uint64_t mask = 1ULL << static_cast<size_t>(f);
+    return value ? (raw | mask) : (raw & ~mask);
+}
+
+[[nodiscard]] inline uint64_t set_severity(uint64_t raw, TsStoreFlags::Severity sev) noexcept {
     raw &= ~(0b111ULL << TsStoreFlags::Severity_LSB);
     raw |= (static_cast<uint64_t>(sev) << TsStoreFlags::Severity_LSB);
     return raw;

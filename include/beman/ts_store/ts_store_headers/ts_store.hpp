@@ -14,8 +14,8 @@ private:
         size_t   event_flags{0};
         size_t   thread_id{0};
         size_t   event_id{0};
-        int64_t  int_metric{0};
-        double   dbl_metric{0.0};
+        std::array<int64_t, Config::the_IntMetrics> int_metrics{};
+        std::array<double,  Config::the_DblMetrics> dbl_metrics{};
         bool     is_debug{false};
         std::string category_storage;
         std::string value_storage;
