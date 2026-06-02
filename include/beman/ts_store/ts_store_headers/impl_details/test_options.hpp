@@ -12,50 +12,49 @@
 namespace jac::ts_store::inline_v001 {
 
 struct TestOptions {
-    bool interactive = true;
-    bool color = true;
+    bool interactive = false;
+    bool color = false;
 };
 
 inline TestOptions parse_test_options(int argc, char** argv) {
-    TestOptions opts;
+    TestOptions opts;  // defaults: no interactive, no colors (as required for tests by default)
+    bool interactive_set = false;
+    bool color_set = false;
     for (int i = 1; i < argc; ++i) {
         const char* arg = argv[i];
         if (std::strcmp(arg, "--no-interactive") == 0 ||
             std::strcmp(arg, "--interactive=0") == 0 ||
             std::strcmp(arg, "--interactive=false") == 0) {
             opts.interactive = false;
+            interactive_set = true;
         } else if (std::strcmp(arg, "--interactive") == 0 ||
                    std::strcmp(arg, "--interactive=1") == 0 ||
                    std::strcmp(arg, "--interactive=true") == 0) {
             opts.interactive = true;
+            interactive_set = true;
         } else if (std::strcmp(arg, "--no-color") == 0 ||
                    std::strcmp(arg, "--color=0") == 0 ||
                    std::strcmp(arg, "--color=false") == 0) {
             opts.color = false;
+            color_set = true;
         } else if (std::strcmp(arg, "--color") == 0 ||
                    std::strcmp(arg, "--color=1") == 0 ||
                    std::strcmp(arg, "--color=true") == 0) {
             opts.color = true;
+            color_set = true;
         } else if (std::strcmp(arg, "--help") == 0 || std::strcmp(arg, "-h") == 0) {
             // optional: could print, but for now silent
         }
     }
 
-    // Set the env vars so that the existing is_interactive() / colors_enabled()
-    // (which check getenv) pick up the CLI choice. This keeps the control
-    // logic in one place and makes CLI set "the values the programs use".
-    if (!opts.interactive) {
-        setenv("TS_STORE_INTERACTIVE", "0", 1);
-    } else if (opts.interactive) {
-        // only set if explicitly 1? but default is on, so if flag for 1 set it
-        // actually, to force, but since default true, if not set to 0, leave or set 1
-        setenv("TS_STORE_INTERACTIVE", "1", 1);
+    // Only set env if CLI explicitly provided the option. This way:
+    // - no params: no env set, helpers fall back to Config defaults (now false) + isatty logic
+    // - explicit CLI flag: force the env so helpers use it (CLI wins over everything)
+    if (interactive_set) {
+        setenv("TS_STORE_INTERACTIVE", opts.interactive ? "1" : "0", 1);
     }
-
-    if (!opts.color) {
-        setenv("TS_STORE_COLOR", "0", 1);
-    } else if (opts.color) {
-        setenv("TS_STORE_COLOR", "1", 1);
+    if (color_set) {
+        setenv("TS_STORE_COLOR", opts.color ? "1" : "0", 1);
     }
 
     return opts;

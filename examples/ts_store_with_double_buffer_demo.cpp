@@ -29,7 +29,7 @@ int main() {
     constexpr size_t DBL_COUNT = 6;
 
     // === Create normal ts_store (in-memory hot path) ===
-    using Config = ts_store_config<true, 6, 32, 256, INT_COUNT, DBL_COUNT>;
+    using Config = ts_store_config<true, 6, 32, 256, INT_COUNT, DBL_COUNT, false, false, false, false>;
     ts_store<Config> store(THREADS, EVENTS_PER_THREAD);
 
     // === Choose your sink (plug and play) ===

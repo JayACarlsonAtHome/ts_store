@@ -17,14 +17,17 @@ namespace ansi {
         static bool enabled = true;
         if (!decided) {
             decided = true;
-            if (const char* nc = std::getenv("NO_COLOR"); nc && *nc) {
+            const char* nc = std::getenv("NO_COLOR");
+            const char* c = std::getenv("TS_STORE_COLOR");
+            if (nc && *nc) {
                 enabled = false;
-            } else if (const char* c = std::getenv("TS_STORE_COLOR")) {
+            } else if (c) {
                 std::string v(c);
                 if (v == "0" || v == "false" || v == "no" || v == "off") enabled = false;
                 else if (v == "1" || v == "true" || v == "yes" || v == "on") enabled = true;
+                else enabled = false;
             } else {
-                enabled = isatty(STDOUT_FILENO);
+                enabled = false;  // default to no colors if no env/CLI (for test programs etc.)
             }
         }
         return enabled;

@@ -9,8 +9,9 @@
 #
 # Usage:
 #   ./scripts/run_all_tests.sh --compiler gcc --output yes
-#   ./scripts/run_all_tests.sh --compiler clang --output no
+#   ./scripts/run_all_tests.sh --compiler clang --output yes
 #   ./scripts/run_all_tests.sh   # defaults to gcc, output=yes (show on console + log)
+# Use --output no if you only want logs (no live test output on console).
 #
 # After run, results are in results/<compiler>/
 #   - individual .log files

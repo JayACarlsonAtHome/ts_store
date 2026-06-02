@@ -12,8 +12,8 @@ namespace jac::ts_store::inline_v001 {
         size_t IntMetrics = 1,
         size_t DblMetrics = 1,
         bool EnableMetrics = false,
-        bool DefaultInteractive = true,
-        bool DefaultColor = true,
+        bool DefaultInteractive = false,
+        bool DefaultColor = false,
         bool DebugMode = false
     >
     struct ts_store_config {

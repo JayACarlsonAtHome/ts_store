@@ -68,7 +68,10 @@ using Config = ts_store_config<
     512,       // MaxPayloadLength (UTF-8 safe truncation)
     9,         // IntMetrics slots (0-9 supported in persistence layer)
     6,         // DblMetrics slots (0-6 supported in persistence layer)
-    false      // EnableMetrics (future)
+    false,     // EnableMetrics (future)
+    false,     // DefaultInteractive (CLI overrides; default off for tests)
+    false,     // DefaultColor (CLI overrides; default off for tests)
+    false      // DebugMode
 >;
 ```
 
@@ -208,8 +211,9 @@ They remain useful for regression testing but are not the recommended on-ramp fo
 All 15 stress tests (001–007 TS + XS variants, plus the flags test) can be run via the automation script:
 
 ```bash
-./scripts/run_all_tests.sh --compiler gcc --output no
+./scripts/run_all_tests.sh --compiler gcc --output yes
 ./scripts/run_all_tests.sh --compiler clang --output yes
+# Use --output no for either if you don't want the live test output printed to your console (only meta messages + full logs).
 ```
 
 - `--compiler gcc|clang` selects the toolchain (GCC uses `scl enable gcc-toolset-15`).
@@ -230,7 +234,7 @@ The runner captures full test output (including any ANSI colors from `ansi::*` a
 The stress test binaries (and `print()`) support command line parameters to control interactive pauses and color output:
   ./build-results-gcc/ts_store_00N_TS --interactive=0 --color=0
   ./build-results-gcc/ts_store_00N_TS --no-interactive --no-color
-These are parsed in `main()` (see `parse_test_options()` and `test_options.hpp`), which sets the env vars so the helpers pick them up. The `ts_store_config<...>` now also supports `DefaultInteractive` / `DefaultColor` / `DebugMode` as constexpr params that the program's Config can set (CLI/env override the defaults + isatty fallback).
+These are parsed in `main()` (see `parse_test_options()` and `test_options.hpp`), which sets the env vars so the helpers pick them up. Defaults (no CLI params) are non-interactive and no colors. The `ts_store_config<...>` now also supports `DefaultInteractive` / `DefaultColor` / `DebugMode` as constexpr params that the program's Config can set (CLI/env override the defaults + isatty fallback).
 
 To view a log with colors if they happen to be present: `less -R results/gcc/ts_store_003_TS.log`
 
@@ -261,7 +265,7 @@ Every significant decision (persistence split-file format, jText dependency stra
 You can now attach asynchronous persistence directly to a `ts_store`:
 
 ```cpp
-using Config = ts_store_config<true, 6, 32, 256, 9, 6>;
+using Config = ts_store_config<true, 6, 32, 256, 9, 6, false, false, false, false>;
 ts_store<Config> store(8, 10'000);
 
 auto sink   = std::make_unique<JTextEventSink>("MyRun", 9, 6);

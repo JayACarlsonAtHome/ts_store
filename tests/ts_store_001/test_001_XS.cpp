@@ -4,7 +4,7 @@
 
 using namespace jac::ts_store::inline_v001;
 
-using LogConfig = ts_store_config<false, 6, 20, 43, 1, 1, false, true, true, false>;
+using LogConfig = ts_store_config<false, 6, 20, 43, 1, 1, false, false, false, false>;
 using LogxStore = ts_store<LogConfig>;
 
 int main(int argc, char** argv) {
