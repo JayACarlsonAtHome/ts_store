@@ -40,7 +40,9 @@ int main(int argc, char** argv) {
             raw_flags = set_severity(raw_flags, static_cast<TsStoreFlags::Severity>(i % 8));
 
             bool is_debug = true;
-            auto [ok, id] = safepay.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug);
+            std::array<int64_t, 1> ints{{ static_cast<int64_t>(i) }};
+            std::array<double, 1> dbls{{ static_cast<double>(i) * 0.01 }};
+            auto [ok, id] = safepay.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug, ints, dbls);
             auto [val_ok, val_sv] = safepay.select(id);
             if (val_ok && std::string_view(val_sv) == payload_copy) {
                 ++local_successes;
@@ -59,7 +61,9 @@ int main(int argc, char** argv) {
         raw_flags = set_user_flag(raw_flags, TsStoreFlags::UserFlag::KeeperRecord);
         raw_flags = set_severity(raw_flags, static_cast<TsStoreFlags::Severity>(TsStoreFlags::Severity::Info));
 
-        auto [ok, _] = results.save_event(t, local_successes, std::move(result_payload), raw_flags, "STATS");
+        std::array<int64_t, 1> r_ints{{ static_cast<int64_t>(local_successes) }};
+        std::array<double, 1> r_dbls{{ static_cast<double>(local_nulls) }};
+        auto [ok, _] = results.save_event(t, local_successes, std::move(result_payload), raw_flags, "STATS", false, r_ints, r_dbls);
         if (!ok) {
             std::cerr << "Results claim failed for thread " << t << "\n";
         }

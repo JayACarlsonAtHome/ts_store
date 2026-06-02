@@ -1,8 +1,8 @@
 # ts_store Stress Test Results — gcc
 
-**Run date**: 2026-06-02 09:21:04 UTC
+**Run date**: 2026-06-02 10:02:55 UTC
 **Compiler**: GCC 15 (gcc-toolset-15)
-**Output mode**: yes
+**Output mode**: no
 **Total tests**: 15
 **Passed**: 15
 **Failed**: 0
@@ -31,7 +31,7 @@
 
 - All tests use the internal verification harnesses (verify_level01 etc.).
 - Tests 005 and 007 are the large-scale "massive" tests (historically ~1,000,000 records per run × 50 runs; the THREADS/EVENTS_PER_THREAD limits are configurable — see source comments in the test files).
-- Double-buffered persistence (using BinaryEventSink + DoubleBufferedWriter) is enabled for the 005/007 runs. The hot path stays fast; background thread drains.
+- Double-buffered persistence (using JTextEventSink / JTextSplitEventLog + DoubleBufferedWriter) is enabled for the 005/007 runs. This produces separate main .jtext + _Ints.jtext + _Floats.jtext files containing ALL the int and float metric values (separate from the runner's stdout capture log). The hot path stays fast; background thread drains.
 - All other tests exercise core features (flags handling, different scales, timestamped vs non-timestamped variants).
 - Every test that reached the verification stage passed with 100% structural integrity (zero corruption reported) when the runner reported PASSED.
 - Individual logs contain the full console output from each test binary (some are large due to debug-style dumps in lower-numbered tests).

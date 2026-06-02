@@ -47,7 +47,9 @@ int main(int argc, char** argv) {
                 raw_flags = set_severity(raw_flags, static_cast<TsStoreFlags::Severity>(i % 8));
 
                 bool is_debug = true;
-                auto [ok, id] = store.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug);
+                std::array<int64_t, 1> ints{{ static_cast<int64_t>(i) }};
+                std::array<double, 1> dbls{{ static_cast<double>(i) * 0.01 }};
+                auto [ok, id] = store.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug, ints, dbls);
                 if (ok) {
                     size_t pos = log_stream_write_pos.fetch_add(1, std::memory_order_relaxed);
                     if (pos < MAX_ENTRIES) {

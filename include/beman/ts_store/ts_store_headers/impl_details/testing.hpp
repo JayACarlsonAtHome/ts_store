@@ -25,7 +25,12 @@ inline void test_run(bool is_debug = false) noexcept
                     raw_flags = set_internal_flag(raw_flags, TsStoreFlags::InternalFlag::HasData);
                 }
 
-                auto [ok, id] = save_event(t, i, std::move(payload), raw_flags, std::string(cat_sv), is_debug);
+                std::array<int64_t, Config::the_IntMetrics> ints{};
+                std::array<double,  Config::the_DblMetrics> dbls{};
+                if constexpr (Config::the_IntMetrics > 0) ints[0] = static_cast<int64_t>(i);
+                if constexpr (Config::the_DblMetrics > 0) dbls[0] = static_cast<double>(i) * 0.01;
+
+                auto [ok, id] = save_event(t, i, std::move(payload), raw_flags, std::string(cat_sv), is_debug, ints, dbls);
                 if (!ok) continue;
 
                 std::this_thread::yield();
