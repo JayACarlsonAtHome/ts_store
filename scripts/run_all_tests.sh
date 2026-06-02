@@ -26,6 +26,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Strip ANSI color escape sequences. This makes the saved .log files clean plain text
+# (good for Markdown, GitHub, Vim, editors, git grep, etc.) while still allowing
+# pretty colors when a human runs a test binary directly in a real terminal.
+strip_ansi() {
+    sed -r 's/\x1B\[[0-9;]*[mGK]//g'
+}
+
 COMPILER="gcc"
 OUTPUT_MODE="yes"  # yes = show on console (tee), no = silent to logs only
 
@@ -67,6 +74,12 @@ if [[ "$OUTPUT_MODE" != "yes" && "$OUTPUT_MODE" != "no" ]]; then
     usage
 fi
 
+if [[ "$COMPILER" == "gcc" ]]; then
+    COMPILER_DISPLAY="GCC 15 (gcc-toolset-15)"
+else
+    COMPILER_DISPLAY="Clang 21.1 (Red Hat)"
+fi
+
 echo "=== ts_store All Stress Tests Runner ==="
 echo "Compiler: $COMPILER"
 echo "Output mode: $OUTPUT_MODE (console visible: $OUTPUT_MODE)"
@@ -78,12 +91,10 @@ CMAKE_CMD="cmake"
 BUILD_CMD="cmake --build . --target"
 
 if [[ "$COMPILER" == "gcc" ]]; then
-    BUILD_PREFIX="scl enable gcc-toolset-15 -- bash -c"
     CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++"
     # We don't enable jtext here for the core stress tests; they don't need it.
     # The stress tests (001-007) are always built.
 else
-    BUILD_PREFIX=""
     CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++"
 fi
 
@@ -163,7 +174,10 @@ for test in "${TESTS[@]}"; do
     bin="./$test"
     if [[ ! -x "$bin" ]]; then
         echo "ERROR: binary $bin not found or not executable"
-        ((FAILED++))
+        log_file="$LOG_DIR/${test}.log"
+        echo "ERROR: binary $bin not found or not executable" > "$log_file"
+        echo "=== TEST FAILED BY RUNNER ===" >> "$log_file"
+        FAILED=$((FAILED + 1))
         continue
     fi
 
@@ -172,21 +186,35 @@ for test in "${TESTS[@]}"; do
 
     if [[ "$OUTPUT_MODE" == "yes" ]]; then
         # Show on console + log
-        if ! "$bin" 2>&1 | tee "$log_file"; then
+        # CLI flags --interactive=0 --color=0 force non-interactive / no-color for automated runs.
+        # The parse_test_options() in test mains sets the corresponding env vars so the
+        # is_interactive()/colors_enabled() helpers (and Config defaults) pick them up.
+        # This lets the programs be controlled from command line.
+        # We strip ANSI for the .log files so they are clean in Markdown/Vim/etc.
+        "$bin" --interactive=0 --color=0 < /dev/null 2>&1 | tee >(strip_ansi > "$log_file")
+        bin_status=${PIPESTATUS[0]}
+        if [ $bin_status -ne 0 ]; then
             echo "  -> $test FAILED (see log)"
-            ((FAILED++))
+            echo "=== TEST FAILED BY RUNNER ===" >> "$log_file"
+            FAILED=$((FAILED + 1))
         else
             echo "  -> $test PASSED"
-            ((PASSED++))
+            echo "=== TEST PASSED BY RUNNER ===" >> "$log_file"
+            PASSED=$((PASSED + 1))
         fi
     else
         # Silent: only to log, no console output from test
-        if ! "$bin" > "$log_file" 2>&1; then
+        # Always strip for the saved log file.
+        "$bin" --interactive=0 --color=0 < /dev/null 2>&1 | strip_ansi > "$log_file"
+        bin_status=${PIPESTATUS[0]}
+        if [ $bin_status -ne 0 ]; then
             echo "  -> $test FAILED (see log)"
-            ((FAILED++))
+            echo "=== TEST FAILED BY RUNNER ===" >> "$log_file"
+            FAILED=$((FAILED + 1))
         else
             echo "  -> $test PASSED"
-            ((PASSED++))
+            echo "=== TEST PASSED BY RUNNER ===" >> "$log_file"
+            PASSED=$((PASSED + 1))
         fi
     fi
 done
@@ -203,7 +231,7 @@ cat > "$summary_file" << EOF
 # ts_store Stress Test Results — $COMPILER
 
 **Run date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-**Compiler**: $COMPILER
+**Compiler**: $COMPILER_DISPLAY
 **Output mode**: $OUTPUT_MODE
 **Total tests**: $TOTAL_TESTS
 **Passed**: $PASSED
@@ -217,7 +245,11 @@ EOF
 
 for test in "${TESTS[@]}"; do
     log_file="${test}.log"
-    if grep -q "PASS" "$LOG_DIR/$log_file" 2>/dev/null || grep -q "verified, zero corruption" "$LOG_DIR/$log_file" 2>/dev/null; then
+    if grep -q "=== TEST PASSED BY RUNNER ===" "$LOG_DIR/$log_file" 2>/dev/null; then
+        status="✅ PASS"
+    elif grep -q "=== TEST FAILED BY RUNNER ===" "$LOG_DIR/$log_file" 2>/dev/null; then
+        status="❌ FAIL"
+    elif grep -qE 'PASS|passed verification!|All .* tests PASSED|ALL TESTS COMPLETED SUCCESSFULLY|verified, zero corruption|STRUCTURALLY PERFECT' "$LOG_DIR/$log_file" 2>/dev/null; then
         status="✅ PASS"
     else
         status="❌ FAIL"
@@ -230,17 +262,24 @@ cat >> "$summary_file" << EOF
 ## Notes
 
 - All tests use the internal verification harnesses (verify_level01 etc.).
-- Tests 005 and 007 are the "big" 1M record massive tests (configurable; see source comments).
-- Double-buffered persistence is active in the 005/007 runs (via recent updates attaching BinaryEventSink).
-- Individual logs contain the full console output from each run.
-- For dual-compiler comparison see the sibling Clang/GCC pages (linked from top-level README).
+- Tests 005 and 007 are the large-scale "massive" tests (historically ~1,000,000 records per run × 50 runs; the THREADS/EVENTS_PER_THREAD limits are configurable — see source comments in the test files).
+- Double-buffered persistence (using BinaryEventSink + DoubleBufferedWriter) is enabled for the 005/007 runs. The hot path stays fast; background thread drains.
+- All other tests exercise core features (flags handling, different scales, timestamped vs non-timestamped variants).
+- Every test that reached the verification stage passed with 100% structural integrity (zero corruption reported) when the runner reported PASSED.
+- Individual logs contain the full console output from each test binary (some are large due to debug-style dumps in lower-numbered tests).
+- Raw logs and this summary are in this directory. All tests were driven by the automation in \`scripts/run_all_tests.sh\` (supports --compiler and --output yes/no for console vs logs-only selection).
 
 See the main [README.md](../../README.md) for overview.
 EOF
 
 echo "Summary written to $summary_file"
 echo
-echo "To view GCC results: results/gcc/summary.md"
-echo "To view Clang results: results/clang/summary.md (run with --compiler clang)"
+if [[ "$COMPILER" == "gcc" ]]; then
+    echo "To view GCC results: results/gcc/summary.md"
+    echo "To view Clang results: results/clang/summary.md (run with --compiler clang)"
+else
+    echo "To view Clang results: results/clang/summary.md"
+    echo "To view GCC results: results/gcc/summary.md (run with --compiler gcc)"
+fi
 echo
 echo "Done."

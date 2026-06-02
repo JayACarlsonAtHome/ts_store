@@ -225,6 +225,15 @@ The runner also supports the double-buffered configuration for the large tests (
 
 See `scripts/run_all_tests.sh` for the implementation (pure automation, no external deps beyond the built test binaries).
 
+The runner captures full test output (including any ANSI colors from `ansi::*` and `print()`) into the `.log` files under `results/<compiler>/`. To keep those logs clean and readable in Markdown, GitHub, Vim, `git diff`, text editors, etc., the runner automatically strips ANSI escape sequences before writing the `.log` (see the `strip_ansi` helper). You still get pretty colors when you run individual test binaries directly in a real terminal.
+
+The stress test binaries (and `print()`) support command line parameters to control interactive pauses and color output:
+  ./build-results-gcc/ts_store_00N_TS --interactive=0 --color=0
+  ./build-results-gcc/ts_store_00N_TS --no-interactive --no-color
+These are parsed in `main()` (see `parse_test_options()` and `test_options.hpp`), which sets the env vars so the helpers pick them up. The `ts_store_config<...>` now also supports `DefaultInteractive` / `DefaultColor` / `DebugMode` as constexpr params that the program's Config can set (CLI/env override the defaults + isatty fallback).
+
+To view a log with colors if they happen to be present: `less -R results/gcc/ts_store_003_TS.log`
+
 ---
 
 ## Design History & Rationale

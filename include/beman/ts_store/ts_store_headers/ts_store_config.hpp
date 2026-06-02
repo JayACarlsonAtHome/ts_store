@@ -11,7 +11,10 @@ namespace jac::ts_store::inline_v001 {
         size_t MaxPayloadLength  = 80,
         size_t IntMetrics = 1,
         size_t DblMetrics = 1,
-        bool EnableMetrics = false
+        bool EnableMetrics = false,
+        bool DefaultInteractive = true,
+        bool DefaultColor = true,
+        bool DebugMode = false
     >
     struct ts_store_config {
 
@@ -25,6 +28,9 @@ namespace jac::ts_store::inline_v001 {
 
         static constexpr bool use_timestamps = UseTimestamps;
         static constexpr bool enable_metrics = EnableMetrics;
+        static constexpr bool default_interactive = DefaultInteractive;
+        static constexpr bool default_color = DefaultColor;
+        static constexpr bool debug_mode = DebugMode;
 
         static constexpr size_t max_payload_length = MaxPayloadLength;
         static constexpr size_t max_type_length    = MaxTypeLength;

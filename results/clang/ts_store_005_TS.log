@@ -3,210 +3,211 @@ Using store.clear() — fastest, most realistic reuse
 
 Run  1 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   427480 µs →   2339291 ops/sec
+[0mPASS —   433494 µs →   2306837 ops/sec
 
 Run  2 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   401898 µs →   2488194 ops/sec
+[0mPASS —   396969 µs →   2519088 ops/sec
 
 Run  3 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   397432 µs →   2516154 ops/sec
+[0mPASS —   389197 µs →   2569393 ops/sec
 
 Run  4 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   387203 µs →   2582625 ops/sec
+[0mPASS —   388728 µs →   2572493 ops/sec
 
 Run  5 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   390365 µs →   2561705 ops/sec
+[0mPASS —   393184 µs →   2543338 ops/sec
 
 Run  6 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   392540 µs →   2547511 ops/sec
+[0mPASS —   392950 µs →   2544853 ops/sec
 
 Run  7 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   389829 µs →   2565227 ops/sec
+[0mPASS —   391190 µs →   2556303 ops/sec
 
 Run  8 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   389458 µs →   2567671 ops/sec
+[0mPASS —   382865 µs →   2611887 ops/sec
 
 Run  9 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   388653 µs →   2572989 ops/sec
+[0mPASS —   389554 µs →   2567038 ops/sec
 
 Run 10 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   390759 µs →   2559122 ops/sec
+[0mPASS —   384219 µs →   2602682 ops/sec
 
 Run 11 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   393531 µs →   2541096 ops/sec
+[0mPASS —   386066 µs →   2590231 ops/sec
 
 Run 12 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   390427 µs →   2561298 ops/sec
+[0mPASS —   384371 µs →   2601653 ops/sec
 
 Run 13 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   381724 µs →   2619694 ops/sec
+[0mPASS —   390589 µs →   2560236 ops/sec
 
 Run 14 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   389973 µs →   2564280 ops/sec
+[0mPASS —   388951 µs →   2571018 ops/sec
 
 Run 15 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   388231 µs →   2575786 ops/sec
+[0mPASS —   392629 µs →   2546934 ops/sec
 
 Run 16 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   391576 µs →   2553783 ops/sec
+[0mPASS —   391230 µs →   2556041 ops/sec
 
 Run 17 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   387561 µs →   2580239 ops/sec
+[0mPASS —   389526 µs →   2567223 ops/sec
 
 Run 18 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   393504 µs →   2541270 ops/sec
+[0mPASS —   393435 µs →   2541716 ops/sec
 
 Run 19 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   390679 µs →   2559646 ops/sec
+[0mPASS —   393940 µs →   2538458 ops/sec
 
 Run 20 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   445237 µs →   2245995 ops/sec
+[0mPASS —   392305 µs →   2549037 ops/sec
 
 Run 21 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   392629 µs →   2546934 ops/sec
+[0mPASS —   391745 µs →   2552681 ops/sec
 
 Run 22 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   392980 µs →   2544659 ops/sec
+[0mPASS —   384804 µs →   2598726 ops/sec
 
 Run 23 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   389559 µs →   2567005 ops/sec
+[0mPASS —   396864 µs →   2519755 ops/sec
 
 Run 24 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   394144 µs →   2537144 ops/sec
+[0mPASS —   398595 µs →   2508812 ops/sec
 
 Run 25 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   396905 µs →   2519495 ops/sec
+[0mPASS —   393420 µs →   2541813 ops/sec
 
 Run 26 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   394335 µs →   2535915 ops/sec
+[0mPASS —   391462 µs →   2554526 ops/sec
 
 Run 27 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   393218 µs →   2543119 ops/sec
+[0mPASS —   385905 µs →   2591311 ops/sec
 
 Run 28 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   396141 µs →   2524354 ops/sec
+[0mPASS —   404418 µs →   2472689 ops/sec
 
 Run 29 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   388689 µs →   2572751 ops/sec
+[0mPASS —   392461 µs →   2548024 ops/sec
 
 Run 30 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   390847 µs →   2558546 ops/sec
+[0mPASS —   388609 µs →   2573281 ops/sec
 
 Run 31 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   391839 µs →   2552069 ops/sec
+[0mPASS —   391071 µs →   2557080 ops/sec
 
 Run 32 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   386374 µs →   2588166 ops/sec
+[0mPASS —   390930 µs →   2558003 ops/sec
 
 Run 33 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   392617 µs →   2547011 ops/sec
+[0mPASS —   390233 µs →   2562572 ops/sec
 
 Run 34 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   389525 µs →   2567229 ops/sec
+[0mPASS —   392253 µs →   2549375 ops/sec
 
 Run 35 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   386655 µs →   2586285 ops/sec
+[0mPASS —   392732 µs →   2546266 ops/sec
 
 Run 36 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   394144 µs →   2537144 ops/sec
+[0mPASS —   393588 µs →   2540728 ops/sec
 
 Run 37 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   396594 µs →   2521470 ops/sec
+[0mPASS —   392605 µs →   2547089 ops/sec
 
 Run 38 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   393250 µs →   2542912 ops/sec
+[0mPASS —   393355 µs →   2542233 ops/sec
 
 Run 39 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   391488 µs →   2554357 ops/sec
+[0mPASS —   386256 µs →   2588957 ops/sec
 
 Run 40 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   389089 µs →   2570106 ops/sec
+[0mPASS —   389564 µs →   2566972 ops/sec
 
 Run 41 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   387815 µs →   2578549 ops/sec
+[0mPASS —   395527 µs →   2528272 ops/sec
 
 Run 42 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   396461 µs →   2522316 ops/sec
+[0mPASS —   391916 µs →   2551567 ops/sec
 
 Run 43 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   391208 µs →   2556185 ops/sec
+[0mPASS —   391098 µs →   2556904 ops/sec
 
 Run 44 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   391475 µs →   2554442 ops/sec
+[0mPASS —   392610 µs →   2547057 ops/sec
 
 Run 45 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   391183 µs →   2556348 ops/sec
+[0mPASS —   389408 µs →   2568001 ops/sec
 
 Run 46 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   389138 µs →   2569782 ops/sec
+[0mPASS —   390932 µs →   2557990 ops/sec
 
 Run 47 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   387436 µs →   2581071 ops/sec
+[0mPASS —   389811 µs →   2565346 ops/sec
 
 Run 48 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   394522 µs →   2534713 ops/sec
+[0mPASS —   389600 µs →   2566735 ops/sec
 
 Run 49 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   394768 µs →   2533133 ops/sec
+[0mPASS —   399248 µs →   2504709 ops/sec
 
 Run 50 / 50
 [32m[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE[0m
-[0mPASS —   391512 µs →   2554200 ops/sec
+[0mPASS —   399296 µs →   2504408 ops/sec
 
 
 ═══════════════════════════════════════════════════════════════
                FINAL RESULT — 50-RUN STATISTICS            
 ═══════════════════════════════════════════════════════════════
-  Fastest run        :    381724 µs  →    2619694 ops/sec
-  Slowest run        :    445237 µs  →    2245995 ops/sec
-  Average            :    393292 µs  →    2542640 ops/sec
+  Fastest run        :    382865 µs  →    2611887 ops/sec
+  Slowest run        :    433494 µs  →    2306837 ops/sec
+  Average            :    392314 µs  →    2548978 ops/sec
   (1000000 events per run, 100% verified, zero corruption)
 ═══════════════════════════════════════════════════════════════
+=== TEST PASSED BY RUNNER ===

@@ -5,3 +5,4 @@ Flags 2: LogConsole, KeeperRecord, DatabaseEntry, SendNetwork, HotCacheHint, IsR
 
 
 All TsStoreFlags tests PASSED!
+=== TEST PASSED BY RUNNER ===

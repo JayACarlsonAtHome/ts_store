@@ -14,11 +14,9 @@ using LogxStore = ts_store<LogConfigxMainx>;
 using LogConfigResult = ts_store_config<false, 6, 20, 75, 1, 1, false>;
 using LogResult = ts_store<LogConfigResult>;
 
-int main() {
-    if (std::cin.rdbuf()->in_avail() > 0) {
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    }
-
+int main(int argc, char** argv) {
+    auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
+    (void)_opts; // silence -Wunused
     LogxStore  safepay(THREADS, EVENTS_PER_THREAD);
     LogResult  results(THREADS, 1);
 
@@ -91,7 +89,6 @@ int main() {
     std::cout << "\nResult store contents:\n";
     results.print();
     std::cout << "\nALL " << TOTAL_EVENTS << " ENTRIES + RESULTS VERIFIED — ZERO CORRUPTION\n\n";
-    safepay.press_any_key();
 
     //safepay.debug_print_widths();
     std::cout << "Per-thread results:\n";

@@ -1,9 +1,9 @@
-# ts_store Stress Test Results — GCC (gcc-toolset-15)
+# ts_store Stress Test Results — gcc
 
-**Run date**: 2026-06-02 07:41:03 UTC
-**Compiler**: GCC 15 (via scl enable gcc-toolset-15)
-**Output mode**: silent (logs only)
-**Total tests**: 15 (001-007 TS/XS + flags)
+**Run date**: 2026-06-02 08:53:30 UTC
+**Compiler**: GCC 15 (gcc-toolset-15)
+**Output mode**: no
+**Total tests**: 15
 **Passed**: 15
 **Failed**: 0
 
@@ -29,12 +29,12 @@
 
 ## Notes
 
-- Tests 005 and 007 are the large-scale "massive" tests (historically ~1,000,000 records per run × 50 runs; the THREADS/EVENTS_PER_THREAD limits are configurable — see source comments in the test files for history of changing the limit from time to time).
-- Double-buffered persistence (using BinaryEventSink + DoubleBufferedWriter) is enabled for the 005/007 runs (as updated for the "big test with double buffering" request). The hot path stays fast; background thread drains.
+- All tests use the internal verification harnesses (verify_level01 etc.).
+- Tests 005 and 007 are the large-scale "massive" tests (historically ~1,000,000 records per run × 50 runs; the THREADS/EVENTS_PER_THREAD limits are configurable — see source comments in the test files).
+- Double-buffered persistence (using BinaryEventSink + DoubleBufferedWriter) is enabled for the 005/007 runs. The hot path stays fast; background thread drains.
 - All other tests exercise core features (flags handling, different scales, timestamped vs non-timestamped variants).
-- Every test that reached the verification stage passed with 100% structural integrity (zero corruption reported).
-- Logs contain the complete output from each test binary (some are large due to debug-style dumps in lower-numbered tests).
-- See the sibling `clang/summary.md` for Clang 21 results.
-- The top-level README.md summarizes the test matrix and links to both compiler-specific pages.
+- Every test that reached the verification stage passed with 100% structural integrity (zero corruption reported) when the runner reported PASSED.
+- Individual logs contain the full console output from each test binary (some are large due to debug-style dumps in lower-numbered tests).
+- Raw logs and this summary are in this directory. All tests were driven by the automation in `scripts/run_all_tests.sh` (supports --compiler and --output yes/no for console vs logs-only selection).
 
-Raw logs and this summary are in this directory. All tests were driven by the automation in `scripts/run_all_tests.sh` (supports --compiler and --output yes/no for console vs logs-only selection).
+See the main [README.md](../../README.md) for overview.

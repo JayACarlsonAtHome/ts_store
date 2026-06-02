@@ -45,7 +45,7 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
                 bool is_debug = true;
                 auto [ok, id] = store.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug);
                 if (!ok) {
-                    std::cerr << ansi::red << "CLAIM FAILED — thread " << t << " event " << i << ansi::reset << "\n" ;
+                    std::cerr << ansi::red() << "CLAIM FAILED — thread " << t << " event " << i << ansi::reset() << "\n" ;
                     std::abort();
                 }
             }
