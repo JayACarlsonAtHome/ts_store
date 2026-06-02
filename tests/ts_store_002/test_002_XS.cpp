@@ -58,13 +58,11 @@ int main() {
         return 1;
     }
 
-#ifdef TS_STORE_ENABLE_TEST_CHECKS
     if (!store.verify_level02()) {
-        std::cerr <<ansi::bold << ansi::red << "Payload verification failed!\n" << ansi::reset;
+        std::cerr << ansi::bold << ansi::red << "Payload verification failed!\n" << ansi::reset;
         store.diagnose_failures();
         return 1;
     }
-#endif
 
     std::cout   << ansi::bold << ansi::blue
                 << std::format("╔════════════════════════════════════════════════╗\n"

@@ -1,4 +1,9 @@
 //tests/ts_store_007/Test_007_TS.CPP
+//
+// Massive multi-threaded throughput + correctness test (historically ~1,000,000 records per run).
+// THREADS and EVENTS_PER_THREAD can be adjusted from time to time to change the load
+// (e.g. for different hardware or stress levels). TOTAL is derived and used throughout
+// for output and calculations so the test stays consistent when limits change.
 
 #include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 #include <utility>
@@ -80,7 +85,7 @@ int main()
     size_t durations[RUNS] = {};
     size_t failed_runs = 0;
 
-    std::cout << "=== FINAL MASSIVE TEST — 1,000,000 entries × " << RUNS << " runs ===\n";
+    std::cout << "=== FINAL MASSIVE TEST — " << TOTAL << " entries × " << RUNS << " runs ===\n";
     std::cout << "Using store.clear() — fastest, most realistic reuse\n\n";
 
     for (size_t run = 0; run < RUNS; ++run) {
@@ -100,7 +105,7 @@ int main()
                 std::cout << "PASS — 0 µs (too fast to measure)\n\n";
             } else
             {
-                double ops_per_sec = 1'000'000.0 * 1'000'000.0 / static_cast<double>(microseconds);
+                double ops_per_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(microseconds);
                 std::cout << "PASS — "
                           << std::setw(8) << microseconds << " µs → "
                           << std::fixed << std::setprecision(0)
@@ -117,9 +122,9 @@ int main()
 
     auto [min_it, max_it] = std::minmax_element(std::begin(durations), std::end(durations));
     double avg_us = static_cast<double>(total_write_us) / RUNS;
-    double max_ops_sec = 1'000'000.0 * 1'000'000.0 / static_cast<double>(*min_it);
-    double min_ops_sec = 1'000'000.0 * 1'000'000.0 / static_cast<double>(*max_it);
-    double avg_ops_sec = 1'000'000.0 * 1'000'000.0 / avg_us;
+    double max_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*min_it);
+    double min_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*max_it);
+    double avg_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / avg_us;
 
     std::cout << "\n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";

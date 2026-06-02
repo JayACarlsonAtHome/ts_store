@@ -1,8 +1,8 @@
 #include "BinaryEventLogReader.hpp"
 
-#ifdef TS_STORE_ENABLE_JTEXT_PERSIST
 #include "jText.h"
-#endif
+#include "JTextSplitEventLog.hpp"
+#include "PersistCommon.hpp"
 
 #include <cstring>
 #include <stdexcept>
@@ -94,7 +94,6 @@ bool BinaryEventLogReader::read_next_record(BinaryRecord& out) {
     return true;
 }
 
-#ifdef TS_STORE_ENABLE_JTEXT_PERSIST
 void BinaryEventLogReader::convert_to_jtext(std::string_view output_base_name,
                                             size_t int_count,
                                             size_t dbl_count) const
@@ -120,6 +119,5 @@ void BinaryEventLogReader::convert_to_jtext(std::string_view output_base_name,
 
     jtext_log.finalize();
 }
-#endif
 
 } // namespace jac::ts_store::inline_v001

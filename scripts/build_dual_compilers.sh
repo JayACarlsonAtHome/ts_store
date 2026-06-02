@@ -44,7 +44,7 @@ build_with_compiler() {
             cmake -DCMAKE_BUILD_TYPE=Debug \
                   -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
                   '$PROJECT_ROOT'
-            cmake --build . --target ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j \$(nproc)
+            cmake --build . --target ts_store_001_TS ts_store_001_XS ts_store_002_TS ts_store_002_XS ts_store_003_TS ts_store_003_XS ts_store_004_TS ts_store_004_XS ts_store_005_TS ts_store_005_XS ts_store_006_TS ts_store_006_XS ts_store_007_TS ts_store_007_XS ts_store_flags ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j \$(nproc)
         "
     else
         # Assume it's a direct path to clang++ or just "clang++"
@@ -53,7 +53,7 @@ build_with_compiler() {
               -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
               "$PROJECT_ROOT"
 
-        cmake --build . --target ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j $(nproc)
+        cmake --build . --target ts_store_001_TS ts_store_001_XS ts_store_002_TS ts_store_002_XS ts_store_003_TS ts_store_003_XS ts_store_004_TS ts_store_004_XS ts_store_005_TS ts_store_005_XS ts_store_006_TS ts_store_006_XS ts_store_007_TS ts_store_007_XS ts_store_flags ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j $(nproc)
     fi
 
     echo "✓ Build with $display_name completed successfully."
