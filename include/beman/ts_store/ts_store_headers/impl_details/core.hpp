@@ -62,6 +62,29 @@ save_event(size_t thread_id,
     }
 
     rows_[id] = std::move(row);
+
+    if (persistence_writer_) {
+        const auto& stored = rows_[id];
+
+        PersistedEvent pe;
+        pe.event_id             = id;                    // global stable ID (good linking key)
+        pe.thread_id            = stored.thread_id;
+        pe.per_thread_event_id  = stored.event_id;       // the caller's per-thread id
+        pe.flags                = stored.event_flags;
+        pe.category             = stored.category_storage;
+        pe.payload              = stored.value_storage;
+
+        if constexpr (Config::use_timestamps) {
+            pe.timestamp_us = stored.ts_us;
+        }
+
+        // Copy metrics (small fixed arrays)
+        pe.int_metrics.assign(stored.int_metrics.begin(), stored.int_metrics.end());
+        pe.dbl_metrics.assign(stored.dbl_metrics.begin(), stored.dbl_metrics.end());
+
+        persistence_writer_->submit_event(std::move(pe));
+    }
+
     return {true, id};
 }
 

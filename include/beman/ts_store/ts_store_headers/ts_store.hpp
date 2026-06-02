@@ -4,6 +4,8 @@
 
 #include "includes.hpp"
 
+#include "persistence/DoubleBufferedWriter.hpp"
+
 namespace jac::ts_store::inline_v001 {
 // ——————————————————————— CONCEPTS ———————————————————————
 template<typename Config>
@@ -70,6 +72,13 @@ public:
         // Remove any rows_.clear() if present
     }
 
+    /// Attach a DoubleBufferedWriter (with any IEventSink: JTextEventSink, BinaryEventSink, or future SQL).
+    /// Events will be submitted to the background writer after every successful save_event.
+    /// This enables true double-buffered asynchronous persistence while keeping the hot path fast.
+    void attach_persistence(std::unique_ptr<DoubleBufferedWriter> writer) {
+        persistence_writer_ = std::move(writer);
+    }
+
     explicit ts_store(size_t max_threads, size_t events_per_thread)
         : max_threads_(max_threads)
         , events_per_thread_(events_per_thread)
@@ -90,6 +99,8 @@ private:
     };
     std::atomic<size_t> next_id_{0};
     std::vector<row_data> rows_;
+
+    std::unique_ptr<DoubleBufferedWriter> persistence_writer_;
 
 public:
     static constexpr bool debug_mode_v = Config::debug_mode;

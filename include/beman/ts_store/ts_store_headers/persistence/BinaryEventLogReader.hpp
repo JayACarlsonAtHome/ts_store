@@ -12,9 +12,7 @@
 #include <optional>
 #include <functional>
 
-#ifdef TS_STORE_ENABLE_JTEXT_PERSIST
 #include "jText.h"
-#endif
 
 namespace jac::ts_store::inline_v001 {
 
@@ -44,12 +42,11 @@ public:
     [[nodiscard]] size_t records_read() const { return records_read_; }
 
     // Convert the entire binary log to jText files (for debugging/inspection)
-    // This creates three jText files with the same naming convention as JTextSplitEventLog
-#ifdef TS_STORE_ENABLE_JTEXT_PERSIST
+    // This creates three jText files with the same naming convention as JTextSplitEventLog.
+    // Only available when the library was built with TS_STORE_ENABLE_JTEXT_PERSIST=ON.
     void convert_to_jtext(std::string_view output_base_name,
                           size_t int_count,
                           size_t dbl_count) const;
-#endif
 
 private:
     bool read_next_record(BinaryRecord& out);

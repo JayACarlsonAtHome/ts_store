@@ -41,7 +41,7 @@ ColumnWidths set_effective_widths() const
 }
 
 void print_table_separator_line(const ColumnWidths& w) const {
-        std::println("{}{:=>{}}{}", ansi::dim, "", w.total(), ansi::reset);
+        std::println("{}{:=>{}}{}", ansi::dim(), "", w.total(), ansi::reset());
 }
 
 void print_table_header(const ColumnWidths& w, std::string_view space_pad) const
@@ -50,7 +50,7 @@ void print_table_header(const ColumnWidths& w, std::string_view space_pad) const
     std::string h_cat      = "CATEGORY"; h_cat.resize(w.category,      '.');
     std::string h_payload  = "PAYLOAD";  h_payload.resize(w.payload,   '.');
 
-    std::print("{}{:>{}}{}", ansi::bold,         "ID",          w.id,      space_pad);
+    std::print("{}{:>{}}{}", ansi::bold(),         "ID",          w.id,      space_pad);
     std::print("{:>{}}{}",                       "TIME (µs)",   w.time,    space_pad);
     std::print("{:>{}}{}",   h_severity,         w.severity,    space_pad);
     std::print("{:>{}}{}",   h_cat,              w.category,    space_pad);
@@ -66,11 +66,11 @@ void print_single_row(size_t id, const row_data& r,
                       std::string_view space_pad ) const
 {
     // ID
-    std::print("{}{:>{}}{}", ansi::cyan, id, widths.id, space_pad);
+    std::print("{}{:>{}}{}", ansi::cyan(), id, widths.id, space_pad);
 
     // TIME
     if constexpr (Config::use_timestamps) {
-        std::print("{}{:>{}}{}", ansi::yellow, r.ts_us, widths.time, space_pad);
+        std::print("{}{:>{}}{}", ansi::yellow(), r.ts_us, widths.time, space_pad);
     } else {
         std::print("{:>{}}{}", "-", widths.time, space_pad);
     }
@@ -80,21 +80,21 @@ void print_single_row(size_t id, const row_data& r,
     std::string severity = row_flags.get_severity_string();
     std::string severity_padded = severity;
     severity_padded.resize(widths.severity, '.');
-    std::print("{}{:<{}}{}", ansi::bold_magenta, severity_padded, widths.severity, space_pad);
+    std::print("{}{:<{}}{}", ansi::bold_magenta(), severity_padded, widths.severity, space_pad);
 
     // CATEGORY (padded)
     std::string cat_padded = r.category_storage;
     cat_padded.resize(widths.category, '.');
-    std::print("{}{:<{}}{}", ansi::bold_yellow, cat_padded, widths.category, space_pad);
+    std::print("{}{:<{}}{}", ansi::bold_yellow(), cat_padded, widths.category, space_pad);
 
     // Thread & Event
-    std::print("{}{:>{}}{}", ansi::magenta,      r.thread_id, widths.thread,  space_pad);
-    std::print("{}{:>{}}{}", ansi::bold_green,   r.event_id,  widths.event,   space_pad);
+    std::print("{}{:>{}}{}", ansi::magenta(),      r.thread_id, widths.thread,  space_pad);
+    std::print("{}{:>{}}{}", ansi::bold_green(),   r.event_id,  widths.event,   space_pad);
 
     // PAYLOAD (padded)
     std::string payload_padded = r.value_storage;
     payload_padded.resize(widths.payload, '.');
-    std::print("{}{:<{}}", ansi::blue, payload_padded, widths.payload);
+    std::print("{}{:<{}}", ansi::blue(), payload_padded, widths.payload);
 
     std::print(" FLAGS: {} ", row_flags.to_string());
     std::println();
@@ -104,14 +104,14 @@ void print_summary(size_t total, size_t rows_printed, bool early_exit) const
 {
     if (early_exit || rows_printed < total) {
         std::println("{}Output stopped after {} rows (of total {}).{}",
-                     ansi::dim, rows_printed, total, ansi::reset);
+                     ansi::dim(), rows_printed, total, ansi::reset());
     }
 
     std::println("{}Note: Output is zero-indexed → last printed entry is ID {}. Expected last ID = {}.{}",
-                 ansi::dim, rows_printed > 0 ? rows_printed - 1 : 0, expected_size() - 1, ansi::reset);
+                 ansi::dim(), rows_printed > 0 ? rows_printed - 1 : 0, expected_size() - 1, ansi::reset());
 
     std::println("{}Total entries stored: {} (expected: {}){}",
-                 ansi::dim, total, expected_size(), ansi::reset);
+                 ansi::dim(), total, expected_size(), ansi::reset());
 }
 
 public:
@@ -159,7 +159,7 @@ inline void print(size_t max_rows = 10'000) const
 
 
 
-    std::println("{}ts_store <{}", ansi::bold_white, ansi::reset);
+    std::println("{}ts_store <{}", ansi::bold_white(), ansi::reset());
     std::println("   Threads    = {}", get_max_threads());
     std::println("   Events     = {}", get_max_events());
     std::println("   ValueT     = std::string(max len={})", Config::max_payload_length);
@@ -194,17 +194,17 @@ inline void print(size_t max_rows = 10'000) const
 
         if (bResult1 && bResult2 && bResult3 && bResult4)   {
             std::print("{}--- Paused after {} rows printed (rows {} to {}) --- press ENTER to continue, Q to quit, E to jump to end ---{}",
-                   ansi::dim, rows_printed, batch_start_row, rows_printed - 1, ansi::reset);
+                   ansi::dim(), rows_printed, batch_start_row, rows_printed - 1, ansi::reset());
 
             char choice = press_any_key();
 
             if (choice == 'Q') {
                 early_exit = true;
-                std::println("{}Early exit requested.{}", ansi::dim, ansi::reset);
+                std::println("{}Early exit requested.{}", ansi::dim(), ansi::reset());
                 break;  // exit the for-loop immediately
             }
             else if (choice == 'E') {
-                std::println("{}Jumping to last {} rows...{}", ansi::dim, PAUSE_EVERY, ansi::reset);
+                std::println("{}Jumping to last {} rows...{}", ansi::dim(), PAUSE_EVERY, ansi::reset());
                 rows_printed = ids.size() - PAUSE_EVERY;
                 i = rows_printed - 1;
             }

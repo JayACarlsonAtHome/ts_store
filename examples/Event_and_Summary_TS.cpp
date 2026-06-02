@@ -16,7 +16,9 @@ using LogxStore = ts_store<LogConfigxMainx>;
 using LogConfigResult = ts_store_config<true>;
 using LogResult = ts_store<LogConfigResult>;
 
-int main() {
+int main(int argc, char** argv) {
+    auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
+    (void)_opts; // silence
     if (std::cin.rdbuf()->in_avail() > 0) {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
