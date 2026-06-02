@@ -52,13 +52,11 @@ foreach(num IN LISTS TEST_NUMBERS)
     # TS version
     add_executable(ts_store_${num}_TS tests/ts_store_${num}/test_${num}_TS.cpp)
     target_include_directories(ts_store_${num}_TS PRIVATE ${TS_STORE_INCLUDE_DIR})
-    target_compile_definitions(ts_store_${num}_TS PRIVATE TS_STORE_ENABLE_TEST_CHECKS USE_TIMESTAMPS=1)
     target_link_libraries(ts_store_${num}_TS PRIVATE project_warnings project_options)
 
     # XS version
     add_executable(ts_store_${num}_XS tests/ts_store_${num}/test_${num}_XS.cpp)
     target_include_directories(ts_store_${num}_XS PRIVATE ${TS_STORE_INCLUDE_DIR})
-    target_compile_definitions(ts_store_${num}_XS PRIVATE TS_STORE_ENABLE_TEST_CHECKS USE_TIMESTAMPS=0)
     target_link_libraries(ts_store_${num}_XS PRIVATE project_warnings project_options)
 endforeach()
 
@@ -114,7 +112,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
-            jText_core
+            jtext_core
     )
 
     target_include_directories(ts_store_jtext_high_throughput_test
@@ -131,17 +129,19 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
-            jText_core
+            jtext_core
     )
 
     # jText split demo
     add_executable(ts_store_jtext_split_demo
         examples/jtext_split_persistence_demo.cpp
+        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
     # Dedicated jText high-throughput test (for fair comparison with binary)
     add_executable(ts_store_jtext_throughput_test
         examples/jtext_throughput_test.cpp
+        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
     target_include_directories(ts_store_jtext_throughput_test
@@ -154,7 +154,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
-            jText_core
+            jtext_core
     )
 
     target_include_directories(ts_store_jtext_split_demo
@@ -167,46 +167,32 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
-            jText_core
+            jtext_core
     )
 
     # Binary fast persistence demo / comparison tool
     add_executable(ts_store_binary_persist_demo
         examples/binary_persist_demo.cpp
-        include/beman/ts_store/ts_store_headers/persistence/BinaryEventLogReader.cpp
+        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
     target_include_directories(ts_store_binary_persist_demo
         PRIVATE
             ${TS_STORE_INCLUDE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
     )
 
     target_link_libraries(ts_store_binary_persist_demo
         PRIVATE
             project_warnings
             project_options
-    )
-
-    # Dedicated binary high-throughput test
-    add_executable(ts_store_binary_throughput_test
-        examples/binary_throughput_test.cpp
-        include/beman/ts_store/ts_store_headers/persistence/BinaryEventLogReader.cpp
-    )
-
-    target_include_directories(ts_store_binary_throughput_test
-        PRIVATE
-            ${TS_STORE_INCLUDE_DIR}
-    )
-
-    target_link_libraries(ts_store_binary_throughput_test
-        PRIVATE
-            project_warnings
-            project_options
+            jtext_core
     )
 
     # Payload scaling benchmarks (user-requested matrix)
     add_executable(ts_store_jtext_payload_benchmark
         examples/jtext_payload_benchmark.cpp
+        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
     target_include_directories(ts_store_jtext_payload_benchmark
@@ -219,22 +205,91 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
-            jText_core
+            jtext_core
     )
 
-    add_executable(ts_store_binary_payload_benchmark
-        examples/binary_payload_benchmark.cpp
-        include/beman/ts_store/ts_store_headers/persistence/BinaryEventLogReader.cpp
+    # Double-buffered pluggable persistence demo (jText + Binary sinks)
+    add_executable(ts_store_double_buffer_demo
+        examples/double_buffered_persistence_demo.cpp
+        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
-    target_include_directories(ts_store_binary_payload_benchmark
+    target_include_directories(ts_store_double_buffer_demo
         PRIVATE
             ${TS_STORE_INCLUDE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
     )
 
-    target_link_libraries(ts_store_binary_payload_benchmark
+    target_compile_definitions(ts_store_double_buffer_demo
+        PRIVATE
+            TS_STORE_ENABLE_JTEXT_PERSIST
+    )
+
+    target_link_libraries(ts_store_double_buffer_demo
         PRIVATE
             project_warnings
             project_options
+            jtext_core
+    )
+
+    # Integrated demo: ts_store + attach_persistence (double buffered)
+    add_executable(ts_store_integrated_double_buffer_demo
+        examples/ts_store_with_double_buffer_demo.cpp
+        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
+        include/beman/ts_store/ts_store_headers/persistence/BinaryEventLogReader.cpp
+    )
+
+    target_include_directories(ts_store_integrated_double_buffer_demo
+        PRIVATE
+            ${TS_STORE_INCLUDE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+    )
+
+    target_compile_definitions(ts_store_integrated_double_buffer_demo
+        PRIVATE
+            TS_STORE_ENABLE_JTEXT_PERSIST
+    )
+
+    target_link_libraries(ts_store_integrated_double_buffer_demo
+        PRIVATE
+            project_warnings
+            project_options
+            jtext_core
     )
 endif()
+
+# -----------------------------------------------------------------------------
+# Binary-only persistence demos (no jText dependency; always available)
+# These demonstrate / benchmark the fast mmap binary path independently.
+# -----------------------------------------------------------------------------
+# Dedicated binary high-throughput test
+add_executable(ts_store_binary_throughput_test
+    examples/binary_throughput_test.cpp
+)
+
+target_include_directories(ts_store_binary_throughput_test
+    PRIVATE
+        ${TS_STORE_INCLUDE_DIR}
+)
+
+target_link_libraries(ts_store_binary_throughput_test
+    PRIVATE
+        project_warnings
+        project_options
+)
+
+# Payload scaling benchmarks (user-requested matrix)
+add_executable(ts_store_binary_payload_benchmark
+    examples/binary_payload_benchmark.cpp
+)
+
+target_include_directories(ts_store_binary_payload_benchmark
+    PRIVATE
+        ${TS_STORE_INCLUDE_DIR}
+)
+
+target_link_libraries(ts_store_binary_payload_benchmark
+    PRIVATE
+        project_warnings
+        project_options
+)

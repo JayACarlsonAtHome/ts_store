@@ -22,4 +22,5 @@
 #include "ts_store_flags.hpp"
 #include "ansi_colors.hpp"
 #include "ts_store_config.hpp"
+#include "impl_details/test_options.hpp"
 

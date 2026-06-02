@@ -1,6 +1,13 @@
 //tests/ts_store_005/Test_005_XS.CPP
+//
+// Massive multi-threaded throughput + correctness test (historically ~1,000,000 records per run).
+// THREADS and EVENTS_PER_THREAD can be adjusted from time to time to change the load
+// (e.g. for different hardware or stress levels). TOTAL is derived and used throughout
+// for output and calculations so the test stays consistent when limits change.
 
 #include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/persistence/BinaryEventSink.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/persistence/PersistCommon.hpp"
 #include <utility>
 
 
@@ -38,7 +45,7 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
                 bool is_debug = true;
                 auto [ok, id] = store.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug);
                 if (!ok) {
-                    std::cerr << ansi::red << "CLAIM FAILED — thread " << t << " event " << i << ansi::reset << "\n" ;
+                    std::cerr << ansi::red() << "CLAIM FAILED — thread " << t << " event " << i << ansi::reset() << "\n" ;
                     std::abort();
                 }
             }
@@ -77,11 +84,28 @@ int main()
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
     LogxStore  store(THREADS, EVENTS_PER_THREAD);
+
+    // Attach double-buffered persistence using the binary sink (pluggable, no jText required).
+    // This exercises the full DoubleBufferedWriter hot-path integration in save_event.
+    {
+        auto sink = std::make_unique<BinaryEventSink>(
+            "Test5_Big_DoubleBuffered",
+            1, 1,                    // matches LogConfig metrics (1 int, 1 dbl)
+            PersistMode::All,
+            64ULL * 1024 * 1024      // 64MB internal buffer for the sink
+        );
+        auto writer = std::make_unique<DoubleBufferedWriter>(
+            std::move(sink),
+            10'000                   // batch size for double buffer
+        );
+        store.attach_persistence(std::move(writer));
+    }
+
     size_t total_write_us = 0;
     size_t durations[RUNS] = {};
     size_t failed_runs = 0;
 
-    std::cout << "=== FINAL MASSIVE TEST — 1,000,000 entries × " << RUNS << " runs ===\n";
+    std::cout << "=== FINAL MASSIVE TEST — " << TOTAL << " entries × " << RUNS << " runs ===\n";
     std::cout << "Using store.clear() — fastest, most realistic reuse\n\n";
 
     for (size_t run = 0; run < RUNS; ++run) {
@@ -101,7 +125,7 @@ int main()
                 std::cout << "PASS — 0 µs (too fast to measure)\n\n";
             } else
             {
-                double ops_per_sec = 1'000'000.0 * 1'000'000.0 / static_cast<double>(microseconds);
+                double ops_per_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(microseconds);
                 std::cout << "PASS — "
                           << std::setw(8) << microseconds << " µs → "
                           << std::fixed << std::setprecision(0)
@@ -118,9 +142,9 @@ int main()
 
     auto [min_it, max_it] = std::minmax_element(std::begin(durations), std::end(durations));
     double avg_us = static_cast<double>(total_write_us) / RUNS;
-    double max_ops_sec = 1'000'000.0 * 1'000'000.0 / static_cast<double>(*min_it);
-    double min_ops_sec = 1'000'000.0 * 1'000'000.0 / static_cast<double>(*max_it);
-    double avg_ops_sec = 1'000'000.0 * 1'000'000.0 / avg_us;
+    double max_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*min_it);
+    double min_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*max_it);
+    double avg_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / avg_us;
 
     std::cout << "\n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";

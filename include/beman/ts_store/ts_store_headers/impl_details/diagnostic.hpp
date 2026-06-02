@@ -9,7 +9,7 @@ inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::m
 {
     if (rows_.size() != expected_size()) {
         std::println("{}[DIAGNOSE] SIZE MISMATCH — expected {:>10}, got {:>10}{}",
-             ansi::bold_red, expected_size(), rows_.size(), ansi::reset);
+             ansi::bold_red(), expected_size(), rows_.size(), ansi::reset());
         return;
     }
 
@@ -47,11 +47,11 @@ inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::m
     // Print individual failures
     for (const auto& f : failures) {
 
-        std::print(  "{}[DIAGNOSE] ID: {:>10}{}{} | {}",     ansi::bold_red, f.id,           ansi::reset, ansi::gray, ansi::reset );
-        std::print(  "{}[DIAGNOSE] Thread: {:>{}}{}{} | {}", ansi::magenta,  f.thread_id, w, ansi::reset, ansi::gray, ansi::reset );
-        std::print(  "{}[DIAGNOSE] Event:  {:>{}}{}{} | {}", ansi::magenta,  f.event_id,  e, ansi::reset, ansi::gray, ansi::reset );
-        std::println("{}     Actual   (len {:>4} Payload: {}{})", ansi::yellow,  f.payload.size(), f.payload,  ansi::reset );
-        std::println("{}     Expected (len {:>4} Payload: {}{})", ansi::yellow,  f.payload.size(), f.expected, ansi::reset );
+        std::print(  "{}[DIAGNOSE] ID: {:>10}{}{} | {}",     ansi::bold_red(), f.id,           ansi::reset(), ansi::gray(), ansi::reset() );
+        std::print(  "{}[DIAGNOSE] Thread: {:>{}}{}{} | {}", ansi::magenta(),  f.thread_id, w, ansi::reset(), ansi::gray(), ansi::reset() );
+        std::print(  "{}[DIAGNOSE] Event:  {:>{}}{}{} | {}", ansi::magenta(),  f.event_id,  e, ansi::reset(), ansi::gray(), ansi::reset() );
+        std::println("{}     Actual   (len {:>4} Payload: {}{})", ansi::yellow(),  f.payload.size(), f.payload,  ansi::reset() );
+        std::println("{}     Expected (len {:>4} Payload: {}{})", ansi::yellow(),  f.payload.size(), f.expected, ansi::reset() );
         std::println("");
     }
 
@@ -60,16 +60,16 @@ inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::m
 
     if (failures.empty()) {
         std::string msg = std::format("ALL {} ENTRIES PASS DIAGNOSTICS", expected_size());
-        std::print("{}╔═══════════════════════════════════════════════════════════════════════════════╗{}",ansi::bold_green, ansi::reset);
-        std::print("{}{:^{}}{}",ansi::bold_green, msg, box_width, ansi::reset);
-        std::print("{}╚═══════════════════════════════════════════════════════════════════════════════╝{}",ansi::bold_green, ansi::reset);
+        std::print("{}╔═══════════════════════════════════════════════════════════════════════════════╗{}",ansi::bold_green(), ansi::reset());
+        std::print("{}{:^{}}{}",ansi::bold_green(), msg, box_width, ansi::reset());
+        std::print("{}╚═══════════════════════════════════════════════════════════════════════════════╝{}",ansi::bold_green(), ansi::reset());
 
     } else {
         std::string header = "CORRUPTED TEST PAYLOADS";
         std::string report = std::format("REPORTED {} TEST PAYLOAD FAILURE(S)", failures.size());
-        std::print("{}╔═══════════════════════════════════════════════════════════════════════════════╗{}",ansi::bold_red, ansi::reset);
-        std::print("{}{:^{}}{}",ansi::bold_red, header, box_width, ansi::reset);
-        std::print("{}{:^{}}{}",ansi::bold_red, report, box_width, ansi::reset);
-        std::print("{}╚═══════════════════════════════════════════════════════════════════════════════╝{}",ansi::bold_red, ansi::reset);
+        std::print("{}╔═══════════════════════════════════════════════════════════════════════════════╗{}",ansi::bold_red(), ansi::reset());
+        std::print("{}{:^{}}{}",ansi::bold_red(), header, box_width, ansi::reset());
+        std::print("{}{:^{}}{}",ansi::bold_red(), report, box_width, ansi::reset());
+        std::print("{}╚═══════════════════════════════════════════════════════════════════════════════╝{}",ansi::bold_red(), ansi::reset());
     }
 }

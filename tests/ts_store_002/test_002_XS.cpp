@@ -7,7 +7,9 @@ using namespace jac::ts_store::inline_v001;
 using LogConfig = ts_store_config<false, 6, 20, 43, 1, 1, false>;
 using LogxStore = ts_store<LogConfig>;
 
-int main() {
+int main(int argc, char** argv) {
+    auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
+    (void)_opts; // silence -Wunused
     if (std::cin.rdbuf()->in_avail() > 0) {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
@@ -16,8 +18,8 @@ int main() {
     constexpr size_t events_per_thread = 100;
     constexpr size_t total_entries     = uint64_t(num_threads) * events_per_thread;
 
-    std::cout << ansi::yellow << std::format( "=== ts_store Test 002 TS with {} entries ===\n", total_entries) << ansi::reset;
-    std::cout << ansi::white  << std::format("Threads: {}    Events/thread: {}    Total: {}\n\n",  num_threads, events_per_thread, total_entries) << ansi::reset;
+    std::cout << ansi::yellow() << std::format( "=== ts_store Test 002 TS with {} entries ===\n", total_entries) << ansi::reset();
+    std::cout << ansi::white()  << std::format("Threads: {}    Events/thread: {}    Total: {}\n\n",  num_threads, events_per_thread, total_entries) << ansi::reset();
 
     LogxStore store(num_threads, events_per_thread);
 
@@ -40,7 +42,7 @@ int main() {
                 bool is_debug = true;
                 auto [ok, id] = store.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug);
                 if (!ok) {
-                    std::cout << ansi::bold << ansi::red << std::format("[FATAL] claim failed — thread {} event {}\n", t, i) << ansi::reset;
+                    std::cout << ansi::bold() << ansi::red() << std::format("[FATAL] claim failed — thread {} event {}\n", t, i) << ansi::reset();
                     std::abort();
                 }
             }
@@ -53,23 +55,21 @@ int main() {
     std::cout << "\nAll threads joined — running final verification...\n\n";
 
     if (!store.verify_level01()) {
-        std::cerr << ansi::bold << ansi::red << "Structural verification failed!\n" << ansi::reset;
+        std::cerr << ansi::bold() << ansi::red() << "Structural verification failed!\n" << ansi::reset();
         store.diagnose_failures();
         return 1;
     }
 
-#ifdef TS_STORE_ENABLE_TEST_CHECKS
     if (!store.verify_level02()) {
-        std::cerr <<ansi::bold << ansi::red << "Payload verification failed!\n" << ansi::reset;
+        std::cerr << ansi::bold() << ansi::red() << "Payload verification failed!\n" << ansi::reset();
         store.diagnose_failures();
         return 1;
     }
-#endif
 
-    std::cout   << ansi::bold << ansi::blue
+    std::cout   << ansi::bold() << ansi::blue()
                 << std::format("╔════════════════════════════════════════════════╗\n"
                                     "║ All {:06} entries passed verification!        ║\n"
                                     "╚════════════════════════════════════════════════╝\n",   total_entries)
-                << ansi::reset;
+                << ansi::reset();
     return 0;
 }

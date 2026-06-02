@@ -20,11 +20,9 @@ using LogConfig = ts_store_config<false, 6, 20, 43, 1, 1, false>;
 using LogxStore = ts_store<LogConfig>;
 
 
-int main() {
-    if (std::cin.rdbuf()->in_avail() > 0) {
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    }
-
+int main(int argc, char** argv) {
+    auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
+    (void)_opts; // silence -Wunused
     LogxStore store(WRITER_THREADS, OPS_PER_THREAD);
     std::vector<std::thread> writers;
     writers.reserve(WRITER_THREADS);
@@ -126,8 +124,6 @@ int main() {
 
     std::cout << "ALL " << store.expected_size() <<" ENTRIES VERIFIED — ZERO CORRUPTION\n";
     store.show_duration("Store");
-    std::cout << "\nPress Enter to display (truncated) trace logs...\n";
-    std::cin.get();
     store.print(0);
     return 0;
 }
