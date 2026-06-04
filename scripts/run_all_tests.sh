@@ -103,6 +103,27 @@ extract_record_count() {
     echo "${n:-?}"
 }
 
+# Format seconds as "Xm Ys (Zs)" or just "Zs" for small values.
+# Accepts number or "skipped".
+format_duration() {
+    local secs="$1"
+    if [[ "$secs" == "skipped" || "$secs" == "N/A" ]]; then
+        echo "$secs"
+        return
+    fi
+    if [[ ! "$secs" =~ ^[0-9]+$ ]]; then
+        echo "$secs"
+        return
+    fi
+    local min=$(( secs / 60 ))
+    local rem=$(( secs % 60 ))
+    if (( min > 0 )); then
+        printf "%2dm %2ds (%3ds)" "$min" "$rem" "$secs"
+    else
+        printf "%ds" "$secs"
+    fi
+}
+
 # Helper to prepare the log dir for a given test + persist type + output mode.
 # Sets globals: logdir_name, sdir, ldir
 prepare_log_dir() {
@@ -133,10 +154,7 @@ generate_test_summary() {
     local suite_duration_sec="${9:-?}"
     local per_compiler_times="${10:-}"
 
-    local suite_dur_display="${suite_duration_sec}s"
-    if [[ "$suite_duration_sec" =~ ^[0-9]+$ ]] && (( suite_duration_sec > 60 )); then
-        suite_dur_display="$((suite_duration_sec / 60))m $((suite_duration_sec % 60))s (${suite_duration_sec}s)"
-    fi
+    local suite_dur_display=$(format_duration "$suite_duration_sec")
 
     local now=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
     local os_pretty="unknown"
@@ -233,7 +251,7 @@ HDR
                 fi
 
                 local rel_path="test_results/$(basename "$logtype_dir")/$SUBDIR/${COMPILER}.log"
-                local log_link="[log]($rel_path)"
+                local log_link="[log*]($rel_path)"
 
                 rowkey="${COMPILER}|${SUBDIR}|${LOGTYPE}|${TEST_OUTPUT_MODE}"
                 if [[ -z "${seen[$rowkey]:-}" ]]; then
@@ -301,7 +319,7 @@ HDR
                         pmbs=$(echo "scale=1; $pbytes / 1024 / 1024 / ${dur%s}" | bc -l 2>/dev/null || echo "N/A")
                     fi
                     local rlog="test_results/$pdir/$tname/${COMPILER}_${ltype}_${om}.log"
-                    rows+=("| ${COMPILER} | ${tname} | ${ltype} | ${om} | ${rec} | ${dur} | ${phuman} | ${pmbs} | ? | [log]($rlog) |")
+                    rows+=("| ${COMPILER} | ${tname} | ${ltype} | ${om} | ${rec} | ${dur} | ${phuman} | ${pmbs} | ? | [log*]($rlog) |")
 
                     # populate scenario_data for the faster section too
                     skey="${tname}|${COMPILER}|${om}"
@@ -327,6 +345,8 @@ HDR
 
 ## Test Run Summary (all scenarios)
 
+* = Not available on GitHub, folder too large for GitHub
+
 | Compiler | Test | Log Type | Output | Records | Duration | Size | Rate | Status | Log |
 |----------|------|----------|--------|---------|----------|------|------|--------|-----|
 TABLE
@@ -344,6 +364,8 @@ TABLE
       sed 's/| on |/| 0on |/g; s/| off |/| 1off |/g' | \
       sort -t '|' -k3,3 -k4,4 -k5,5 -k2,2 | \
       sed 's/| 0on |/| on |/g; s/| 1off |/| off |/g' >> "$out_file"
+
+    echo "* = Not available on GitHub, folder too large for GitHub" >> "$out_file"
 
     cat >> "$out_file" <<'FOOT1'
 
@@ -431,7 +453,7 @@ FASTER
 - `Records` are best-effort parsed from test output (for 005/007 this is typically 1,000,000 × 50 = 50M per invocation).
 - Size and Rate columns: measured on-disk persist artifact size and effective MB/s (size / full test duration). The "Log" column links to the captured stdout for that run.
 - Each (test, logtype) is executed twice: once with output=on (live console, ANSI colors enabled via --color=1) and once with output=off (silent capture, --color=0). This shows the overhead of console output (many events set LogConsole). Live "on" runs are colorful and pretty; saved logs are always plain text (ANSI stripped).
-- Compile/build time is for the full set of test binaries for that compiler (Release + jText enabled).
+- Per-compiler times show build + full test suite execution time for that compiler (60 scenarios). Total suite duration is wall time across all compilers.
 - Default (no --compiler or --compiler all) runs gcc then clang internally in one invocation. Use --compiler gcc|clang to run just one. The summary table and faster comparisons will include all compilers' data.
 - Legacy `results/<compiler>/` tree may still exist from prior versions; new canonical location is `test_results/`.
 
@@ -782,10 +804,13 @@ PER_COMPILER_TIMES=""
 for c in "${COMPILER_LIST[@]}"; do
   bdur=${COMPILER_BUILD_DURATIONS[$c]:-skipped}
   tdur=${COMPILER_TEST_DURATIONS[$c]:-0}
+  bhuman=$(format_duration "$bdur")
+  thuman=$(format_duration "$tdur")
+  label=$(printf "  %-7s" "$c:")
   if [[ "$bdur" == "skipped" ]]; then
-    PER_COMPILER_TIMES+="  $c: build skipped, tests: ${tdur}s"$'\n'
+    PER_COMPILER_TIMES+="${label}build $bhuman, tests $thuman"$'\n'
   else
-    PER_COMPILER_TIMES+="  $c: build ${bdur}s + tests ${tdur}s"$'\n'
+    PER_COMPILER_TIMES+="${label}build $bhuman + tests $thuman"$'\n'
   fi
 done
 
