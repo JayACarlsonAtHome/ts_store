@@ -218,7 +218,7 @@ All 15 stress tests (001–007 TS + XS variants, plus the flags test) can be run
 
 - `--compiler gcc|clang` selects the toolchain (GCC uses `scl enable gcc-toolset-15`).
 - `--output yes|no` selects console output (tee to stdout + log) or silent (logs only).
-- Every test now exercises **double-buffered asynchronous persistence** (BinaryEventSink or JTextEventSink, chosen via internal --persist). The runner runs each test twice (once per log type).
+- Every test now exercises **double-buffered asynchronous persistence** (BinaryEventSink or JTextEventSink, chosen via internal --persist). The runner runs each test four times (once per log type × output=on vs output=off).
 - Structured output (runner logs + the actual persist artifacts `.bin` / `.jtext*`) goes to `test_results/binary_logs/TS_STORE_TEST_00N_XX/` and `test_results/jText_logs/TS_STORE_TEST_00N_XX/`.
 - A rich summary (with OS, compiler column, compile times, start/stop/duration, record counts, "which log was faster", Config settings, etc.) is generated at the project root.
 

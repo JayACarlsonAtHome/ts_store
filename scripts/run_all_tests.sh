@@ -11,9 +11,14 @@
 #   test_results/jText_logs/TS_STORE_TEST_001_TS/
 #   (and same for all other tests; flags gets logs in both for structure)
 #
-# A rich summary document is (re)generated at the project root (or under test_results)
-# with OS, compiler column, compile times, per-run start/stop/duration, record counts,
-# which log type was faster per scenario, links, Config settings, etc.
+# Each test + logtype combination is run *twice*:
+#   - once with output=on (live console/tee)
+#   - once with output=off (silent/redirect only)
+# This lets us measure the overhead of console output.
+#
+# A rich summary document is (re)generated at the project root
+# with OS, compiler column, compile times, record counts, duration, persist size/rate,
+# which log type was faster/smaller per (test, logtype, output mode), links, Config settings, etc.
 #
 # Usage:
 #   ./scripts/run_all_tests.sh --compiler gcc --output yes
@@ -62,6 +67,21 @@ extract_record_count() {
     echo "${n:-?}"
 }
 
+# Helper to prepare the log dir for a given test + persist type + output mode.
+# Sets globals: logdir_name, sdir, ldir
+prepare_log_dir() {
+    local tname="$1"
+    local pval="$2"
+    if [[ "$pval" == "jtext" ]]; then
+        logdir_name="jText_logs"
+    else
+        logdir_name="binary_logs"
+    fi
+    sdir=$(test_to_subdir_name "$tname")
+    ldir="$TEST_RESULTS_BASE/$logdir_name/$sdir"
+    mkdir -p "$ldir"
+}
+
 # Generate the rich markdown summary document.
 # Scans test_results/... for .meta + .log files (supports multiple compilers).
 # Includes OS info, compile time, compiler column, faster log per scenario, etc.
@@ -102,7 +122,8 @@ HDR
     # Collect runs by scanning metas
     # We'll build rows and also compute per-(test,compiler) faster logtype
     declare -a rows=()
-    declare -A scenario_data=()   # key=test|compiler  value="binary_dur jtext_dur binary_rec jtext_rec"
+    declare -A scenario_data=()   # key=SUBDIR|COMPILER|OUTPUT_MODE  value="b_dur b_size b_rec j_dur j_size j_rec"
+    declare -A seen=()            # dedup rows by full key (in case old metas linger)
 
     for logtype_dir in "$results_base/binary_logs" "$results_base/jText_logs"; do
         [[ -d "$logtype_dir" ]] || continue
@@ -112,10 +133,14 @@ HDR
             for meta in "$sub"/*.meta ; do
                 [[ -f "$meta" ]] || continue
                 # source the meta (simple key=value)
-                local COMPILER TEST LOGTYPE SUBDIR START STOP DURATION_SEC STATUS RECORDS
-                COMPILER=""; TEST=""; LOGTYPE=""; SUBDIR=""; START=""; STOP=""; DURATION_SEC=""; STATUS=""; RECORDS="?"
+                local COMPILER TEST LOGTYPE SUBDIR DURATION_SEC STATUS RECORDS TEST_OUTPUT_MODE
+                COMPILER=""; TEST=""; LOGTYPE=""; SUBDIR=""; DURATION_SEC=""; STATUS=""; RECORDS=""; TEST_OUTPUT_MODE=""
                 # shellcheck disable=SC1090
                 . "$meta" 2>/dev/null || true
+
+                if [[ -z "$TEST_OUTPUT_MODE" ]]; then
+                    TEST_OUTPUT_MODE="off"
+                fi
 
                 # Measure actual persist file size(s) on disk for this run
                 local persist_bytes=0
@@ -139,21 +164,17 @@ HDR
                     persist_mbs="instant"
                 fi
 
-                local lt_short="$LOGTYPE"
-                # relative link from summary at project root
                 local rel_path="test_results/$(basename "$logtype_dir")/$SUBDIR/${COMPILER}.log"
-                local log_link="[$lt_short log]($rel_path)"
-                local persist_note=""
-                if [[ "$LOGTYPE" == "binary" ]]; then
-                    persist_note="(.bin under subdir)"
-                else
-                    persist_note="(.jtext + _Ints.jtext + _Floats.jtext under subdir)"
+                local log_link="[log]($rel_path)"
+
+                rowkey="${COMPILER}|${SUBDIR}|${LOGTYPE}|${TEST_OUTPUT_MODE}"
+                if [[ -z "${seen[$rowkey]}" ]]; then
+                    seen[$rowkey]=1
+                    rows+=("| ${COMPILER} | ${SUBDIR} | ${LOGTYPE} | ${TEST_OUTPUT_MODE} | ${RECORDS:-?} | ${DURATION_SEC}s | ${persist_human} | ${persist_mbs} | ${STATUS} | ${log_link} |")
                 fi
 
-                rows+=("| ${COMPILER} | ${SUBDIR} | ${LOGTYPE} | ${RECORDS:-?} | ${START:-?} | ${STOP:-?} | ${DURATION_SEC}s | ${persist_human} | ${persist_mbs} MB/s | ${STATUS} | ${log_link} ${persist_note} |")
-
-                # for faster + smaller computation: store b_dur b_size b_rec j_dur j_size j_rec
-                local key="${SUBDIR}|${COMPILER}"
+                # for faster + smaller computation: store b_dur b_size b_rec j_dur j_size j_rec per output mode
+                local key="${SUBDIR}|${COMPILER}|${TEST_OUTPUT_MODE}"
                 local cur="${scenario_data[$key]:-}"
                 local b_dur="" b_size="" b_rec=""
                 local j_dur="" j_size="" j_rec=""
@@ -179,25 +200,27 @@ HDR
 
 ## Test Run Summary (all scenarios)
 
-| Compiler | Test Name | Log Type | Records | Start (UTC) | Stop (UTC) | Duration | Persist Size | Persist MB/s | Status | Log |
-|----------|-----------|----------|---------|-------------|------------|----------|--------------|--------------|--------|-----|
+| Compiler | Test | Log Type | Output | Records | Duration | Size | Rate | Status | Log |
+|----------|------|----------|--------|---------|----------|------|------|--------|-----|
 TABLE
 
     # Sort rows roughly (by compiler then test) - simple lexical is ok
     printf "%s\n" "${rows[@]}" | sort >> "$out_file"
 
-    cat >> "$out_file" <<FOOT1
+    cat >> "$out_file" <<'FOOT1'
 
-**Total scenarios this run**: $total_scenarios (passed: $passed, failed: $failed)
-
-**Persist Size / MB/s**: measured from the actual on-disk files written by the persistence layer (binary = one .bin; jText = sum of .jtext + .sql sidecars). Rate = size / full test duration (includes hot path + verification + async background drain + finalize). For 0s runs the rate is N/A.
+**Size / Rate**: total bytes written to persist files on disk (binary = single `.bin`; jText = `.jtext` + `_Ints.jtext` + `_Floats.jtext`). Rate = size / full run wall time. "instant" or N/A for zero-duration runs.
 
 FOOT1
 
-    # Faster log per scenario (per compiler)
+    cat >> "$out_file" <<EOF
+**Total scenarios this run**: $total_scenarios (passed: $passed, failed: $failed)
+EOF
+
+    # Faster / smaller per scenario (per compiler + output mode)
     cat >> "$out_file" <<'FASTER'
 
-## Which log type was faster / smaller? (per test + compiler)
+## Which log type was faster / smaller? (per test + compiler + output mode)
 (time = full binary wall time including async persist drain; size = total on-disk persist artifacts)
 
 FASTER
@@ -205,8 +228,8 @@ FASTER
     local any_comp=0
     for key in "${!scenario_data[@]}"; do
         any_comp=1
-        local tname="${key%%|*}"
-        local cname="${key##*|}"
+        # key = SUBDIR|COMPILER|OUTPUT_MODE
+        IFS='|' read -r tname cname omode <<< "$key"
         local data="${scenario_data[$key]}"
         read -r bdur bsize brec jdur jsize jrec <<< "$data"
 
@@ -235,7 +258,7 @@ FASTER
 
         local rec_info="~${brec:-?} rec"
         if [[ -n "$time_line" || -n "$size_line" ]]; then
-            echo "- **$tname** ($cname): ${time_line}${size_line}) | ${rec_info}" >> "$out_file"
+            echo "- **$tname** ($cname, output=$omode): ${time_line}${size_line}) | ${rec_info}" >> "$out_file"
         fi
     done
     if (( any_comp == 0 )); then
@@ -249,7 +272,8 @@ FASTER
 - All tests now attach a `DoubleBufferedWriter` + chosen sink (`BinaryEventSink` or `JTextEventSink`) for asynchronous background persistence. Hot path remains fast.
 - Persist artifacts (`.bin` or the 3 `.jtext` files) are written using the `--base-name` passed by the runner so they land inside the corresponding `test_results/*/TS_STORE_TEST_.../` subdirectory.
 - `Records` are best-effort parsed from test output (for 005/007 this is typically 1,000,000 × 50 = 50M per invocation).
-- Persist Size and Persist MB/s columns: actual bytes written to the log files on disk after each (test, logtype) run. Rate is observed throughput (size / wall duration). All tests now really persist via the double-buffered writer.
+- Size and Rate columns: measured on-disk persist artifact size and effective MB/s (size / full test duration). The "Log" column links to the captured stdout for that run.
+- Each (test, logtype) is executed twice: once with output=on and once with output=off, to show the overhead of console output (many events set LogConsole).
 - Compile/build time is for the full set of test binaries for that compiler (Release + jText enabled).
 - Run the script once per compiler (`--compiler gcc` then `--compiler clang`) to populate both columns and the "faster" comparisons.
 - Legacy `results/<compiler>/` tree may still exist from prior versions; new canonical location is `test_results/`.
@@ -271,7 +295,7 @@ NOTES
 }
 
 COMPILER="gcc"
-OUTPUT_MODE="yes"  # yes = show on console (tee), no = silent to logs only
+OUTPUT_MODE="yes"  # yes = show runner progress on console, no = silent (logs only)
 
 usage() {
     echo "Usage: $0 [--compiler gcc|clang] [--output yes|no]"
@@ -402,6 +426,30 @@ JTEXT_LOGS="$TEST_RESULTS_BASE/jText_logs"
 mkdir -p "$BINARY_LOGS"
 mkdir -p "$JTEXT_LOGS"
 
+# === Cleanup of legacy/unused stuff (part of the runner now) ===
+# Remove old results/ dir (legacy)
+if [ -d "$PROJECT_ROOT/results" ]; then
+  echo "Removing legacy results/ directory..."
+  rm -rf "$PROJECT_ROOT/results"
+fi
+
+# Remove historical unused build directories that clutter the tree
+for d in build-clean-check build-double-test build-dual build-no-persist; do
+  if [ -d "$PROJECT_ROOT/$d" ]; then
+    echo "Removing unused build directory: $d"
+    rm -rf "$PROJECT_ROOT/$d"
+  fi
+done
+
+# Clean previous run's log/meta files for *this* compiler (keep data from other compilers)
+echo "Cleaning previous $COMPILER artifacts from test_results/..."
+for logdir in "$BINARY_LOGS" "$JTEXT_LOGS"; do
+  for sub in "$logdir"/TS_STORE_TEST_* ; do
+    [ -d "$sub" ] || continue
+    rm -f "$sub/${COMPILER}_"*.log "$sub/${COMPILER}_"*.meta 2>/dev/null || true
+  done
+done
+
 # === New structured run: every test x2 (binary + jtext), logs + persist artifacts under test_results/ ===
 
 # List of tests in order (all now get double-buffered persist)
@@ -427,10 +475,11 @@ echo
 echo "=== Running all tests (double-buffered async persist for every test) ==="
 echo "Binary logs : $BINARY_LOGS/"
 echo "jText logs  : $JTEXT_LOGS/"
-echo "Each test subdir (e.g. TS_STORE_TEST_005_TS) will contain ${COMPILER}.log + persist.* files"
+echo "Each test subdir will contain separate logs for output=on vs output=off."
+echo "Each (test, logtype) is run twice: once with output=on (live console), once with output=off (silent)."
 echo
 
-TOTAL_SCENARIOS=$(( ${#TESTS[@]} * 2 ))
+TOTAL_SCENARIOS=$(( ${#TESTS[@]} * 2 * 2 ))  # log types × output modes (on/off)
 RUN_PASSED=0
 RUN_FAILED=0
 
@@ -446,81 +495,69 @@ for test in "${TESTS[@]}"; do
     if [[ ! -x "$bin" ]]; then
         echo "ERROR: binary $bin not found"
         for persist_val in binary jtext; do
-            if [[ "$persist_val" == "jtext" ]]; then
-                logdir_name="jText_logs"
-            else
-                logdir_name="binary_logs"
-            fi
-            sdir=$(test_to_subdir_name "$test")
-            ldir="$TEST_RESULTS_BASE/$logdir_name/$sdir"
-            mkdir -p "$ldir"
-            echo "ERROR: binary $bin not found or not executable (logtype=$persist_val)" > "$ldir/${COMPILER}.log"
-            echo "=== TEST RUN FAILED (logtype=$persist_val) ===" >> "$ldir/${COMPILER}.log"
+            for om in on off; do
+                prepare_log_dir "$test" "$persist_val"
+                echo "ERROR: binary $bin not found or not executable (logtype=$persist_val, output=$om)" > "$ldir/${COMPILER}_${persist_val}_${om}.log"
+                echo "=== TEST RUN FAILED (logtype=$persist_val, output=$om) ===" >> "$ldir/${COMPILER}_${persist_val}_${om}.log"
+            done
         done
-        RUN_FAILED=$((RUN_FAILED + 2))
+        RUN_FAILED=$((RUN_FAILED + 4))
         continue
     fi
 
     for persist_val in binary jtext; do
         logtype="$persist_val"
-        if [[ "$persist_val" == "jtext" ]]; then
-            logdir_name="jText_logs"
-        else
-            logdir_name="binary_logs"
-        fi
-        sdir=$(test_to_subdir_name "$test")
-        ldir="$TEST_RESULTS_BASE/$logdir_name/$sdir"
-        mkdir -p "$ldir"
+        prepare_log_dir "$test" "$persist_val"
         persist_base="$ldir/persist"
-        run_log="$ldir/${COMPILER}.log"
 
-        echo "Running $test (logtype=$logtype) ... -> $run_log"
+        for test_output_mode in on off; do
+            run_log="$ldir/${COMPILER}_${logtype}_${test_output_mode}.log"
 
-        start_ts=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-        start_ep=$(date +%s)
+            echo "Running $test (logtype=$logtype, output=$test_output_mode) ... -> $run_log"
 
-        if [[ "$OUTPUT_MODE" == "yes" ]]; then
-            "$bin" --interactive=0 --color=0 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
-                | tee >(strip_ansi > "$run_log")
-            bin_status=${PIPESTATUS[0]}
-        else
-            "$bin" --interactive=0 --color=0 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
-                | strip_ansi > "$run_log"
-            bin_status=${PIPESTATUS[0]}
-        fi
+            start_ep=$(date +%s)
 
-        stop_ts=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-        stop_ep=$(date +%s)
-        dur_sec=$((stop_ep - start_ep))
+            if [[ "$test_output_mode" == "on" ]]; then
+                "$bin" --interactive=0 --color=0 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
+                    | tee >(strip_ansi > "$run_log")
+                bin_status=${PIPESTATUS[0]}
+            else
+                "$bin" --interactive=0 --color=0 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
+                    | strip_ansi > "$run_log"
+                bin_status=${PIPESTATUS[0]}
+            fi
 
-        if [ $bin_status -ne 0 ]; then
-            echo "  -> $test / $logtype FAILED (${dur_sec}s)"
-            echo "=== TEST RUN FAILED (logtype=$logtype, duration=${dur_sec}s) ===" >> "$run_log"
-            RUN_FAILED=$((RUN_FAILED + 1))
-        else
-            echo "  -> $test / $logtype PASSED (${dur_sec}s)"
-            echo "=== TEST RUN PASSED (logtype=$logtype, duration=${dur_sec}s) ===" >> "$run_log"
-            RUN_PASSED=$((RUN_PASSED + 1))
-        fi
+            stop_ep=$(date +%s)
+            dur_sec=$((stop_ep - start_ep))
 
-        # Write a tiny meta for easy summary scanning
-        # Also capture persist size right after run (for cases where summary is regenerated later)
-        pbytes=0
-        for f in "$ldir"/persist*; do
-            [[ -f "$f" ]] && pbytes=$((pbytes + $(stat -c%s "$f" 2>/dev/null || echo 0)))
-        done
-        cat > "$ldir/${COMPILER}_${logtype}.meta" <<META
+            if [ $bin_status -ne 0 ]; then
+                echo "  -> $test / $logtype / $test_output_mode FAILED (${dur_sec}s)"
+                echo "=== TEST RUN FAILED (logtype=$logtype, output=$test_output_mode, duration=${dur_sec}s) ===" >> "$run_log"
+                RUN_FAILED=$((RUN_FAILED + 1))
+            else
+                echo "  -> $test / $logtype / $test_output_mode PASSED (${dur_sec}s)"
+                echo "=== TEST RUN PASSED (logtype=$logtype, output=$test_output_mode, duration=${dur_sec}s) ===" >> "$run_log"
+                RUN_PASSED=$((RUN_PASSED + 1))
+            fi
+
+            # Write a tiny meta for easy summary scanning
+            # Also capture persist size right after run (for cases where summary is regenerated later)
+            pbytes=0
+            for f in "$ldir"/persist*; do
+                [[ -f "$f" ]] && pbytes=$((pbytes + $(stat -c%s "$f" 2>/dev/null || echo 0)))
+            done
+            cat > "$ldir/${COMPILER}_${logtype}_${test_output_mode}.meta" <<META
 COMPILER=${COMPILER}
 TEST=${test}
 LOGTYPE=${logtype}
 SUBDIR=${sdir}
-START=${start_ts}
-STOP=${stop_ts}
+TEST_OUTPUT_MODE=${test_output_mode}
 DURATION_SEC=${dur_sec}
 STATUS=$([ $bin_status -eq 0 ] && echo PASS || echo FAIL)
 RECORDS=$(extract_record_count "$run_log")
 PERSIST_SIZE_BYTES=${pbytes}
 META
+        done
     done
 done
 
