@@ -51,10 +51,13 @@ public:
 private:
     bool read_next_record(BinaryRecord& out);
 
+    void skip_leading_file_header();
+
     std::ifstream file_;
     std::string filepath_;
     size_t records_read_ = 0;
     bool eof_reached_ = false;
+    std::streampos data_start_ = 0;
 };
 
 } // namespace jac::ts_store::inline_v001

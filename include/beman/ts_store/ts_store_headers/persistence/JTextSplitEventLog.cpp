@@ -4,6 +4,7 @@
 #include <format>
 #include <fstream>
 #include <stdexcept>
+#include <chrono>
 
 #include "jText.h"
 
@@ -12,6 +13,10 @@ namespace jac::ts_store::inline_v001 {
 namespace fs = std::filesystem;
 
 struct JTextSplitEventLog::Impl {
+    std::ofstream main_ofs;
+    std::ofstream ints_ofs;
+    std::ofstream floats_ofs;
+
     std::unique_ptr<JTextWriter> main_writer;
     std::unique_ptr<JTextWriter> ints_writer;
     std::unique_ptr<JTextWriter> floats_writer;
@@ -49,10 +54,24 @@ JTextSplitEventLog::JTextSplitEventLog(
     i.ints_path = std::format("{}_Ints.jtext", base_name);
     i.floats_path = std::format("{}_Floats.jtext", base_name);
 
-    // Open writers (this creates the files early)
-    i.main_writer = std::make_unique<JTextWriter>(i.main_path);
-    i.ints_writer = std::make_unique<JTextWriter>(i.ints_path);
-    i.floats_writer = std::make_unique<JTextWriter>(i.floats_path);
+    // Open files ourselves first so we can prepend the required standardized // header comments.
+    // Then attach JTextWriter to the open stream (its # header comes after our // block).
+    auto open_and_prep = [](std::ofstream& ofs, const std::string& path, std::string_view purpose) {
+        ofs.open(path, std::ios::out | std::ios::trunc);
+        if (!ofs.is_open()) {
+            throw std::runtime_error("JTextSplitEventLog: failed to open " + path);
+        }
+        ::write_file_comment_header(ofs, path, purpose);
+    };
+
+    open_and_prep(i.main_ofs, i.main_path, "jText Data File");
+    i.main_writer = std::make_unique<JTextWriter>(i.main_ofs);
+
+    open_and_prep(i.ints_ofs, i.ints_path, "jText Field List File");
+    i.ints_writer = std::make_unique<JTextWriter>(i.ints_ofs);
+
+    open_and_prep(i.floats_ofs, i.floats_path, "jText Field List File");
+    i.floats_writer = std::make_unique<JTextWriter>(i.floats_ofs);
 
     // High-throughput default (10k batching)
     i.main_writer->enable_high_throughput_batching();
@@ -168,7 +187,7 @@ void JTextSplitEventLog::write_sql_companions(
     {
         std::string sql_path = std::format("{}.sql", base_name);
         std::ofstream sql(sql_path);
-        sql << "-- Generated alongside " << base_name << ".jtext\n\n";
+        ::write_file_comment_header(sql, sql_path, "SQL Schema File");
         sql << "CREATE TABLE IF NOT EXISTS " << base_name << " (\n"
             << "    id BIGINT PRIMARY KEY,\n"
             << "    thread_id BIGINT,\n"
@@ -183,7 +202,7 @@ void JTextSplitEventLog::write_sql_companions(
     if (int_count > 0) {
         std::string sql_path = std::format("{}_Ints.sql", base_name);
         std::ofstream sql(sql_path);
-        sql << "-- Generated alongside " << base_name << "_Ints.jtext\n\n";
+        ::write_file_comment_header(sql, sql_path, "SQL Schema File");
         sql << "CREATE TABLE IF NOT EXISTS " << base_name << "_ints (\n"
             << "    id BIGINT PRIMARY KEY,\n";
         for (size_t i = 0; i < int_count; ++i) {
@@ -197,7 +216,7 @@ void JTextSplitEventLog::write_sql_companions(
     if (dbl_count > 0) {
         std::string sql_path = std::format("{}_Floats.sql", base_name);
         std::ofstream sql(sql_path);
-        sql << "-- Generated alongside " << base_name << "_Floats.jtext\n\n";
+        ::write_file_comment_header(sql, sql_path, "SQL Schema File");
         sql << "CREATE TABLE IF NOT EXISTS " << base_name << "_floats (\n"
             << "    id BIGINT PRIMARY KEY,\n";
         for (size_t i = 0; i < dbl_count; ++i) {

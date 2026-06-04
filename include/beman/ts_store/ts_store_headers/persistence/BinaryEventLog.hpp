@@ -11,6 +11,7 @@
 #include <fstream>
 #include <cstdint>
 #include <chrono>
+#include <format>
 #include <cstring>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -22,6 +23,23 @@
 #include "PersistCommon.hpp"
 
 namespace jac::ts_store::inline_v001 {
+
+namespace {
+    // Local helper (binary has no jText dep) to emit the required // header at file start.
+    size_t write_binary_file_header(int fd, std::string_view full_path) {
+        auto now = std::chrono::system_clock::now();
+        auto today = std::chrono::floor<std::chrono::days>(now);
+        std::string date_str = std::format("{:%Y-%m-%d}", today);
+
+        std::string h;
+        h += std::format("//File Name: {}\n", full_path);
+        h += std::format("//Date: {}\n", date_str);
+        h += "//Purpose - Binary Data File\n";
+        h += "//\n";
+        ::write(fd, h.data(), h.size());
+        return h.size();
+    }
+}
 
 struct BinaryEventLogStats {
     size_t rows_written = 0;
@@ -48,18 +66,22 @@ public:
             throw std::runtime_error("BinaryEventLog: failed to open " + file_path_);
         }
 
-        // Pre-allocate
-        ::posix_fallocate(fd_, 0, static_cast<off_t>(buffer_size_));
+        // Write standardized // header comments first (per requirement for ALL persist files)
+        size_t header_size = write_binary_file_header(fd_, file_path_);
 
-        mapped_ = static_cast<char*>(::mmap(nullptr, buffer_size_, PROT_READ | PROT_WRITE,
+        // Pre-allocate (mmap covers header prefix + data area)
+        size_t initial_map = buffer_size_ + header_size + 4096;
+        ::posix_fallocate(fd_, 0, static_cast<off_t>(initial_map));
+
+        mapped_ = static_cast<char*>(::mmap(nullptr, initial_map, PROT_READ | PROT_WRITE,
                                             MAP_SHARED, fd_, 0));
         if (mapped_ == MAP_FAILED) {
             ::close(fd_);
             throw std::runtime_error("BinaryEventLog: mmap failed");
         }
 
-        write_pos_ = 0;
-        file_size_ = buffer_size_;
+        write_pos_ = header_size;
+        file_size_ = initial_map;
     }
 
     ~BinaryEventLog() {

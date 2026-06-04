@@ -16,6 +16,30 @@ BinaryEventLogReader::BinaryEventLogReader(std::string_view filepath)
     if (!file_.is_open()) {
         throw std::runtime_error("BinaryEventLogReader: failed to open " + std::string(filepath));
     }
+    skip_leading_file_header();
+    data_start_ = file_.tellg();
+}
+
+void BinaryEventLogReader::skip_leading_file_header() {
+    std::string line;
+    while (true) {
+        std::streampos before = file_.tellg();
+        if (!std::getline(file_, line)) {
+            // No data or empty file during header skip
+            file_.clear();
+            file_.seekg(0, std::ios::beg);
+            return;
+        }
+        // Leading // lines are our standardized file header comments; skip them all
+        if (!line.empty() && line[0] == '/' && line.size() > 1 && line[1] == '/') {
+            continue;
+        }
+        // First non-header content (binary record bytes or old file without header)
+        // Seek back so the next binary read starts at the correct offset
+        file_.clear();
+        file_.seekg(before);
+        return;
+    }
 }
 
 bool BinaryEventLogReader::next(BinaryRecord& out_record) {
@@ -24,7 +48,7 @@ bool BinaryEventLogReader::next(BinaryRecord& out_record) {
 
 void BinaryEventLogReader::rewind() {
     file_.clear();
-    file_.seekg(0, std::ios::beg);
+    file_.seekg(data_start_);
     records_read_ = 0;
     eof_reached_ = false;
 }

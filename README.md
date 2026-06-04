@@ -211,22 +211,32 @@ They remain useful for regression testing but are not the recommended on-ramp fo
 All 15 stress tests (001–007 TS + XS variants, plus the flags test) can be run via the automation script:
 
 ```bash
+./scripts/run_all_tests.sh                  # runs everything for gcc + clang (default)
 ./scripts/run_all_tests.sh --compiler gcc --output yes
 ./scripts/run_all_tests.sh --compiler clang --output yes
 # Use --output no for either if you don't want the live test output printed to your console (only meta messages + full logs).
 ```
 
-- `--compiler gcc|clang` selects the toolchain (GCC uses `scl enable gcc-toolset-15`).
+- No `--compiler` (or `--compiler all`) runs the full suite for both gcc and clang internally (120 scenarios total).
+- `--compiler gcc|clang` selects just one toolchain (GCC uses `scl enable gcc-toolset-15`).
 - `--output yes|no` selects console output (tee to stdout + log) or silent (logs only).
-- Every test now exercises **double-buffered asynchronous persistence** (BinaryEventSink or JTextEventSink, chosen via internal --persist). The runner runs each test four times (once per log type × output=on vs output=off).
-- Structured output (runner logs + the actual persist artifacts `.bin` / `.jtext*`) goes to `test_results/binary_logs/TS_STORE_TEST_00N_XX/` and `test_results/jText_logs/TS_STORE_TEST_00N_XX/`.
-- A rich summary (with OS, compiler column, compile times, start/stop/duration, record counts, "which log was faster", Config settings, etc.) is generated at the project root.
+- Every test now exercises **double-buffered asynchronous persistence** (BinaryEventSink or JTextEventSink, chosen via internal --persist).
 
-**Primary results document** (run the script for gcc and for clang to get full cross-compiler + binary-vs-jText data):
+Combinatorial fields (product = scenario count):
+  1. Compiler   : gcc + clang (when default/all)
+  2. Test       : 15 variants (001_TS..007_XS + flags)
+  3. LogType    : binary, jtext
+  4. OutputMode : on, off
+
+Per compiler: 15 × 2 × 2 = 60 scenarios. Full run: 120 total.
+- Structured output (runner logs + the actual persist artifacts `.bin` / `.jtext*`) goes to `test_results/binary_logs/TS_STORE_TEST_00N_XX/` and `test_results/jText_logs/TS_STORE_TEST_00N_XX/`.
+- A rich summary (with OS, compiler column, compile times, duration, record counts, "which log was faster", Config settings, etc.) is generated at the project root.
+
+**Primary results document** (default `./scripts/run_all_tests.sh` runs both gcc and clang to get full cross-compiler + binary-vs-jText data):
 
 - [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md)
 
-See `scripts/run_all_tests.sh` for implementation details. The old `results/<compiler>/` tree is legacy (new output lives under `test_results/`).
+See `scripts/run_all_tests.sh` for implementation details (default runs both compilers). The old `results/<compiler>/` tree is legacy (new output lives under `test_results/`).
 
 The runner always passes `--interactive=0 --color=0 --persist=... --base-name=...` (the latter two control the new double-buffered persist + structured log locations). You still get pretty colors when running test binaries directly in a real terminal.
 
