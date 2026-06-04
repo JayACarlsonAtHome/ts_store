@@ -242,18 +242,35 @@ HDR
                         phuman="${pbytes}B"
                     fi
                     local dur="N/A"
-                    local rlogfile="$pdir_path/${COMPILER}_${ltype}_${om}.log"
-                    if [[ -f "$rlogfile" ]]; then
-                        local d
-                        d=$(grep -oE "duration=[0-9]+s" "$rlogfile" | head -1 | grep -oE "[0-9]+" || echo "")
-                        [[ -n "$d" ]] && dur="${d}s"
+                    # aggressive parse: look in any log in the subdir for duration for this test
+                    local d
+                    d=$(grep -h -oE "duration=[0-9]+s" "$pdir_path"/*${COMPILER}*.log 2>/dev/null | head -1 | grep -oE "[0-9]+" || echo "")
+                    if [[ -z "$d" ]]; then
+                        # fallback to any duration in subdir logs
+                        d=$(grep -h -oE "duration=[0-9]+s" "$pdir_path"/*.log 2>/dev/null | head -1 | grep -oE "[0-9]+" || echo "")
                     fi
+                    [[ -n "$d" ]] && dur="${d}s"
                     local pmbs="N/A"
                     if [[ "$dur" != "N/A" && "$pbytes" -gt 0 ]]; then
                         pmbs=$(echo "scale=1; $pbytes / 1024 / 1024 / ${dur%s}" | bc -l 2>/dev/null || echo "N/A")
                     fi
                     local rlog="test_results/$pdir/$tname/${COMPILER}_${ltype}_${om}.log"
                     rows+=("| ${COMPILER} | ${tname} | ${ltype} | ${om} | ${rec} | ${dur} | ${phuman} | ${pmbs} | ? | [log]($rlog) |")
+
+                    # populate scenario_data for the faster section too
+                    skey="${tname}|${COMPILER}|${om}"
+                    cur="${scenario_data[$skey]:-}"
+                    read -r cb_dur cb_size cb_rec cj_dur cj_size cj_rec <<< "$cur" 2>/dev/null || { cb_dur=""; cb_size=""; cb_rec=""; cj_dur=""; cj_size=""; cj_rec=""; }
+                    if [[ "$ltype" == "binary" ]]; then
+                        cb_dur="$dur"
+                        cb_size="$pbytes"
+                        cb_rec="$rec"
+                    else
+                        cj_dur="$dur"
+                        cj_size="$pbytes"
+                        cj_rec="$rec"
+                    fi
+                    scenario_data[$skey]="$cb_dur $cb_size $cb_rec $cj_dur $cj_size $cj_rec"
                 fi
             done
         done
