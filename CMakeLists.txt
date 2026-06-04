@@ -257,9 +257,10 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
             jtext_core
     )
 
-    # --- Support for stress tests 005/007 that now use JTextEventSink (for separate
-    #     ints/floats metric files via JTextSplitEventLog + double buffering) ---
-    foreach(num IN ITEMS 005 007)
+    # --- Support for *all* stress tests (001-007) to use double-buffered persistence
+    #     with either JTextEventSink or BinaryEventSink (chosen at runtime via --persist).
+    #     This enables the new test_results/ binary_logs / jText_logs output for every test.
+    foreach(num IN LISTS TEST_NUMBERS)
         target_include_directories(ts_store_${num}_TS PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../jText)
         target_compile_definitions(ts_store_${num}_TS PRIVATE TS_STORE_ENABLE_JTEXT_PERSIST)
         target_link_libraries(ts_store_${num}_TS PRIVATE jtext_core)
@@ -268,7 +269,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         target_compile_definitions(ts_store_${num}_XS PRIVATE TS_STORE_ENABLE_JTEXT_PERSIST)
         target_link_libraries(ts_store_${num}_XS PRIVATE jtext_core)
 
-        # Also compile the split log impl into these targets (like the jtext demos do)
+        # Compile the split log impl into these targets so JTextEventSink works.
         target_sources(ts_store_${num}_TS PRIVATE
             include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
         )

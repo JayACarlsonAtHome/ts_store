@@ -14,6 +14,8 @@ namespace jac::ts_store::inline_v001 {
 struct TestOptions {
     bool interactive = false;
     bool color = false;
+    std::string persist = "jtext";   // "jtext" or "binary" for double-buffered persistence sink choice
+    std::string base_name;           // base name (can include path) for the persist log files
 };
 
 inline TestOptions parse_test_options(int argc, char** argv) {
@@ -44,6 +46,14 @@ inline TestOptions parse_test_options(int argc, char** argv) {
             color_set = true;
         } else if (std::strcmp(arg, "--help") == 0 || std::strcmp(arg, "-h") == 0) {
             // optional: could print, but for now silent
+        } else if (std::strncmp(arg, "--persist=", 10) == 0) {
+            opts.persist = (arg + 10);
+        } else if (std::strcmp(arg, "--persist") == 0 && (i + 1) < argc) {
+            opts.persist = argv[++i];
+        } else if (std::strncmp(arg, "--base-name=", 12) == 0) {
+            opts.base_name = (arg + 12);
+        } else if (std::strcmp(arg, "--base-name") == 0 && (i + 1) < argc) {
+            opts.base_name = argv[++i];
         }
     }
 

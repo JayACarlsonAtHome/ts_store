@@ -6,8 +6,11 @@
 // for output and calculations so the test stays consistent when limits change.
 
 #include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/persistence/DoubleBufferedWriter.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/persistence/BinaryEventSink.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/PersistCommon.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/persistence/EventSink.hpp"
 #include <utility>
 
 using namespace jac::ts_store::inline_v001;
@@ -84,26 +87,33 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
     return { true, write_us };
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
+    (void)_opts;
+
     if (std::cin.rdbuf()->in_avail() > 0) {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
     LogxStore  store(THREADS, EVENTS_PER_THREAD);
 
-    // Attach double-buffered persistence using JTextEventSink (which uses
-    // JTextSplitEventLog internally). This produces three separate files:
-    //   Test5_Big_DoubleBuffered.jtext      (main events + payload + flags)
-    //   Test5_Big_DoubleBuffered_Ints.jtext (ALL integer metrics)
-    //   Test5_Big_DoubleBuffered_Floats.jtext (ALL float/double metrics)
-    // Separate from the runner's stdout .log capture.
-    // Exercises the full DoubleBufferedWriter + pluggable sink for metrics.
+    // Attach double-buffered (asynchronous) persistence.
+    // Sink (JText or Binary) chosen by --persist=... (default jtext).
+    // base_name (for output files) can be overridden by --base-name (runner points it
+    // into test_results/binary_logs/TS_STORE_TEST_005_TS/ or jText_logs/... so the
+    // .bin / .jtext + _Ints.jtext + _Floats.jtext land in the right place).
     {
-        auto sink = std::make_unique<JTextEventSink>(
-            "Test5_Big_DoubleBuffered",
-            LogConfig::the_IntMetrics, LogConfig::the_DblMetrics,  // matches LogConfig metrics
-            PersistMode::All
-        );
+        std::string ptype = _opts.persist.empty() ? "jtext" : _opts.persist;
+        std::string bname = _opts.base_name.empty() ? "persist" : _opts.base_name;
+
+        std::unique_ptr<IEventSink> sink;
+        const size_t im = LogConfig::the_IntMetrics;
+        const size_t dm = LogConfig::the_DblMetrics;
+        if (ptype == "binary") {
+            sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+        } else {
+            sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+        }
         auto writer = std::make_unique<DoubleBufferedWriter>(
             std::move(sink),
             10'000                   // batch size for double buffer

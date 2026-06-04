@@ -6,7 +6,11 @@
 // for output and calculations so the test stays consistent when limits change.
 
 #include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/persistence/DoubleBufferedWriter.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/persistence/BinaryEventSink.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/persistence/PersistCommon.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/persistence/EventSink.hpp"
 #include <utility>
 
 using namespace jac::ts_store::inline_v001;
@@ -83,8 +87,11 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
     return { true, write_us };
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
+    (void)_opts;
+
     if (std::cin.rdbuf()->in_avail() > 0) {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
@@ -96,14 +103,22 @@ int main()
     std::cout << "=== FINAL MASSIVE TEST — " << TOTAL << " entries × " << RUNS << " runs ===\n";
     std::cout << "Using store.clear() — fastest, most realistic reuse\n\n";
 
-    // Attach double-buffered persistence using JTextEventSink to produce
-    // separate _Ints.jtext and _Floats.jtext files with ALL the metric values.
+    // Attach double-buffered (asynchronous) persistence.
+    // Sink (JText or Binary) chosen by --persist=... (default jtext).
+    // base_name can be set by runner via --base-name to land files under
+    // test_results/binary_logs/TS_STORE_TEST_007_TS/ or jText_logs/...
     {
-        auto sink = std::make_unique<JTextEventSink>(
-            "Test7_Big_DoubleBuffered",
-            LogConfig::the_IntMetrics, LogConfig::the_DblMetrics,
-            PersistMode::All
-        );
+        std::string ptype = _opts.persist.empty() ? "jtext" : _opts.persist;
+        std::string bname = _opts.base_name.empty() ? "persist" : _opts.base_name;
+
+        std::unique_ptr<IEventSink> sink;
+        const size_t im = LogConfig::the_IntMetrics;
+        const size_t dm = LogConfig::the_DblMetrics;
+        if (ptype == "binary") {
+            sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+        } else {
+            sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+        }
         auto writer = std::make_unique<DoubleBufferedWriter>(
             std::move(sink),
             10'000

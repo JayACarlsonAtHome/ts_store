@@ -2,6 +2,7 @@
 // Standalone unit test for TsStoreFlags — completely independent of other ts_store tests
 
 #include "../../include/beman/ts_store/ts_store_headers/ts_store_flags.hpp"
+#include "../../include/beman/ts_store/ts_store_headers/impl_details/test_options.hpp"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -9,7 +10,9 @@
 #include <concepts>
 #include <type_traits>
 
-int main() {
+int main(int argc, char** argv) {
+    auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
+    (void)_opts;  // flags test does not use persist/double-buffer; parse for CLI compatibility with runner
     std::cout << "Running TsStoreFlags standalone tests...\n\n";
 
     TsStoreFlags flags(0);

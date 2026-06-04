@@ -1,7 +1,0 @@
-Running TsStoreFlags standalone tests...
-
-Flags 1: LogConsole, KeeperRecord, DatabaseEntry, SendNetwork, HotCacheHint, IsResult, IsExplicitNull, HasData, IsInvalid, HasIntData, HasIntStats, HasDblData, HasDblStats | Severity: Critical
-Flags 2: LogConsole, KeeperRecord, DatabaseEntry, SendNetwork, HotCacheHint, IsResult, IsExplicitNull, HasData, IsInvalid, HasIntData, HasIntStats, HasDblData, HasDblStats | Severity: Critical
-
-
-All TsStoreFlags tests PASSED!

@@ -16,7 +16,9 @@ After making changes, run:
 This script will:
 1. Clean-build with gcc-toolset-15
 2. Clean-build with system clang++ (if available and new enough)
-3. Build the two main jText persistence test targets in both configurations
+3. Build **all** the numbered stress tests (001–007 TS/XS + flags) plus the main jText + double-buffer demo/benchmark targets in both configurations.
+
+This is important because all stress tests now exercise double-buffered persistence (Binary + jText sinks).
 
 ## Manual Dual Build
 
@@ -25,7 +27,9 @@ This script will:
 scl enable gcc-toolset-15 -- bash -c '
   rm -rf build-gcc && mkdir build-gcc && cd build-gcc
   cmake -DCMAKE_BUILD_TYPE=Debug -DTS_STORE_ENABLE_JTEXT_PERSIST=ON ..
-  cmake --build . --target ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j$(nproc)
+  cmake --build . --target ts_store_001_TS ts_store_001_XS ... ts_store_007_XS ts_store_flags \
+        ts_store_jtext_high_throughput_test ts_store_jtext_split_demo \
+        ts_store_binary_payload_benchmark ts_store_double_buffer_demo -j$(nproc)
 '
 ```
 
@@ -36,8 +40,12 @@ cmake -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_CXX_COMPILER=clang++ \
       -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
       ..
-cmake --build . --target ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j$(nproc)
+cmake --build . --target ts_store_001_TS ... ts_store_007_XS ts_store_flags \
+      ts_store_jtext_high_throughput_test ts_store_jtext_split_demo \
+      ts_store_binary_payload_benchmark ts_store_double_buffer_demo -j$(nproc)
 ```
+
+(The full list of stress test + demo targets is in `scripts/build_dual_compilers.sh`.)
 
 ## Why Dual Compiler Support?
 

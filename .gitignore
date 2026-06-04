@@ -26,6 +26,10 @@ Binary_*
 JText_*
 Event_*
 
+# Test runner output (large persist logs, per-run artifacts, sizes, etc.)
+# The canonical summary (TS_STORE_Test_Summary.md at root) is committed.
+test_results/
+
 # IDE
 .idea/
 .vscode/
