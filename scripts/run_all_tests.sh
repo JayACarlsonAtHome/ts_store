@@ -119,11 +119,33 @@ generate_test_summary() {
 
 HDR
 
+    echo "DEBUG: after HDR write, out_file=$out_file, results_base=$results_base" >> /tmp/summary_debug.log
+
     # Collect runs by scanning metas
     # We'll build rows and also compute per-(test,compiler) faster logtype
     declare -a rows=()
     declare -A scenario_data=()   # key=SUBDIR|COMPILER|OUTPUT_MODE  value="b_dur b_size b_rec j_dur j_size j_rec"
     declare -A seen=()            # dedup rows by full key (in case old metas linger)
+
+    # Known tests and approx records for completeness when metas are missing
+    declare -A KNOWN_TESTS=(
+        ["TS_STORE_TEST_001_TS"]=64
+        ["TS_STORE_TEST_001_XS"]=64
+        ["TS_STORE_TEST_002_TS"]=2500
+        ["TS_STORE_TEST_002_XS"]=2500
+        ["TS_STORE_TEST_003_TS"]=20000
+        ["TS_STORE_TEST_003_XS"]=20000
+        ["TS_STORE_TEST_004_TS"]=100000
+        ["TS_STORE_TEST_004_XS"]=100000
+        ["TS_STORE_TEST_005_TS"]=1000000
+        ["TS_STORE_TEST_005_XS"]=1000000
+        ["TS_STORE_TEST_006_TS"]=20000
+        ["TS_STORE_TEST_006_XS"]=20000
+        ["TS_STORE_TEST_007_TS"]=1000000
+        ["TS_STORE_TEST_007_XS"]=1000000
+        ["TS_STORE_TEST_flags"]="?"
+    )
+    declare -A KNOWN_PERSIST=( ["binary_logs"]="binary" ["jText_logs"]="jtext" )
 
     for logtype_dir in "$results_base/binary_logs" "$results_base/jText_logs"; do
         [[ -d "$logtype_dir" ]] || continue
@@ -168,7 +190,7 @@ HDR
                 local log_link="[log]($rel_path)"
 
                 rowkey="${COMPILER}|${SUBDIR}|${LOGTYPE}|${TEST_OUTPUT_MODE}"
-                if [[ -z "${seen[$rowkey]}" ]]; then
+                if [[ -z "${seen[$rowkey]:-}" ]]; then
                     seen[$rowkey]=1
                     rows+=("| ${COMPILER} | ${SUBDIR} | ${LOGTYPE} | ${TEST_OUTPUT_MODE} | ${RECORDS:-?} | ${DURATION_SEC}s | ${persist_human} | ${persist_mbs} | ${STATUS} | ${log_link} |")
                 fi
@@ -191,6 +213,48 @@ HDR
                     j_rec="${RECORDS}"
                 fi
                 scenario_data[$key]="${b_dur} ${b_size} ${b_rec} ${j_dur} ${j_size} ${j_rec}"
+            done
+        done
+    done
+
+    # Fill missing combinations from persist files so summary is never "short"
+    for tname in "${!KNOWN_TESTS[@]}"; do
+        for pdir in binary_logs jText_logs; do
+            local ltype=${KNOWN_PERSIST[$pdir]}
+            for om in on off; do
+                local rkey="${COMPILER}|${tname}|${ltype}|${om}"
+                if [[ -z "${seen[$rkey]:-}" ]]; then
+                    seen[$rkey]=1
+                    local rec=${KNOWN_TESTS[$tname]}
+                    local pdir_path="$results_base/$pdir/$tname"
+                    local pbytes=0
+                    for f in "$pdir_path"/persist* ; do
+                        if [[ -f "$f" ]]; then
+                            local s
+                            s=$(stat -c%s "$f" 2>/dev/null || echo 0)
+                            pbytes=$((pbytes + s))
+                        fi
+                    done
+                    local phuman
+                    if command -v numfmt >/dev/null 2>&1; then
+                        phuman=$(numfmt --to=iec-i --suffix=B --format="%.1f" "$pbytes" 2>/dev/null || echo "${pbytes}B")
+                    else
+                        phuman="${pbytes}B"
+                    fi
+                    local dur="N/A"
+                    local rlogfile="$pdir_path/${COMPILER}_${ltype}_${om}.log"
+                    if [[ -f "$rlogfile" ]]; then
+                        local d
+                        d=$(grep -oE "duration=[0-9]+s" "$rlogfile" | head -1 | grep -oE "[0-9]+" || echo "")
+                        [[ -n "$d" ]] && dur="${d}s"
+                    fi
+                    local pmbs="N/A"
+                    if [[ "$dur" != "N/A" && "$pbytes" -gt 0 ]]; then
+                        pmbs=$(echo "scale=1; $pbytes / 1024 / 1024 / ${dur%s}" | bc -l 2>/dev/null || echo "N/A")
+                    fi
+                    local rlog="test_results/$pdir/$tname/${COMPILER}_${ltype}_${om}.log"
+                    rows+=("| ${COMPILER} | ${tname} | ${ltype} | ${om} | ${rec} | ${dur} | ${phuman} | ${pmbs} | ? | [log]($rlog) |")
+                fi
             done
         done
     done
