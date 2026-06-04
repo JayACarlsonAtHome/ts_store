@@ -17,7 +17,7 @@ constexpr size_t EVENTS_PER_THREAD = 4000;
 constexpr size_t TOTAL             = size_t(THREADS) * EVENTS_PER_THREAD;
 constexpr size_t RUNS              = 50;
 
-using LogConfig = ts_store_config<true, 6, 20, 43, 1, 1, false>;
+using LogConfig = ts_store_config<true, 6, 20, 43, 9, 6, false>;
 using LogxStore = ts_store<LogConfig>;
 
 std::pair<bool, long int> run_single_test(LogxStore& store)
@@ -41,8 +41,10 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
                 raw_flags = set_severity(raw_flags, static_cast<TsStoreFlags::Severity>(i % 8));
 
                 bool is_debug = true;
-                std::array<int64_t, 1> ints{{ static_cast<int64_t>(i) }};
-                std::array<double, 1> dbls{{ static_cast<double>(i) * 0.01 }};
+                std::array<int64_t, LogConfig::the_IntMetrics> ints{};
+                std::array<double, LogConfig::the_DblMetrics> dbls{};
+                for (size_t k = 0; k < LogConfig::the_IntMetrics; ++k) ints[k] = static_cast<int64_t>(i * 100 + k);
+                for (size_t k = 0; k < LogConfig::the_DblMetrics; ++k) dbls[k] = static_cast<double>(i) * 0.01 + static_cast<double>(k) * 0.001;
                 auto [ok, id] = store.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug, ints, dbls);
                 if (!ok) {
                     std::cerr << ansi::red() << "CLAIM FAILED — thread " << t << " event " << i << ansi::reset() << "\n" ;
@@ -99,7 +101,7 @@ int main()
     {
         auto sink = std::make_unique<JTextEventSink>(
             "Test7_Big_DoubleBuffered",
-            1, 1,
+            LogConfig::the_IntMetrics, LogConfig::the_DblMetrics,
             PersistMode::All
         );
         auto writer = std::make_unique<DoubleBufferedWriter>(

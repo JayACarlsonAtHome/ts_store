@@ -8,10 +8,10 @@ constexpr size_t THREADS           = 250;
 constexpr size_t EVENTS_PER_THREAD = 400;
 constexpr size_t TOTAL_EVENTS      = size_t(THREADS) * EVENTS_PER_THREAD;
 
-using LogConfigxMainx = ts_store_config<true, 6, 20, 75, 1, 1, false>;
+using LogConfigxMainx = ts_store_config<true, 6, 20, 75, 9, 6, false>;
 using LogxStore = ts_store<LogConfigxMainx>;
 
-using LogConfigResult = ts_store_config<true, 6, 20, 75, 1, 1, false>;
+using LogConfigResult = ts_store_config<true, 6, 20, 75, 9, 6, false>;
 using LogResult = ts_store<LogConfigResult>;
 
 int main(int argc, char** argv) {
@@ -40,8 +40,10 @@ int main(int argc, char** argv) {
             raw_flags = set_severity(raw_flags, static_cast<TsStoreFlags::Severity>(i % 8));
 
             bool is_debug = true;
-            std::array<int64_t, 1> ints{{ static_cast<int64_t>(i) }};
-            std::array<double, 1> dbls{{ static_cast<double>(i) * 0.01 }};
+            std::array<int64_t, LogConfigxMainx::the_IntMetrics> ints{};
+            std::array<double, LogConfigxMainx::the_DblMetrics> dbls{};
+            for (size_t k = 0; k < LogConfigxMainx::the_IntMetrics; ++k) ints[k] = static_cast<int64_t>(i * 100 + k);
+            for (size_t k = 0; k < LogConfigxMainx::the_DblMetrics; ++k) dbls[k] = static_cast<double>(i) * 0.01 + static_cast<double>(k) * 0.001;
             auto [ok, id] = safepay.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug, ints, dbls);
             auto [val_ok, val_sv] = safepay.select(id);
             if (val_ok && std::string_view(val_sv) == payload_copy) {
@@ -61,8 +63,10 @@ int main(int argc, char** argv) {
         raw_flags = set_user_flag(raw_flags, TsStoreFlags::UserFlag::KeeperRecord);
         raw_flags = set_severity(raw_flags, static_cast<TsStoreFlags::Severity>(TsStoreFlags::Severity::Info));
 
-        std::array<int64_t, 1> r_ints{{ static_cast<int64_t>(local_successes) }};
-        std::array<double, 1> r_dbls{{ static_cast<double>(local_nulls) }};
+        std::array<int64_t, LogConfigResult::the_IntMetrics> r_ints{};
+        std::array<double, LogConfigResult::the_DblMetrics> r_dbls{};
+        for (size_t k = 0; k < LogConfigResult::the_IntMetrics; ++k) r_ints[k] = static_cast<int64_t>(local_successes * 10 + k);
+        for (size_t k = 0; k < LogConfigResult::the_DblMetrics; ++k) r_dbls[k] = static_cast<double>(local_nulls) + static_cast<double>(k) * 0.1;
         auto [ok, _] = results.save_event(t, local_successes, std::move(result_payload), raw_flags, "STATS", false, r_ints, r_dbls);
         if (!ok) {
             std::cerr << "Results claim failed for thread " << t << "\n";

@@ -27,8 +27,8 @@ inline void test_run(bool is_debug = false) noexcept
 
                 std::array<int64_t, Config::the_IntMetrics> ints{};
                 std::array<double,  Config::the_DblMetrics> dbls{};
-                if constexpr (Config::the_IntMetrics > 0) ints[0] = static_cast<int64_t>(i);
-                if constexpr (Config::the_DblMetrics > 0) dbls[0] = static_cast<double>(i) * 0.01;
+                for (size_t k = 0; k < Config::the_IntMetrics; ++k) ints[k] = static_cast<int64_t>(i * 100 + k);
+                for (size_t k = 0; k < Config::the_DblMetrics; ++k) dbls[k] = static_cast<double>(i) * 0.01 + static_cast<double>(k) * 0.001;
 
                 auto [ok, id] = save_event(t, i, std::move(payload), raw_flags, std::string(cat_sv), is_debug, ints, dbls);
                 if (!ok) continue;

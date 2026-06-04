@@ -1,8 +1,8 @@
 # ts_store Stress Test Results — gcc
 
-**Run date**: 2026-06-02 10:02:55 UTC
+**Run date**: 2026-06-04 01:21:57 UTC
 **Compiler**: GCC 15 (gcc-toolset-15)
-**Output mode**: no
+**Output mode**: yes
 **Total tests**: 15
 **Passed**: 15
 **Failed**: 0

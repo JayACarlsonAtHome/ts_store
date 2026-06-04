@@ -2,262 +2,261 @@
 Using store.clear() — fastest, most realistic reuse
 
 Run  1 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0.42
+  sample metrics on event 42 (t=0): int=4200 dbl=0.42
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   415054 µs →   2409325 ops/sec
+PASS —   422484 µs →   2366954 ops/sec
 
 Run  2 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   435130 µs →   2298164 ops/sec
+PASS —   456218 µs →   2191935 ops/sec
 
 Run  3 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   428393 µs →   2334305 ops/sec
+PASS —   472362 µs →   2117020 ops/sec
 
 Run  4 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   434628 µs →   2300818 ops/sec
+PASS —   468493 µs →   2134504 ops/sec
 
 Run  5 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   438032 µs →   2282938 ops/sec
+PASS —   473094 µs →   2113745 ops/sec
 
 Run  6 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   430085 µs →   2325122 ops/sec
+PASS —   474977 µs →   2105365 ops/sec
 
 Run  7 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   434205 µs →   2303060 ops/sec
+PASS —   468644 µs →   2133816 ops/sec
 
 Run  8 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   432777 µs →   2310659 ops/sec
+PASS —   475603 µs →   2102594 ops/sec
 
 Run  9 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   434040 µs →   2303935 ops/sec
+PASS —   466504 µs →   2143604 ops/sec
 
 Run 10 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   436111 µs →   2292994 ops/sec
+PASS —   471411 µs →   2121291 ops/sec
 
 Run 11 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   430427 µs →   2323274 ops/sec
+PASS —   470054 µs →   2127415 ops/sec
 
 Run 12 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   437535 µs →   2285531 ops/sec
+PASS —   476542 µs →   2098451 ops/sec
 
 Run 13 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   434649 µs →   2300707 ops/sec
+PASS —   472709 µs →   2115466 ops/sec
 
 Run 14 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   437053 µs →   2288052 ops/sec
+PASS —   471354 µs →   2121548 ops/sec
 
 Run 15 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   432556 µs →   2311839 ops/sec
+PASS —   471694 µs →   2120018 ops/sec
 
 Run 16 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   436867 µs →   2289026 ops/sec
+PASS —   469524 µs →   2129817 ops/sec
 
 Run 17 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   437166 µs →   2287461 ops/sec
+PASS —   477342 µs →   2094934 ops/sec
 
 Run 18 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   438273 µs →   2281683 ops/sec
+PASS —   474576 µs →   2107144 ops/sec
 
 Run 19 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   437182 µs →   2287377 ops/sec
+PASS —   477887 µs →   2092545 ops/sec
 
 Run 20 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   435152 µs →   2298048 ops/sec
+PASS —   470194 µs →   2126782 ops/sec
 
 Run 21 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   440405 µs →   2270637 ops/sec
+PASS —   473729 µs →   2110912 ops/sec
 
 Run 22 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   432838 µs →   2310333 ops/sec
+PASS —   470238 µs →   2126583 ops/sec
 
 Run 23 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   438170 µs →   2282219 ops/sec
+PASS —   470627 µs →   2124825 ops/sec
 
 Run 24 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   436042 µs →   2293357 ops/sec
+PASS —   469163 µs →   2131455 ops/sec
 
 Run 25 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   433255 µs →   2308110 ops/sec
+PASS —   475381 µs →   2103576 ops/sec
 
 Run 26 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   439359 µs →   2276043 ops/sec
+PASS —   470650 µs →   2124721 ops/sec
 
 Run 27 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   436590 µs →   2290478 ops/sec
+PASS —   465517 µs →   2148149 ops/sec
 
 Run 28 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   438419 µs →   2280923 ops/sec
+PASS —   473466 µs →   2112084 ops/sec
 
 Run 29 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   433718 µs →   2305646 ops/sec
+PASS —   472228 µs →   2117621 ops/sec
 
 Run 30 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   438765 µs →   2279124 ops/sec
+PASS —   469021 µs →   2132101 ops/sec
 
 Run 31 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   438246 µs →   2281823 ops/sec
+PASS —   468891 µs →   2132692 ops/sec
 
 Run 32 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   436550 µs →   2290688 ops/sec
+PASS —   470102 µs →   2127198 ops/sec
 
 Run 33 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   433997 µs →   2304163 ops/sec
+PASS —   466834 µs →   2142089 ops/sec
 
 Run 34 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   432816 µs →   2310451 ops/sec
+PASS —   467791 µs →   2137707 ops/sec
 
 Run 35 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   437648 µs →   2284941 ops/sec
+PASS —   470841 µs →   2123859 ops/sec
 
 Run 36 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   434920 µs →   2299273 ops/sec
+PASS —   473482 µs →   2112013 ops/sec
 
 Run 37 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   440517 µs →   2270060 ops/sec
+PASS —   468093 µs →   2136328 ops/sec
 
 Run 38 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   431899 µs →   2315356 ops/sec
+PASS —   469830 µs →   2128429 ops/sec
 
 Run 39 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   441250 µs →   2266289 ops/sec
+PASS —   473129 µs →   2113588 ops/sec
 
 Run 40 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   433716 µs →   2305656 ops/sec
+PASS —   472022 µs →   2118545 ops/sec
 
 Run 41 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   441388 µs →   2265580 ops/sec
+PASS —   473623 µs →   2111384 ops/sec
 
 Run 42 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   437209 µs →   2287236 ops/sec
+PASS —   467190 µs →   2140457 ops/sec
 
 Run 43 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   439732 µs →   2274112 ops/sec
+PASS —   475257 µs →   2104125 ops/sec
 
 Run 44 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   438628 µs →   2279836 ops/sec
+PASS —   472031 µs →   2118505 ops/sec
 
 Run 45 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   437411 µs →   2286179 ops/sec
+PASS —   467016 µs →   2141254 ops/sec
 
 Run 46 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   439551 µs →   2275049 ops/sec
+PASS —   474258 µs →   2108557 ops/sec
 
 Run 47 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   440350 µs →   2270921 ops/sec
+PASS —   469139 µs →   2131564 ops/sec
 
 Run 48 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   439113 µs →   2277318 ops/sec
+PASS —   472197 µs →   2117760 ops/sec
 
 Run 49 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   433636 µs →   2306082 ops/sec
+PASS —   478101 µs →   2091608 ops/sec
 
 Run 50 / 50
-  sample metrics on event 42 (t=0): int=42 dbl=0
+  sample metrics on event 42 (t=0): int=4200 dbl=0
 [VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS —   437308 µs →   2286718 ops/sec
+PASS —   476876 µs →   2096981 ops/sec
 
 
 ═══════════════════════════════════════════════════════════════
                FINAL RESULT — 50-RUN STATISTICS            
 ═══════════════════════════════════════════════════════════════
-  Fastest run        :    415054 µs  →    2409325 ops/sec
-  Slowest run        :    441388 µs  →    2265580 ops/sec
-  Average            :    435775 µs  →    2294761 ops/sec
+  Fastest run        :    422484 µs  →    2366954 ops/sec
+  Slowest run        :    478101 µs  →    2091608 ops/sec
+  Average            :    470368 µs  →    2125996 ops/sec
   (1000000 events per run, 100% verified, zero corruption)
 ═══════════════════════════════════════════════════════════════
-=== TEST PASSED BY RUNNER ===

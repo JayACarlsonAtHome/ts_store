@@ -16,7 +16,7 @@ alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 inline std::array<size_t, MAX_ENTRIES> log_stream_array{};
 inline std::atomic<size_t> total_written{0};
 
-using LogConfig = ts_store_config<false, 6, 20, 43, 1, 1, false>;
+using LogConfig = ts_store_config<false, 6, 20, 43, 9, 6, false>;
 using LogxStore = ts_store<LogConfig>;
 
 
@@ -47,8 +47,10 @@ int main(int argc, char** argv) {
                 raw_flags = set_severity(raw_flags, static_cast<TsStoreFlags::Severity>(i % 8));
 
                 bool is_debug = true;
-                std::array<int64_t, 1> ints{{ static_cast<int64_t>(i) }};
-                std::array<double, 1> dbls{{ static_cast<double>(i) * 0.01 }};
+                std::array<int64_t, LogConfig::the_IntMetrics> ints{};
+                std::array<double, LogConfig::the_DblMetrics> dbls{};
+                for (size_t k = 0; k < LogConfig::the_IntMetrics; ++k) ints[k] = static_cast<int64_t>(i * 100 + k);
+                for (size_t k = 0; k < LogConfig::the_DblMetrics; ++k) dbls[k] = static_cast<double>(i) * 0.01 + static_cast<double>(k) * 0.001;
                 auto [ok, id] = store.save_event(t, i, std::move(payload), raw_flags, std::move(cat), is_debug, ints, dbls);
                 if (ok) {
                     size_t pos = log_stream_write_pos.fetch_add(1, std::memory_order_relaxed);
