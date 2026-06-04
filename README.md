@@ -219,14 +219,15 @@ All 15 stress tests (001–007 TS + XS variants, plus the flags test) can be run
 
 - No `--compiler` (or `--compiler all`) runs the full suite for both gcc and clang internally (120 scenarios total).
 - `--compiler gcc|clang` selects just one toolchain (GCC uses `scl enable gcc-toolset-15`).
-- `--output yes|no` selects console output (tee to stdout + log) or silent (logs only).
+- `--output yes|no` selects live console output (with ANSI colors) or silent (logs only).
 - Every test now exercises **double-buffered asynchronous persistence** (BinaryEventSink or JTextEventSink, chosen via internal --persist).
 
 Combinatorial fields (product = scenario count):
   1. Compiler   : gcc + clang (when default/all)
   2. Test       : 15 variants (001_TS..007_XS + flags)
   3. LogType    : binary, jtext
-  4. OutputMode : on, off
+  4. OutputMode : on (live + ANSI colors), off (silent)
+     (table sorted Test + LogType + Output(on before off) + Compiler for easy comparison)
 
 Per compiler: 15 × 2 × 2 = 60 scenarios. Full run: 120 total.
 - Structured output (runner logs + the actual persist artifacts `.bin` / `.jtext*`) goes to `test_results/binary_logs/TS_STORE_TEST_00N_XX/` and `test_results/jText_logs/TS_STORE_TEST_00N_XX/`.
@@ -238,7 +239,11 @@ Per compiler: 15 × 2 × 2 = 60 scenarios. Full run: 120 total.
 
 See `scripts/run_all_tests.sh` for implementation details (default runs both compilers). The old `results/<compiler>/` tree is legacy (new output lives under `test_results/`).
 
-The runner always passes `--interactive=0 --color=0 --persist=... --base-name=...` (the latter two control the new double-buffered persist + structured log locations). You still get pretty colors when running test binaries directly in a real terminal.
+The runner always passes `--interactive=0 --persist=... --base-name=...`.
+- For `--output yes` (live): uses `--color=1` so the console gets ANSI colors (pretty tables, headers, etc.).
+- For `--output no` (silent): uses `--color=0`.
+Captured `.log` files are always stripped of ANSI for cleanliness.
+You get pretty colors on live runs; direct execution of a test binary also respects `--color`.
 
 To view a captured log: `less -R test_results/binary_logs/TS_STORE_TEST_003_TS/gcc.log` (or the equivalent under `jText_logs/`).
 

@@ -15,7 +15,7 @@
 #   1. Compiler      : gcc, clang   (2 when --compiler all / default)
 #   2. Test          : the 15 values in the TESTS array below
 #   3. LogType       : binary, jtext
-#   4. OutputMode    : on, off
+#   4. OutputMode    : on (live + ANSI colors), off (silent)   [within each test+logtype, sorted on before off, then clang before gcc]
 #
 # Per-compiler count : 15 × 2 × 2 = 60
 # Full "all" count   : 2 × 60 = 120 scenarios
@@ -35,7 +35,10 @@
 # After run (default does both compilers internally and one combined summary), see the summary and
 # test_results/ tree. README.md links to the summary.
 #
-# Note: GCC path uses "scl enable gcc-toolset-15". Always passes --interactive=0 --color=0.
+# Note: GCC path uses "scl enable gcc-toolset-15".
+# Always passes --interactive=0.
+# For output=on (live): --color=1 so ANSI colors are visible on the console.
+# For output=off (silent): --color=0. Saved .log files are always stripped of ANSI.
 #
 set -euo pipefail
 
@@ -318,8 +321,19 @@ HDR
 |----------|------|----------|--------|---------|----------|------|------|--------|-----|
 TABLE
 
-    # Sort rows roughly (by compiler then test) - simple lexical is ok
-    printf "%s\n" "${rows[@]}" | sort >> "$out_file"
+    # Sort by Test (k3), then Log Type (k4), then Output (k5), then Compiler (k2).
+    # "on" before "off" for nicer ordering within each (test+logtype).
+    # This puts clang + gcc for the *exact same* (test + logtype + output) right next to each other.
+    # E.g.
+    # clang TS_STORE_TEST_001_TS binary on ...
+    # gcc   TS_STORE_TEST_001_TS binary on ...
+    # clang TS_STORE_TEST_001_TS binary off ...
+    # gcc   TS_STORE_TEST_001_TS binary off ...
+    # ... then jtext, then next test, etc.
+    printf "%s\n" "${rows[@]}" | \
+      sed 's/| on |/| 0on |/g; s/| off |/| 1off |/g' | \
+      sort -t '|' -k3,3 -k4,4 -k5,5 -k2,2 | \
+      sed 's/| 0on |/| on |/g; s/| 1off |/| off |/g' >> "$out_file"
 
     cat >> "$out_file" <<'FOOT1'
 
@@ -340,6 +354,7 @@ EOF
 FASTER
 
     local any_comp=0
+    declare -a faster_lines=()
     for key in "${!scenario_data[@]}"; do
         any_comp=1
         # key = SUBDIR|COMPILER|OUTPUT_MODE
@@ -372,11 +387,29 @@ FASTER
 
         local rec_info="~${brec:-?} rec"
         if [[ -n "$time_line" || -n "$size_line" ]]; then
-            echo "- **$tname** ($cname, output=$omode): ${time_line}${size_line}) | ${rec_info}" >> "$out_file"
+            faster_lines+=("- **$tname** ($cname, output=$omode): ${time_line}${size_line}) | ${rec_info}")
         fi
     done
     if (( any_comp == 0 )); then
         echo "(No comparative data yet — run for both gcc and clang.)" >> "$out_file"
+    else
+        # Gather + sort so that for each (test, output), the clang and gcc lines are adjacent.
+        # "on" before "off". Matches the main table ordering.
+        declare -a keyed_faster=()
+        for line in "${faster_lines[@]}"; do
+            # Parse tname, cname, omode reliably (grep -o is used elsewhere in the script)
+            tname=$(echo "$line" | grep -o 'TS_STORE_TEST_[^ *]*' | head -1)
+            cname=$(echo "$line" | grep -o '([a-z]*,' | tr -d '(,' )
+            omode_raw=$(echo "$line" | grep -o 'output=[^)]*' | cut -d= -f2 )
+            # Use 0on/1off so "on" sorts before "off"
+            if [[ "$omode_raw" == "on" ]]; then
+                omode="0on"
+            else
+                omode="1off"
+            fi
+            keyed_faster+=("${tname}|${omode}|${cname}|${line}")
+        done
+        printf "%s\n" "${keyed_faster[@]}" | sort -t'|' -k1,1 -k2,2 -k3,3 | cut -d'|' -f4- >> "$out_file"
     fi
 
     # Notes + Configs
@@ -387,7 +420,7 @@ FASTER
 - Persist artifacts (`.bin` or the 3 `.jtext` files) are written using the `--base-name` passed by the runner so they land inside the corresponding `test_results/*/TS_STORE_TEST_.../` subdirectory.
 - `Records` are best-effort parsed from test output (for 005/007 this is typically 1,000,000 × 50 = 50M per invocation).
 - Size and Rate columns: measured on-disk persist artifact size and effective MB/s (size / full test duration). The "Log" column links to the captured stdout for that run.
-- Each (test, logtype) is executed twice: once with output=on and once with output=off, to show the overhead of console output (many events set LogConsole).
+- Each (test, logtype) is executed twice: once with output=on (live console, ANSI colors enabled via --color=1) and once with output=off (silent capture, --color=0). This shows the overhead of console output (many events set LogConsole). Live "on" runs are colorful and pretty; saved logs are always plain text (ANSI stripped).
 - Compile/build time is for the full set of test binaries for that compiler (Release + jText enabled).
 - Default (no --compiler or --compiler all) runs gcc then clang internally in one invocation. Use --compiler gcc|clang to run just one. The summary table and faster comparisons will include all compilers' data.
 - Legacy `results/<compiler>/` tree may still exist from prior versions; new canonical location is `test_results/`.
@@ -409,11 +442,13 @@ NOTES
 }
 
 COMPILER="all"
-OUTPUT_MODE="yes"  # yes = show runner progress on console, no = silent (logs only)
+OUTPUT_MODE="yes"  # yes = live console (with ANSI colors for test output), no = silent (logs only)
 
 usage() {
     echo "Usage: $0 [--compiler gcc|clang|all] [--output yes|no]"
     echo "  Default: all (runs gcc then clang internally, one summary at end)"
+    echo "  --output yes : live console output with ANSI colors (pretty)"
+    echo "  --output no  : silent (logs only)"
     exit 1
 }
 
@@ -455,10 +490,10 @@ fi
 
 echo "=== ts_store All Stress Tests Runner (double-buffered persist for ALL tests) ==="
 echo "Compilers: ${COMPILER_LIST[*]}"
-echo "Output mode: $OUTPUT_MODE (console visible: $OUTPUT_MODE)"
+echo "Output mode: $OUTPUT_MODE (live console + ANSI colors when 'yes')"
 echo "Primary output: test_results/binary_logs/ + jText_logs/ + TS_STORE_Test_Summary.md"
 echo "Each test subdir will contain separate logs for output=on vs output=off."
-echo "Each (test, logtype) is run twice per compiler: once with output=on (live console), once with output=off (silent)."
+echo "Each (test, logtype) is run twice per compiler: once with output=on (live console + ANSI colors), once with output=off (silent, no color)."
 
 RUN_PASSED_ALL=0
 RUN_FAILED_ALL=0
@@ -568,7 +603,8 @@ fi
 #    - 001_TS / 001_XS ... 007_TS / 007_XS   (timestamps on vs off)
 #    - flags
 # 3. Persist/log type: "binary", "jtext"  (2)
-# 4. Output mode: "on" (live console via tee), "off" (silent redirect)  (2)
+# 4. Output mode: "on" (live console + ANSI colors via --color=1), "off" (silent redirect, --color=0)  (2)
+#    Table sorted by Test, LogType, Output (on before off), Compiler (clang before gcc) for easy side-by-side comparison.
 #
 # Per-compiler scenarios: 15 × 2 × 2 = 60
 # When running "all" (the default): 2 compilers × 60 = 120 total scenarios
@@ -605,7 +641,7 @@ echo "=== Running all tests (double-buffered async persist for every test) ==="
 echo "Binary logs : $BINARY_LOGS/"
 echo "jText logs  : $JTEXT_LOGS/"
 echo "Combinatorics: ${#TESTS[@]} tests × 2 logtypes × 2 output modes = 60 per compiler (120 when both)"
-echo "Each (test, logtype) is run twice per compiler: once with output=on (live console), once with output=off (silent)."
+echo "Each (test, logtype) is run twice per compiler: once with output=on (live console + ANSI colors), once with output=off (silent, no color)."
 echo
 
 TOTAL_SCENARIOS=$(( ${#TESTS[@]} * 2 * 2 ))  # 15 tests × 2 logtypes × 2 output modes = 60 per compiler
@@ -647,10 +683,12 @@ for test in "${TESTS[@]}"; do
             start_ep=$(date +%s)
 
             if [[ "$test_output_mode" == "on" ]]; then
-                "$bin" --interactive=0 --color=0 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
+                # "on" = live console with ANSI colors enabled (pretty output visible)
+                "$bin" --interactive=0 --color=1 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
                     | tee >(strip_ansi > "$run_log")
                 bin_status=${PIPESTATUS[0]}
             else
+                # "off" = silent, force no color (clean for logs; we strip anyway)
                 "$bin" --interactive=0 --color=0 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
                     | strip_ansi > "$run_log"
                 bin_status=${PIPESTATUS[0]}
