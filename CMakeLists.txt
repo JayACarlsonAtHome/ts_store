@@ -66,6 +66,9 @@ endforeach()
 option(TS_STORE_ENABLE_JTEXT_PERSIST
        "Enable jText file persistence (requires sibling ../jText checkout)" OFF)
 
+option(TS_STORE_ENABLE_SQLITE_PERSIST
+       "Enable direct SQLite persistence (requires libsqlite3)" OFF)
+
 if(TS_STORE_ENABLE_JTEXT_PERSIST)
     message(STATUS "ts_store: jText persistence ENABLED")
 
@@ -279,6 +282,29 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     endforeach()
 endif()
 
+# =============================================================================
+# Optional direct SQLite persistence
+# =============================================================================
+if(TS_STORE_ENABLE_SQLITE_PERSIST)
+    message(STATUS "ts_store: SQLite persistence ENABLED")
+    find_package(SQLite3 REQUIRED)
+    if(NOT SQLite3_FOUND)
+        message(FATAL_ERROR "TS_STORE_ENABLE_SQLITE_PERSIST=ON but SQLite3 not found")
+    endif()
+
+    # Add the sqlite wrapper to relevant targets
+    # For now we expose it to all tests when enabled (similar to jText)
+    foreach(num IN LISTS TEST_NUMBERS)
+        target_include_directories(ts_store_${num}_TS PRIVATE ${TS_STORE_INCLUDE_DIR})
+        target_compile_definitions(ts_store_${num}_TS PRIVATE TS_STORE_ENABLE_SQLITE_PERSIST)
+        target_link_libraries(ts_store_${num}_TS PRIVATE SQLite::SQLite3)
+
+        target_include_directories(ts_store_${num}_XS PRIVATE ${TS_STORE_INCLUDE_DIR})
+        target_compile_definitions(ts_store_${num}_XS PRIVATE TS_STORE_ENABLE_SQLITE_PERSIST)
+        target_link_libraries(ts_store_${num}_XS PRIVATE SQLite::SQLite3)
+    endforeach()
+endif()
+
 # -----------------------------------------------------------------------------
 # Binary-only persistence demos (no jText dependency; always available)
 # These demonstrate / benchmark the fast mmap binary path independently.
@@ -303,6 +329,23 @@ target_link_libraries(ts_store_binary_throughput_test
 add_executable(ts_store_binary_payload_benchmark
     examples/binary_payload_benchmark.cpp
 )
+
+if(TS_STORE_ENABLE_SQLITE_PERSIST)
+    # Example slurper: takes jText split files + inserts into SQLite
+    add_executable(ts_store_slurp_jtext_to_sqlite
+        examples/slurp_jtext_to_sqlite.cpp
+    )
+    target_include_directories(ts_store_slurp_jtext_to_sqlite PRIVATE
+        ${TS_STORE_INCLUDE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+    )
+    target_link_libraries(ts_store_slurp_jtext_to_sqlite PRIVATE
+        project_warnings
+        project_options
+        SQLite::SQLite3
+        jtext_core
+    )
+endif()
 
 target_include_directories(ts_store_binary_payload_benchmark
     PRIVATE

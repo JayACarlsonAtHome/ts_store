@@ -23,7 +23,7 @@
 # Each scenario produces one .log + one .meta (plus the persist artifacts written by the test).
 #
 # A rich summary document is (re)generated at the project root
-# with OS, compiler column, compile times, record counts, duration, persist size/rate,
+# with OS, compiler column, per-compiler times (build+test), total suite duration, record counts, duration, persist size/rate,
 # which log type was faster/smaller per (test, logtype, output mode), links, Config settings, etc.
 #
 # Usage:
@@ -120,7 +120,7 @@ prepare_log_dir() {
 
 # Generate the rich markdown summary document.
 # Scans test_results/... for .meta + .log files (supports multiple compilers).
-# Includes OS info, compile time, compiler column, faster log per scenario, etc.
+# Includes OS info, compile time, per-compiler times (build + test suite), compiler column, faster log per scenario, total suite duration, etc.
 generate_test_summary() {
     local out_file="$1"
     local compiler="$2"
@@ -130,6 +130,13 @@ generate_test_summary() {
     local passed="$6"
     local failed="$7"
     local total_scenarios="$8"
+    local suite_duration_sec="${9:-?}"
+    local per_compiler_times="${10:-}"
+
+    local suite_dur_display="${suite_duration_sec}s"
+    if [[ "$suite_duration_sec" =~ ^[0-9]+$ ]] && (( suite_duration_sec > 60 )); then
+        suite_dur_display="$((suite_duration_sec / 60))m $((suite_duration_sec % 60))s (${suite_duration_sec}s)"
+    fi
 
     local now=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
     local os_pretty="unknown"
@@ -151,7 +158,10 @@ generate_test_summary() {
 
 ## Build / Compile Info
 **Compiler(s)**: $compiler_display  
-**Build**: $build_info
+**Build**: $build_info  
+**Per-compiler times**:
+$per_compiler_times
+**Total suite duration**: $suite_dur_display
 
 HDR
 
@@ -499,6 +509,13 @@ RUN_PASSED_ALL=0
 RUN_FAILED_ALL=0
 TOTAL_ALL=0
 
+declare -A COMPILER_TEST_DURATIONS=()
+declare -A COMPILER_BUILD_DURATIONS=()
+
+# Start timing the entire suite (all compilers + tests + builds)
+SUITE_START_TS=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+SUITE_START_EP=$(date +%s)
+
 for COMPILER in "${COMPILER_LIST[@]}"; do
   if [[ "$COMPILER" == "gcc" ]]; then
     COMPILER_DISPLAY="GCC 15 (gcc-toolset-15)"
@@ -595,6 +612,10 @@ else
     cd "$BUILD_DIR"
 fi
 
+COMPILER_BUILD_DURATIONS["$COMPILER"]=$BUILD_DURATION_SEC
+
+TEST_START_EP=$(date +%s)
+
 # === New structured run: every test x2 (binary + jtext), logs + persist artifacts under test_results/ ===
 
 # Combinatorial matrix (the fields whose product gives the scenario count):
@@ -648,7 +669,7 @@ TOTAL_SCENARIOS=$(( ${#TESTS[@]} * 2 * 2 ))  # 15 tests × 2 logtypes × 2 outpu
 RUN_PASSED=0
 RUN_FAILED=0
 
-# Per-compiler build info for the summary
+# Per-compiler build info for the summary (last compiler's for the old BUILD_INFO field)
 if [[ "$BUILD_DURATION_SEC" == "skipped" ]]; then
   BUILD_INFO="Build: skipped (binaries up to date)"
 else
@@ -736,6 +757,11 @@ done
   echo "Structured logs + persist files under: $TEST_RESULTS_BASE/"
   echo
 
+  TEST_END_EP=$(date +%s)
+  TEST_DURATION_SEC=$((TEST_END_EP - TEST_START_EP))
+  COMPILER_TEST_DURATIONS["$COMPILER"]=$TEST_DURATION_SEC
+  echo "Test scenarios for $COMPILER complete. (duration: ${TEST_DURATION_SEC}s)"
+
   RUN_PASSED_ALL=$((RUN_PASSED_ALL + RUN_PASSED))
   RUN_FAILED_ALL=$((RUN_FAILED_ALL + RUN_FAILED))
   TOTAL_ALL=$((TOTAL_ALL + TOTAL_SCENARIOS))
@@ -751,13 +777,29 @@ if [[ ${#COMPILER_LIST[@]} -gt 1 ]]; then
   # BUILD_INFO below is from the last compiler; the table has data for all
 fi
 
+# Build per-compiler timing strings for summary
+PER_COMPILER_TIMES=""
+for c in "${COMPILER_LIST[@]}"; do
+  bdur=${COMPILER_BUILD_DURATIONS[$c]:-skipped}
+  tdur=${COMPILER_TEST_DURATIONS[$c]:-0}
+  if [[ "$bdur" == "skipped" ]]; then
+    PER_COMPILER_TIMES+="  $c: build skipped, tests: ${tdur}s"$'\n'
+  else
+    PER_COMPILER_TIMES+="  $c: build ${bdur}s + tests ${tdur}s"$'\n'
+  fi
+done
+
 # Quick verification that the number of produced artifacts matches the combinatorics
 META_COUNT=$(find "$TEST_RESULTS_BASE" -name '*.meta' | wc -l)
 echo "Verification: expected $TOTAL_SCENARIOS scenarios, found $META_COUNT .meta files"
 
+# Capture total wall time for the entire suite (including all compilers, builds, and runs)
+SUITE_END_EP=$(date +%s)
+SUITE_DURATION_SEC=$((SUITE_END_EP - SUITE_START_EP))
+
 # Generate (or update) the rich combined summary document (table will contain data from all compilers)
 SUMMARY_FILE="$PROJECT_ROOT/TS_STORE_Test_Summary.md"
-generate_test_summary "$SUMMARY_FILE" "$COMPILER" "$COMPILER_DISPLAY" "$BUILD_INFO" "$TEST_RESULTS_BASE" "$RUN_PASSED" "$RUN_FAILED" "$TOTAL_SCENARIOS"
+generate_test_summary "$SUMMARY_FILE" "$COMPILER" "$COMPILER_DISPLAY" "$BUILD_INFO" "$TEST_RESULTS_BASE" "$RUN_PASSED" "$RUN_FAILED" "$TOTAL_SCENARIOS" "$SUITE_DURATION_SEC" "$PER_COMPILER_TIMES"
 
 echo "Rich summary written to: $SUMMARY_FILE"
 echo

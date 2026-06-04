@@ -231,7 +231,7 @@ Combinatorial fields (product = scenario count):
 
 Per compiler: 15 × 2 × 2 = 60 scenarios. Full run: 120 total.
 - Structured output (runner logs + the actual persist artifacts `.bin` / `.jtext*`) goes to `test_results/binary_logs/TS_STORE_TEST_00N_XX/` and `test_results/jText_logs/TS_STORE_TEST_00N_XX/`.
-- A rich summary (with OS, compiler column, compile times, duration, record counts, "which log was faster", Config settings, etc.) is generated at the project root.
+- A rich summary (with OS, compiler column, per-compiler times (build + test suite per compiler), total suite duration, per-run durations, record counts, "which log was faster", Config settings, etc.) is generated at the project root.
 
 **Primary results document** (default `./scripts/run_all_tests.sh` runs both gcc and clang to get full cross-compiler + binary-vs-jText data):
 
