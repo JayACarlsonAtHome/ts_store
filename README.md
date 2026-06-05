@@ -55,7 +55,7 @@ int main() {
 
 ### The Buffer
 - Pre-sized, fixed-capacity ring of events (`max_threads × events_per_thread`)
-- `save_event(...)` is the hot path — extremely fast, lock-free on the write side
+- `save_event(...)` is the hot path — fast in-memory operation; with async double-buffered persistence the measured throughput on realistic multi-threaded workloads (e.g. 005/007 stress tests) is in the low millions of events/sec (see Performance section and `TS_STORE_Test_Summary.md`)
 - `select(id)` gives you a `string_view` into the stored payload
 - `clear()` resets the buffer for reuse (very cheap)
 
@@ -131,10 +131,17 @@ The same pattern works with `BinaryEventLog`.
 
 ## Performance Reality (mid-2026)
 
-### In-Memory Hot Path (the number that actually matters)
-The core `save_event` path routinely achieves **16–22+ million events/sec** on realistic workloads (9 integer metrics + 6 double metrics + payload + flags) when persistence is drained asynchronously.
+### In-Memory Hot Path with Asynchronous Persistence
 
-This is the design target. The entire architecture (double-buffering intent, etc.) exists to keep the hot path at this speed.
+The core `save_event` + `submit_event` path is the critical hot path. The entire double-buffering and pluggable persistence architecture exists to keep this path as fast as possible while still providing durable, asynchronous recording of events.
+
+In the high-concurrency stress tests that represent realistic workloads (9 integer metrics + 6 double metrics + payload + flags, 250 threads, full asynchronous persistence via `DoubleBufferedWriter` + sink):
+
+- The measured hot-path throughput is typically **2–2.5 million events/sec** (see the latest numbers in `TS_STORE_Test_Summary.md` for the 005/007 runs).
+
+Higher rates (up to ~29M events/sec in some configurations) have been observed, particularly when persistence is not attached (pure in-memory only) or under much lower contention. Without actually recording the data, it is trivial to achieve very high artificial rates (a simple counter increment can do hundreds of millions per second). The number that matters is what the hot path can sustain *while* durably persisting events asynchronously in the background.
+
+This remains the design target: keep the in-memory hot path as close as possible to its maximum speed even with real persistence happening asynchronously.
 
 ### Synchronous Persistence Throughput
 When you call the writers directly from the hot path:
@@ -162,6 +169,8 @@ The dedicated benchmark programs live in `examples/`:
 ```
 
 These programs measure **direct writer throughput** (not the core in-memory path).
+
+The full `run_all_tests.sh` now also runs pure in-memory versions of the heavy 005/007 tests (with `--persist=none`) and produces a separate `TS_STORE_InMemory_Summary.md` with compile times + hot path rates (no logging).
 
 ---
 
@@ -235,7 +244,8 @@ Per compiler: 15 × 2 × 2 = 60 scenarios. Full run: 120 total.
 
 **Primary results document** (default `./scripts/run_all_tests.sh` runs both gcc and clang to get full cross-compiler + binary-vs-jText data):
 
-- [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md)
+- [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md) (full runs with persistence)
+- [TS_STORE_InMemory_Summary.md](TS_STORE_InMemory_Summary.md) (pure in-memory hot path, no logs)
 
 See `scripts/run_all_tests.sh` for implementation details (default runs both compilers). The old `results/<compiler>/` tree is legacy (new output lives under `test_results/`).
 

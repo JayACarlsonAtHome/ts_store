@@ -109,21 +109,25 @@ int main(int argc, char** argv)
     // test_results/binary_logs/TS_STORE_TEST_007_TS/ or jText_logs/...
     {
         std::string ptype = _opts.persist.empty() ? "jtext" : _opts.persist;
-        std::string bname = _opts.base_name.empty() ? "persist" : _opts.base_name;
-
-        std::unique_ptr<IEventSink> sink;
-        const size_t im = LogConfig::the_IntMetrics;
-        const size_t dm = LogConfig::the_DblMetrics;
-        if (ptype == "binary") {
-            sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+        if (ptype == "none") {
+            std::cout << "No persistence attached — pure in-memory hot path\n";
         } else {
-            sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+            std::string bname = _opts.base_name.empty() ? "persist" : _opts.base_name;
+
+            std::unique_ptr<IEventSink> sink;
+            const size_t im = LogConfig::the_IntMetrics;
+            const size_t dm = LogConfig::the_DblMetrics;
+            if (ptype == "binary") {
+                sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+            } else {
+                sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+            }
+            auto writer = std::make_unique<DoubleBufferedWriter>(
+                std::move(sink),
+                10'000
+            );
+            store.attach_persistence(std::move(writer));
         }
-        auto writer = std::make_unique<DoubleBufferedWriter>(
-            std::move(sink),
-            10'000
-        );
-        store.attach_persistence(std::move(writer));
     }
 
     for (size_t run = 0; run < RUNS; ++run) {

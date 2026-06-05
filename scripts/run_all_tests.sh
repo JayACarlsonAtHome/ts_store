@@ -53,8 +53,10 @@ cd "$PROJECT_ROOT" || { echo "ERROR: cannot change to project root $PROJECT_ROOT
 TEST_RESULTS_BASE="$PROJECT_ROOT/test_results"
 BINARY_LOGS="$TEST_RESULTS_BASE/binary_logs"
 JTEXT_LOGS="$TEST_RESULTS_BASE/jText_logs"
+INMEM_DIR="$TEST_RESULTS_BASE/inmem"
 mkdir -p "$BINARY_LOGS"
 mkdir -p "$JTEXT_LOGS"
+mkdir -p "$INMEM_DIR"
 
 # === Cleanup of legacy/unused stuff (part of the runner now) ===
 # Remove old results/ dir (legacy)
@@ -455,6 +457,7 @@ FASTER
 - Each (test, logtype) is executed twice: once with output=on (live console, ANSI colors enabled via --color=1) and once with output=off (silent capture, --color=0). This shows the overhead of console output (many events set LogConsole). Live "on" runs are colorful and pretty; saved logs are always plain text (ANSI stripped).
 - Per-compiler times show build + full test suite execution time for that compiler (60 scenarios). Total suite duration is wall time across all compilers.
 - Default (no --compiler or --compiler all) runs gcc then clang internally in one invocation. Use --compiler gcc|clang to run just one. The summary table and faster comparisons will include all compilers' data.
+- Separate `TS_STORE_InMemory_Summary.md` is also generated for pure in-memory runs of the heavy tests (no persistence).
 - Legacy `results/<compiler>/` tree may still exist from prior versions; new canonical location is `test_results/`.
 
 ## Config settings used by the tests (LogConfig)
@@ -481,6 +484,7 @@ usage() {
     echo "  Default: all (runs gcc then clang internally, one summary at end)"
     echo "  --output yes : live console output with ANSI colors (pretty)"
     echo "  --output no  : silent (logs only)"
+    echo "  Additionally runs pure in-memory (no logs) for 005/007 and produces separate TS_STORE_InMemory_Summary.md with compile times."
     exit 1
 }
 
@@ -649,8 +653,11 @@ TEST_START_EP=$(date +%s)
 # 4. Output mode: "on" (live console + ANSI colors via --color=1), "off" (silent redirect, --color=0)  (2)
 #    Table sorted by Test, LogType, Output (on before off), Compiler (clang before gcc) for easy side-by-side comparison.
 #
-# Per-compiler scenarios: 15 × 2 × 2 = 60
-# When running "all" (the default): 2 compilers × 60 = 120 total scenarios
+# Additionally: pure in-memory runs (no persistence) for the heavy 005/007 tests to measure the true in-memory hot path.
+#
+# Per-compiler scenarios (log runs): 15 × 2 × 2 = 60
+# When running "all" (the default): 2 compilers × 60 = 120 total log scenarios + in-memory for heavy tests.
+# Compile times are captured per compiler and included in both summaries.
 #
 # What each scenario produces:
 # - Runner capture: ${COMPILER}_${logtype}_${mode}.log   (stdout of the test binary)
@@ -685,6 +692,7 @@ echo "Binary logs : $BINARY_LOGS/"
 echo "jText logs  : $JTEXT_LOGS/"
 echo "Combinatorics: ${#TESTS[@]} tests × 2 logtypes × 2 output modes = 60 per compiler (120 when both)"
 echo "Each (test, logtype) is run twice per compiler: once with output=on (live console + ANSI colors), once with output=off (silent, no color)."
+echo "Additionally: pure in-memory (no persistence) runs for 005/007 throughput tests."
 echo
 
 TOTAL_SCENARIOS=$(( ${#TESTS[@]} * 2 * 2 ))  # 15 tests × 2 logtypes × 2 output modes = 60 per compiler
@@ -784,6 +792,30 @@ done
   COMPILER_TEST_DURATIONS["$COMPILER"]=$TEST_DURATION_SEC
   echo "Test scenarios for $COMPILER complete. (duration: ${TEST_DURATION_SEC}s)"
 
+  # Pure in-memory hot path (no persistence, no logs) for the throughput-heavy tests
+  echo "=== Pure in-memory hot path (no persistence/logs) for $COMPILER ==="
+  for heavy in ts_store_005_TS ts_store_005_XS ts_store_007_TS ts_store_007_XS; do
+    if [[ ! -x "./$heavy" ]]; then
+      continue
+    fi
+    echo "  Running $heavy pure in-memory..."
+    inmem_log="$INMEM_DIR/${COMPILER}_${heavy}_inmem.log"
+    start_im=$(date +%s)
+    ./${heavy} --persist=none --interactive=0 --color=0 > "$inmem_log" 2>&1 || true
+    end_im=$(date +%s)
+    im_dur=$((end_im - start_im))
+    # Parse the average ops/sec reported by the test (for 1M events per run)
+    avg_ops=$(grep -o 'Average .* → *[0-9,]* ops/sec' "$inmem_log" | tail -1 | sed 's/.*→ *//' | tr -d ', ops/sec' | head -1 || echo "0")
+    echo "    Full in-mem run: ${im_dur}s, parsed avg ~${avg_ops} ops/sec (per 1M-event run)"
+    inmem_meta="$INMEM_DIR/${COMPILER}_${heavy}.meta"
+    cat > "$inmem_meta" <<META
+COMPILER=${COMPILER}
+TEST=${heavy}
+DURATION_SEC=${im_dur}
+AVG_OPS_PER_SEC=${avg_ops}
+META
+  done
+
   RUN_PASSED_ALL=$((RUN_PASSED_ALL + RUN_PASSED))
   RUN_FAILED_ALL=$((RUN_FAILED_ALL + RUN_FAILED))
   TOTAL_ALL=$((TOTAL_ALL + TOTAL_SCENARIOS))
@@ -829,3 +861,65 @@ generate_test_summary "$SUMMARY_FILE" "$COMPILER" "$COMPILER_DISPLAY" "$BUILD_IN
 echo "Rich summary written to: $SUMMARY_FILE"
 echo
 echo "Done."
+
+# =============================================================================
+# Separate In-Memory Hot Path Summary (pure in-memory, no logs/persistence)
+# =============================================================================
+echo "Generating separate in-memory hot path summary..."
+
+INMEM_SUMMARY="$PROJECT_ROOT/TS_STORE_InMemory_Summary.md"
+
+# Re-get basic info (dupe small logic from generate for standalone)
+inmem_now=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+inmem_os="unknown"
+if [[ -r /etc/os-release ]]; then
+    . /etc/os-release 2>/dev/null || true
+    inmem_os="${PRETTY_NAME:-$NAME $VERSION}"
+else
+    inmem_os=$(uname -sr)
+fi
+
+cat > "$INMEM_SUMMARY" <<IMHDR
+# TS_STORE In-Memory Hot Path Summary (no persistence / no logs)
+
+**Date**: $inmem_now  
+**OS**: $inmem_os  
+**Generated by**: scripts/run_all_tests.sh (pure in-memory runs with --persist=none)
+
+## Purpose
+These runs execute the core in-memory `save_event` hot path **without any persistence attached** (no jText, no Binary, no logs written).  
+This gives the "pure" in-memory throughput for comparison against the persisted log runs in the main summary.
+
+## Per-Compiler Compile Times + In-Memory Throughput
+IMHDR
+
+for c in "${COMPILER_LIST[@]}"; do
+  bdur=${COMPILER_BUILD_DURATIONS[$c]:-skipped}
+  bhuman=$(format_duration "$bdur")
+  echo "### Compiler: $c" >> "$INMEM_SUMMARY"
+  echo "- Compile time: $bhuman" >> "$INMEM_SUMMARY"
+  for h in ts_store_005_TS ts_store_005_XS ts_store_007_TS ts_store_007_XS; do
+    m="$INMEM_DIR/${c}_${h}.meta"
+    if [[ -f "$m" ]]; then
+      # shellcheck disable=SC1090
+      . "$m" 2>/dev/null || true
+      aops=${AVG_OPS_PER_SEC:-?}
+      idur=${DURATION_SEC:-?}
+      echo "- ${h} (1M events/run × 50 runs): ~${aops} ops/sec (full in-mem run: ${idur}s)" >> "$INMEM_SUMMARY"
+    fi
+  done
+  echo "" >> "$INMEM_SUMMARY"
+done
+
+cat >> "$INMEM_SUMMARY" <<IMNOTES
+
+## Notes
+- These are **pure in-memory** numbers (no logging, no double-buffer submit cost beyond the in-memory store work).
+- Compare to main `TS_STORE_Test_Summary.md` (which includes async persistence) to see the cost of durable logging.
+- Higher artificial rates are easy without recording (e.g. just a counter). The meaningful engineering number is sustained rate *while recording*.
+- Compile times are the same as used for the log runs (binaries built once per compiler).
+
+See main [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md) for the full matrix with persistence (binary/jText, on/off, etc.).
+IMNOTES
+
+echo "In-memory summary written to: $INMEM_SUMMARY"
