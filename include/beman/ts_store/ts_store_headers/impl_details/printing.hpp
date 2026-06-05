@@ -83,7 +83,7 @@ void print_single_row(size_t id, const row_data& r,
     std::print("{}{:<{}}{}", ansi::bold_magenta(), severity_padded, widths.severity, space_pad);
 
     // CATEGORY (padded)
-    std::string cat_padded = r.category_storage;
+    std::string cat_padded{ r.category_storage.view() };
     cat_padded.resize(widths.category, '.');
     std::print("{}{:<{}}{}", ansi::bold_yellow(), cat_padded, widths.category, space_pad);
 
@@ -92,7 +92,7 @@ void print_single_row(size_t id, const row_data& r,
     std::print("{}{:>{}}{}", ansi::bold_green(),   r.event_id,  widths.event,   space_pad);
 
     // PAYLOAD (padded)
-    std::string payload_padded = r.value_storage;
+    std::string payload_padded{ r.value_storage.view() };
     payload_padded.resize(widths.payload, '.');
     std::print("{}{:<{}}", ansi::blue(), payload_padded, widths.payload);
 
@@ -162,7 +162,7 @@ inline void print(size_t max_rows = 10'000) const
     std::println("{}ts_store <{}", ansi::bold_white(), ansi::reset());
     std::println("   Threads    = {}", get_max_threads());
     std::println("   Events     = {}", get_max_events());
-    std::println("   ValueT     = std::string(max len={})", Config::max_payload_length);
+    std::println("   ValueT     = bounded_string<{}> (fixed, max {} codepoints)", Config::max_payload_length, Config::max_payload_length);
     std::println("   Time Stamp = {}>", Config::use_timestamps ? "On" : "Off");
 
 

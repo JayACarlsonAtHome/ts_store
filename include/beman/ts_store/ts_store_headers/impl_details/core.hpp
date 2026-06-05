@@ -1,13 +1,16 @@
 // ts_store/ts_store_headers/impl_details/core.hpp
-// Updated for dynamic std::string storage (no fixed buffers, no copy_from, no size limits)
+// Hot path: now uses bounded_string (fixed inline char buffer) instead of std::string
+// for category/value_storage. Exact preallocation via vector<row_data>, direct
+// assign_truncated (memcpy after utf8 cp count), memory check + bail at ctor.
+// Drops std::string overhead in the critical in-memory save_event path.
 // NO namespace — this file is included inside ts_store class
 
 inline std::pair<bool, size_t>
 save_event(size_t thread_id,
            size_t event_id,
-           Config::ValueT&& value,
+           Config::ValueT value,
            size_t event_flag_param = 0,
-           Config::CategoryT&& category = "",
+           Config::CategoryT category = {},
            bool debug = false,
            std::array<int64_t, Config::the_IntMetrics> int_metrics = {},
            std::array<double,  Config::the_DblMetrics> dbl_metrics = {}
@@ -15,13 +18,16 @@ save_event(size_t thread_id,
 {
     const size_t id = next_id_.fetch_add(1, std::memory_order_relaxed);
 
-    row_data row{};
+    // Direct reference into the pre-sized + pre-reserved row slot.
+    // Strings already have capacity reserved at construction; we write straight into them (no per-event alloc).
+    auto& row = rows_[id];
     row.thread_id = thread_id;
     row.event_id  = event_id;
     row.is_debug  = debug;
 
-    row.value_storage = Config::utf8_truncate(value, Config::max_payload_length);
-    row.category_storage = Config::utf8_truncate(category, Config::max_category_length);
+    // Direct write into fixed bounded buffer (no std::string, no alloc, memcpy under the hood).
+    row.value_storage.assign_truncated(std::string_view(value), Config::max_payload_length);
+    row.category_storage.assign_truncated(std::string_view(category), Config::max_category_length);
 
     row.int_metrics = std::move(int_metrics);
     row.dbl_metrics = std::move(dbl_metrics);
@@ -61,7 +67,7 @@ save_event(size_t thread_id,
         row.ts_us = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(now - base).count());
     }
 
-    rows_[id] = std::move(row);
+    // (no rows_[id] = move; we wrote directly into the slot)
 
     if (persistence_writer_) {
         const auto& stored = rows_[id];
@@ -71,8 +77,8 @@ save_event(size_t thread_id,
         pe.thread_id            = stored.thread_id;
         pe.per_thread_event_id  = stored.event_id;       // the caller's per-thread id
         pe.flags                = stored.event_flags;
-        pe.category             = stored.category_storage;
-        pe.payload              = stored.value_storage;
+        pe.category             = stored.category_storage.str();  // copy out to PersistedEvent's std::string (persist path only)
+        pe.payload              = stored.value_storage.str();
 
         if constexpr (Config::use_timestamps) {
             pe.timestamp_us = stored.ts_us;
@@ -88,13 +94,13 @@ save_event(size_t thread_id,
     return {true, id};
 }
 
-// select() — returns string_view into stored std::string
+// select() — returns string_view into stored bounded_string
 inline auto select(size_t id) const
 {
     if (id >= rows_.size()) {
         return std::pair<bool, std::string_view>{false, {}};
     }
-    return std::pair{true, std::string_view(rows_[id].value_storage)};
+    return std::pair{true, rows_[id].value_storage.view()};
 }
 
 // get_all_ids

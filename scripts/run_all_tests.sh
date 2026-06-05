@@ -35,6 +35,11 @@
 # After run (default does both compilers internally and one combined summary), see the summary and
 # test_results/ tree. README.md links to the summary.
 #
+# Cleanup is automatic ("roll out the garbage"): stray/old artifacts, previous per-compiler
+# logs/metas/persists, inmem, and stray persist files in root/build dirs are removed at start
+# so you don't have to manually clean before re-running. test_results/ is .gitignore'd (only
+# the root summaries are committed).
+#
 # Note: GCC path uses "scl enable gcc-toolset-15".
 # Always passes --interactive=0.
 # For output=on (live): --color=1 so ANSI colors are visible on the console.
@@ -70,6 +75,33 @@ for d in build-clean-check build-double-test build-dual build-no-persist; do
   if [ -d "$PROJECT_ROOT/$d" ]; then
     echo "Removing unused build directory: $d"
     rm -rf "$PROJECT_ROOT/$d"
+  fi
+done
+
+# Roll out the garbage: aggressively clean stray/old artifacts from test_results/
+# and other places (persist files left in root/build dirs from manual runs, old
+# non-prefixed logs, etc.). This is part of the runner so you don't have to
+# manually "rm -rf test_results/*" before every full run. Keeps the structure
+# for the current run's data. Summaries are re-generated at the end.
+echo "Rolling out the garbage (stray artifacts from previous runs)..."
+for logdir in "$BINARY_LOGS" "$JTEXT_LOGS"; do
+  for sub in "$logdir"/TS_STORE_TEST_* ; do
+    [ -d "$sub" ] || continue
+    # delete anything that isn't a current gcc_/clang_ log/meta or a persist* file
+    # (old runs or manual junk without compiler prefix)
+    find "$sub" -maxdepth 1 -type f ! -name 'gcc_*' ! -name 'clang_*' ! -name 'persist*' -delete 2>/dev/null || true
+  done
+done
+# stray inmem files without proper prefix
+find "$INMEM_DIR" -maxdepth 1 -type f ! -name 'gcc_*' ! -name 'clang_*' -delete 2>/dev/null || true
+
+# stray persist artifacts that can accumulate in root (from examples or manual runs)
+rm -f "$PROJECT_ROOT"/{persist,persist_Ints,persist_Floats}.{bin,jtext,sql} 2>/dev/null || true
+
+# also clean any that ended up in the build-results dirs (sometimes from running inside build)
+for bdir in build-results-gcc build-results-clang; do
+  if [ -d "$PROJECT_ROOT/$bdir" ]; then
+    rm -f "$PROJECT_ROOT/$bdir"/{persist,persist_Ints,persist_Floats}.{bin,jtext,sql} 2>/dev/null || true
   fi
 done
 
@@ -562,6 +594,9 @@ for COMPILER in "${COMPILER_LIST[@]}"; do
       rm -f "$sub"/{persist,persist_Ints,persist_Floats}.{bin,jtext,sql} 2>/dev/null || true
     done
   done
+
+  # Clean previous inmem for this compiler (the inmem runs are always fresh for the current run)
+  rm -f "$INMEM_DIR/${COMPILER}_"* 2>/dev/null || true
 
   # Determine build dir and how to invoke cmake/build
 BUILD_DIR="$PROJECT_ROOT/build-results-$COMPILER"

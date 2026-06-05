@@ -330,6 +330,22 @@ add_executable(ts_store_binary_payload_benchmark
     examples/binary_payload_benchmark.cpp
 )
 
+# Pure in-memory hot path benchmark (no persistence attached)
+add_executable(ts_store_in_memory_throughput
+    examples/in_memory_throughput.cpp
+)
+
+target_include_directories(ts_store_in_memory_throughput
+    PRIVATE
+        ${TS_STORE_INCLUDE_DIR}
+)
+
+target_link_libraries(ts_store_in_memory_throughput
+    PRIVATE
+        project_warnings
+        project_options
+)
+
 if(TS_STORE_ENABLE_SQLITE_PERSIST)
     # Example slurper: takes jText split files + inserts into SQLite
     add_executable(ts_store_slurp_jtext_to_sqlite

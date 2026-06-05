@@ -49,8 +49,8 @@
     for (size_t id = 0; id < rows_.size(); ++id) {
         const auto& row = rows_[id];
         bool valid = false;
-        std::string pay_load = row.value_storage;
-        std::string expected = Config::utf8_truncate(std::string(test_messages[row.event_id % test_messages.size()]), Config::max_payload_length);
+        std::string pay_load{ row.value_storage.view() };
+        std::string expected = Config::utf8_truncate(test_messages[row.event_id % test_messages.size()], Config::max_payload_length);
         size_t utf8_xactualx_len = Config::utf8_length(pay_load);
         size_t utf8_expected_len = Config::utf8_length(expected);
         if ((pay_load == expected) && (utf8_xactualx_len <= Config::max_payload_length))  valid = true;

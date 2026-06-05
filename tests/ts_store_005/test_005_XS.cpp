@@ -32,12 +32,18 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
     threads.reserve(THREADS);
     auto start = high_resolution_clock::now();
 
+    // Pre-create payloads and categories to reduce string construction overhead in the hot path measurement
+    std::array<std::string, 8> pre_payloads;
+    for (size_t i = 0; i < 8; ++i) pre_payloads[i] = std::string(LogxStore::test_messages[i]);
+    std::array<std::string, 5> pre_cats;
+    for (size_t i = 0; i < 5; ++i) pre_cats[i] = std::string(LogxStore::categories[i]);
+
     for (size_t t = 0; t < THREADS; ++t) {
         threads.emplace_back([&, t]() {
             for (size_t i = 0; i < EVENTS_PER_THREAD; ++i) {
 
-                std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
-                std::string cat  = std::string( LogxStore::categories[t % LogxStore::categories.size()]);
+                std::string payload = pre_payloads[i % pre_payloads.size()];
+                std::string cat = pre_cats[t % pre_cats.size()];
 
                 uint64_t raw_flags = 0;
                 raw_flags = set_user_flag(raw_flags, TsStoreFlags::UserFlag::LogConsole);

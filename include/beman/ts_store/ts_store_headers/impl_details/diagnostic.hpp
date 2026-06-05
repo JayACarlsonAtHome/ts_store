@@ -28,13 +28,13 @@ inline void diagnose_failures(size_t max_report = std::numeric_limits<size_t>::m
         if (failures.size() >= max_report) break;
 
         const auto& row = rows_[id];
-        std::string_view payload  = row.value_storage;
+        std::string_view payload  = row.value_storage.view();
         std::string_view expected = test_messages[row.event_id % test_messages.size()];
 
         bool valid = false;
         if (payload == expected)  valid = true;
         if (!valid) {
-            failures.emplace_back(id, row.thread_id, row.event_id, row.value_storage, expected);
+            failures.emplace_back(id, row.thread_id, row.event_id, row.value_storage.view(), expected);
         }
     }
 

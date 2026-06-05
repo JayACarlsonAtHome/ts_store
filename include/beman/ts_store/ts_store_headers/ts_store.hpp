@@ -19,8 +19,10 @@ private:
         std::array<int64_t, Config::the_IntMetrics> int_metrics{};
         std::array<double,  Config::the_DblMetrics> dbl_metrics{};
         bool     is_debug{false};
-        std::string category_storage;
-        std::string value_storage;
+        // Now using bounded/fixed storage (no more std::string for hot path cat/payload).
+        // This gives exact preallocation, direct writes, no capacity/SSO overhead.
+        Config::CategoryT category_storage{};
+        Config::ValueT    value_storage{};
         std::conditional_t<Config::use_timestamps, uint64_t, std::monostate> ts_us{};
     };
 
@@ -85,7 +87,28 @@ public:
     {
         if (max_threads == 0 || events_per_thread == 0)
             throw std::invalid_argument("ts_store: thread/event count must be > 0");
+
+        // Memory check before allocating the rows (now fixed-size bounded_string storage inside).
+        // The vector resize gives us the exact preallocated storage for all cat/payload buffers.
+        const size_t N = expected_size();
+        const size_t per_row = sizeof(row_data);
+        const size_t total_est = N * per_row + (16ULL << 20); // headroom
+
+        struct sysinfo info{};
+        size_t avail = 0;
+        if (sysinfo(&info) == 0) {
+            avail = info.freeram + info.bufferram + info.sharedram;
+        }
+        if (avail > 0 && total_est > (avail * 90 / 100)) {
+            std::cerr << "ts_store: insufficient memory for preallocation (need ~"
+                      << (total_est >> 20) << " MiB, avail ~" << (avail >> 20) << " MiB) — bailing\n";
+            std::exit(1);
+        }
+
         rows_.resize(expected_size());
+        // bounded_string members are inline fixed char arrays — no per-row .reserve needed.
+        // Storage is fully preallocated by the above resize.
+
         if constexpr (Config::use_timestamps) {
             const auto min_time = std::chrono::steady_clock::time_point::min();
             if (auto cur = s_epoch_base.load(std::memory_order_relaxed); cur == min_time)
