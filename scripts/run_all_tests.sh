@@ -770,14 +770,18 @@ for test in "${TESTS[@]}"; do
 
             if [[ "$test_output_mode" == "on" ]]; then
                 # "on" = live console with ANSI colors enabled (pretty output visible)
+                set +e
                 "$bin" --interactive=0 --color=1 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
                     | tee >(strip_ansi > "$run_log")
                 bin_status=${PIPESTATUS[0]}
+                set -e
             else
                 # "off" = silent, force no color (clean for logs; we strip anyway)
+                set +e
                 "$bin" --interactive=0 --color=0 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
                     | strip_ansi > "$run_log"
                 bin_status=${PIPESTATUS[0]}
+                set -e
             fi
 
             stop_ep=$(date +%s)
