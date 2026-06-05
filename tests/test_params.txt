@@ -1,0 +1,40 @@
+# ts_store test parameters
+# Controls which tests to run and the size (to avoid burning SSD on every run).
+#
+# Usage in runner: scripts/run_all_tests.sh reads this (if present).
+# SIZE=smoke : ~100 records per test (5 threads * 20 events * 1 run) -- fast smoke test
+# SIZE=full  : high intensity (original large numbers like 250*4000*50 etc.)
+#
+# Checkboxes for tests: put x or [x] next to tests you want to run (e.g. 005=x )
+# If no tests marked, runner falls back to all.
+#
+# You can also override with explicit THREADS= etc (higher precedence than SIZE).
+
+SIZE=smoke
+
+# High defaults (for SIZE=full or reference):
+# THREADS=250
+# EVENTS_PER_THREAD=4000
+# RUNS=50
+# (For 003/006: WRITER_THREADS/OPS_PER_THREAD map to above)
+
+# THREADS=5
+# EVENTS_PER_THREAD=20
+# RUNS=1
+
+# Test selection ( [x] or just x after = )
+001=x
+002=x
+003=x
+004=x
+005=x
+006=x
+007=x
+# flags= x   # optional unit test for flags
+
+# Notes:
+# - 100 records is good for quick verification / CI-like smoke.
+# - Use SIZE=full or explicit high numbers only when you want the real stress (SSD/ time cost).
+# - The C++ tests accept --threads=N --events-per-thread=M --runs=K --test-size=smoke|full
+# - Runner will pass the chosen sizes for the selected tests.
+# - 001/002 are small fixed (~64 records); their size not affected by params.

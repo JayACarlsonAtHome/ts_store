@@ -1,9 +1,9 @@
 //tests/ts_store_007/Test_007_XS.CPP
 //
 // Massive multi-threaded throughput + correctness test (historically ~1,000,000 records per run).
-// THREADS and EVENTS_PER_THREAD can be adjusted from time to time to change the load
-// (e.g. for different hardware or stress levels). TOTAL is derived and used throughout
-// for output and calculations so the test stays consistent when limits change.
+// Size controlled at runtime via --threads --events-per-thread --runs (or --test-size=smoke|full)
+// or via the runner's test_params.txt (smoke ~100 records for SSD safety, full for high intensity).
+// See tests/test_params.txt and scripts/run_all_tests.sh .
 
 #include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/DoubleBufferedWriter.hpp"
@@ -12,15 +12,18 @@
 #include "../../include/beman/ts_store/ts_store_headers/persistence/PersistCommon.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/EventSink.hpp"
 #include <utility>
+#include <vector>
 
 
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
-constexpr size_t THREADS           = 5;
-constexpr size_t EVENTS_PER_THREAD = 20;
-constexpr size_t TOTAL             = size_t(THREADS) * EVENTS_PER_THREAD;
-constexpr size_t RUNS              = 1;
+// These are set at runtime from CLI / config (see test_params.txt and runner).
+// Defaults come from TestOptions (high intensity); smoke uses small via --test-size=smoke or explicit.
+size_t THREADS;
+size_t EVENTS_PER_THREAD;
+size_t TOTAL;
+size_t RUNS;
 
 using LogConfig = ts_store_config<false, 6, 20, 43, 9, 6, false>;
 using LogxStore = ts_store<LogConfig>;
@@ -97,14 +100,18 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
 int main(int argc, char** argv)
 {
     auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
-    (void)_opts;
+
+    THREADS = _opts.threads;
+    EVENTS_PER_THREAD = _opts.events_per_thread;
+    TOTAL = THREADS * EVENTS_PER_THREAD;
+    RUNS = _opts.runs;
 
     if (std::cin.rdbuf()->in_avail() > 0) {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
     LogxStore  store(THREADS, EVENTS_PER_THREAD);
     size_t total_write_us = 0;
-    size_t durations[RUNS] = {};
+    std::vector<size_t> durations(RUNS, 0);
     size_t failed_runs = 0;
 
     std::cout << "=== FINAL MASSIVE TEST — " << TOTAL << " entries × " << RUNS << " runs ===\n";
@@ -169,7 +176,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto [min_it, max_it] = std::minmax_element(std::begin(durations), std::end(durations));
+    auto [min_it, max_it] = std::minmax_element(durations.begin(), durations.end());
     double avg_us = static_cast<double>(total_write_us) / RUNS;
     double max_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*min_it);
     double min_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*max_it);

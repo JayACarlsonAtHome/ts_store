@@ -51,7 +51,7 @@ int main() {
 
 **Extensively tested** — zero corruption observed across millions of events in stress workloads. All numbered stress tests pass 100% on GCC 15 (RHEL) and recent Clang.
 
-**Not production-ready** — The core in-memory buffer is mature. The persistence layer (double-buffered async draining to Binary/jText) is now exercised in all stress tests with measurable results (see TS_STORE_Test_Summary.md), but the on-disk formats and query story are still evolving.
+**Not production-ready** — The core in-memory buffer is mature. The persistence layer (double-buffered async draining to Binary/jText) is now exercised in all stress tests with measurable results (see TS_STORE_Test_Summary.md). jText persist runs are automatically followed by CLI-based roundtrips to SQL (jtext_process emit + jtext_to_sqlite direct load + queries + sqlite_to_jtext export back); see TS_STORE_SQL_Roundtrip_Summary.md. The on-disk formats and query story continue to evolve.
 
 ---
 
@@ -233,16 +233,25 @@ All 15 stress tests (001–007 TS + XS variants, plus the flags test) can be run
 - No `--compiler` (or `--compiler all`) runs the full suite for both gcc and clang internally (120 scenarios total).
 - `--compiler gcc|clang` selects just one toolchain (GCC uses `scl enable gcc-toolset-15`).
 - `--output yes|no` selects live console output (with ANSI colors) or silent (logs only).
-- Every test now exercises **double-buffered asynchronous persistence** (BinaryEventSink or JTextEventSink, chosen via internal --persist).
+- Every test now exercises the persistence matrix as scenarios that must be run and documented:
+  - binary logs
+  - jtext logs
+  - straight to SQL (direct via SqlEventSink writing INSERTs to DB; for debug also writes the Insert statements to a .sql file)
+  - inMemory - no persistence (--persist=none)
+  - Round tripping tests (DB to jtext, jtext to DB) after the relevant persist runs.
+- Summaries, READMEs, other documentation and Rationals updated for all.
+- --persist= controls it in the runner (and --base-name for output location).
+- Test selection and sizes controlled by `tests/test_params.txt` ( [x] which tests, SIZE=smoke for ~100 records or full for high intensity). This avoids SSD wear for routine runs; smoke is default for most, full only when needed. Runner passes --threads --events-per-thread --runs to tests.
 
 Combinatorial fields (product = scenario count):
   1. Compiler   : gcc + clang (when default/all)
   2. Test       : 15 variants (001_TS..007_XS + flags)
-  3. LogType    : binary, jtext
+  3. PersistType: binary, jtext, sql (direct-to-SQL with debug INSERT file), none (pure in-memory)
   4. OutputMode : on (live + ANSI colors), off (silent)
-     (table sorted Test + LogType + Output(on before off) + Compiler for easy comparison)
+     (table sorted Test + PersistType + Output(on before off) + Compiler for easy comparison)
 
-Per compiler: 15 × 2 × 2 = 60 scenarios. Full run: 120 total.
+Per compiler: 15 × 4 × 2 = 120 scenarios. Full run: 240 total.
+Additionally, roundtrip verification (jText<->SQL, DB<->jText) is performed after the relevant persist runs.
 - Structured output (runner logs + the actual persist artifacts `.bin` / `.jtext*`) goes to `test_results/binary_logs/TS_STORE_TEST_00N_XX/` and `test_results/jText_logs/TS_STORE_TEST_00N_XX/`.
 - A rich summary (with OS, compiler column, per-compiler times (build + test suite per compiler), total suite duration, per-run durations, record counts, "which log was faster", Config settings, etc.) is generated at the project root.
 
@@ -250,6 +259,7 @@ Per compiler: 15 × 2 × 2 = 60 scenarios. Full run: 120 total.
 
 - [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md) (full runs with persistence)
 - [TS_STORE_InMemory_Summary.md](TS_STORE_InMemory_Summary.md) (pure in-memory hot path, no logs)
+- [TS_STORE_SQL_Roundtrip_Summary.md](TS_STORE_SQL_Roundtrip_Summary.md) (jText → SQL direct via CLIs + export-back for every jtext scenario; sizes + timings co-located with jText logs)
 
 See `scripts/run_all_tests.sh` for implementation details (default runs both compilers). The old `results/<compiler>/` tree is legacy (new output lives under `test_results/`).
 
@@ -261,6 +271,29 @@ You get pretty colors on live runs; direct execution of a test binary also respe
 
 To view a captured log: `less -R test_results/binary_logs/TS_STORE_TEST_003_TS/gcc.log` (or the equivalent under `jText_logs/`).
 
+### jText-to-SQL Roundtrips (via CLI tools + export back)
+
+**Clarification** (per note): This is *jText-mediated* SQL roundtrips via external CLI tools. It is **not** native "direct to SQL" from the ts_store executable.
+
+A true direct-to-SQL persist path would be the ts_store (via a pluggable SqlEventSink attached with DoubleBufferedWriter) emitting INSERT statements or using prepared statements directly to a database — without going through jText files as an interchange step.
+
+What the automated `run_all_tests.sh` currently performs after every jtext persist scenario (on and off), as an interim verification step to exercise SQL loading + roundtrips:
+
+- `jtext_process` CLI emits the `.sql` companions (CREATE + INSERT OR IGNORE templates substituted from the jtext data; canonical `//File: //Date: //Purpose: //Related:` headers).
+- `jtext_to_sqlite` (from jacQLite) loads the jText data into a temp SQLite DB (jText → SQL path using the interchange format + tools).
+- Simple COUNT(*) queries are run against the loaded tables (main + ints + floats splits).
+- `sqlite_to_jtext` CLI exports the DB content back out to `<base>_fulltrip/` directories (jText files + companions) for roundtrip fidelity verification.
+
+Artifacts (`.sql`, `*_fulltrip/`) are co-located with the source jText logs under `test_results/jText_logs/TS_STORE_TEST_.../` so they are included for size and timing tracking alongside the binary/jtext files.
+
+A dedicated structured summary is produced:
+
+- [TS_STORE_SQL_Roundtrip_Summary.md](TS_STORE_SQL_Roundtrip_Summary.md) — per-compiler, per-test post-processing times, .sql sizes, fulltrip sizes, loaded row counts, etc. (regional-aware numbers, accurate scale from the actual run).
+
+All of this uses the published CLI tools only (no hard-coded parser logic inside the runner or ts_store core). The test binaries themselves continue to use `--persist binary|jtext|none`.
+
+Native direct writing of INSERTs from ts_store is still future/planned work (see "Planned" below). See the runner source and the SQL summary for the exact captured fields.
+
 ---
 
 ## Design History & Rationale
@@ -271,7 +304,7 @@ Every significant decision (persistence split-file format, jText dependency stra
 
 ## Current Limitations & In-Progress Work
 
-- Query/aggregation features beyond `select(id)` are not implemented
+- Query/aggregation features beyond `select(id)` are not implemented (runtime); offline jText → SQL roundtrips via CLI tools (load + queries + export back) are now automatically exercised after every jtext persist run and summarized (see TS_STORE_SQL_Roundtrip_Summary.md and README "jText-to-SQL Roundtrips" section). Native direct-to-SQL (INSERTs written straight from ts_store) remains future work.
 - No rotation, compaction, or long-term storage policy yet
 - (Double-buffered persistence with Binary + jText sinks is now exercised by *all* automated stress tests via the runner — see TS_STORE_Test_Summary.md and Rationale/10_...)
 
@@ -279,8 +312,8 @@ Every significant decision (persistence split-file format, jText dependency stra
 
 ## Planned
 
-- jText → SQL pathway in the future (easy extraction / loading of the human-readable split files into relational storage when needed)
-- Direct ts_store → SQL writer option (as a future alternative or complement to the current jText and Binary persistence layers)
+- (jText → SQL roundtrips via CLI tools are now exercised automatically after every jtext persist scenario — see "jText-to-SQL Roundtrips" section and TS_STORE_SQL_Roundtrip_Summary.md)
+- Native direct ts_store → SQL writer (INSERTs / prepared statements straight from the exe or a SqlEventSink, without jText interchange) as a pluggable persistence option (future)
 
 **Double-buffered background IO** (asynchronous draining) is **implemented** (see the "Double-Buffered Persistence" section below and the automated stress tests).
 

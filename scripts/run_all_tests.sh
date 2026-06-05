@@ -58,14 +58,75 @@ cd "$PROJECT_ROOT" || { echo "ERROR: cannot change to project root $PROJECT_ROOT
 TEST_RESULTS_BASE="$PROJECT_ROOT/test_results"
 BINARY_LOGS="$TEST_RESULTS_BASE/binary_logs"
 JTEXT_LOGS="$TEST_RESULTS_BASE/jText_logs"
+SQL_LOGS="$TEST_RESULTS_BASE/sql_logs"
+INMEM_LOGS="$TEST_RESULTS_BASE/inmem_logs"
 INMEM_DIR="$TEST_RESULTS_BASE/inmem"
 mkdir -p "$BINARY_LOGS"
 mkdir -p "$JTEXT_LOGS"
+mkdir -p "$SQL_LOGS"
+mkdir -p "$INMEM_LOGS"
 mkdir -p "$INMEM_DIR"
 
-# Roundtrip / SQL-direct tools (prefer jacQLite sqlite-aware CLIs for our SQLite usage;
-# jText jtext_process still used to emit the .sql companions per header standards).
-# These enable "after test" insert-to-SQL + queries + export-back-to-jText (points 3,6,7 in matrix *).
+# =============================================================================
+# Load test parameters from tests/test_params.txt (if present).
+# This lets us [x] select tests and choose smoke (100 records, SSD friendly) vs full (high intensity).
+# Most runs use SIZE=smoke; occasional full for real stress.
+# =============================================================================
+CONFIG_FILE="$PROJECT_ROOT/tests/test_params.txt"
+SIZE="smoke"
+THREADS=5
+EVENTS_PER_THREAD=20
+RUNS=1
+WRITER_THREADS=5
+OPS_PER_THREAD=20
+declare -A SELECTED_TESTS=()
+if [[ -f "$CONFIG_FILE" ]]; then
+    echo "Loading test params from $CONFIG_FILE"
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%%#*}"   # strip comments
+        line="${line// /}"   # remove spaces
+        [[ -z "$line" ]] && continue
+        if [[ "$line" =~ ^SIZE=(.*)$ ]]; then
+            SIZE="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ ^THREADS=(.*)$ ]]; then
+            THREADS="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ ^EVENTS_PER_THREAD=(.*)$ ]]; then
+            EVENTS_PER_THREAD="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ ^RUNS=(.*)$ ]]; then
+            RUNS="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ ^WRITER_THREADS=(.*)$ ]]; then
+            WRITER_THREADS="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ ^OPS_PER_THREAD=(.*)$ ]]; then
+            OPS_PER_THREAD="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ ^([0-9]{3})=[xX] ]]; then
+            SELECTED_TESTS["${BASH_REMATCH[1]}"]=1
+        fi
+    done < "$CONFIG_FILE"
+fi
+
+# Apply SIZE profile (smoke wins unless explicit high in config or SIZE=full)
+if [[ "$SIZE" == "smoke" ]]; then
+    THREADS=5; EVENTS_PER_THREAD=20; RUNS=1; WRITER_THREADS=5; OPS_PER_THREAD=20
+elif [[ "$SIZE" == "full" ]]; then
+    THREADS=250; EVENTS_PER_THREAD=4000; RUNS=50; WRITER_THREADS=50; OPS_PER_THREAD=400
+fi
+
+# Build list of tests to run (from config selection or all)
+declare -a TESTS=()
+for t in 001 002 003 004 005 006 007; do
+    if [[ ${#SELECTED_TESTS[@]} -eq 0 || -n "${SELECTED_TESTS[$t]:-}" ]]; then
+        TESTS+=("ts_store_${t}_TS" "ts_store_${t}_XS")
+    fi
+done
+if [[ ${#SELECTED_TESTS[@]} -eq 0 ]]; then
+    TESTS+=("ts_store_flags")
+fi
+
+echo "Test selection: ${#TESTS[@]} binaries (SIZE=$SIZE threads=$THREADS events=$EVENTS_PER_THREAD runs=$RUNS)"
+
+# Tools for jText → SQL roundtrip verification (jtext_process for .sql emit, jacQLite CLIs for load/export).
+# Used in the post-test phase after jtext persist runs (points 3/4/6/7 in matrix *).
+# This is jText-mediated SQL work via CLIs, not native direct-to-SQL INSERTs written by the ts_store exe itself.
 JTEXT_PROCESS_BIN="/home/jay/git/jText/cmake-build-debug/jtext_process"
 JAC_J2S_BIN="/home/jay/git/jacQLite/build/tools/jtext_integration/jtext_to_sqlite"
 JAC_S2J_BIN="/home/jay/git/jacQLite/build/tools/jtext_integration/sqlite_to_jtext"
@@ -176,6 +237,10 @@ prepare_log_dir() {
     local pval="$2"
     if [[ "$pval" == "jtext" ]]; then
         logdir_name="jText_logs"
+    elif [[ "$pval" == "sql" ]]; then
+        logdir_name="sql_logs"
+    elif [[ "$pval" == "none" ]]; then
+        logdir_name="inmem_logs"
     else
         logdir_name="binary_logs"
     fi
@@ -254,9 +319,9 @@ HDR
         ["TS_STORE_TEST_007_XS"]=100
         ["TS_STORE_TEST_flags"]="?"
     )
-    declare -A KNOWN_PERSIST=( ["binary_logs"]="binary" ["jText_logs"]="jtext" )
+    declare -A KNOWN_PERSIST=( ["binary_logs"]="binary" ["jText_logs"]="jtext" ["sql_logs"]="sql" ["inmem_logs"]="none" )
 
-    for logtype_dir in "$results_base/binary_logs" "$results_base/jText_logs"; do
+    for logtype_dir in "$results_base/binary_logs" "$results_base/jText_logs" "$results_base/sql_logs" "$results_base/inmem_logs"; do
         [[ -d "$logtype_dir" ]] || continue
         for sub in "$logtype_dir"/TS_STORE_TEST_* ; do
             [[ -d "$sub" ]] || continue
@@ -275,7 +340,7 @@ HDR
 
                 # Measure actual persist file size(s) on disk for this run
                 local persist_bytes=0
-                for f in "$logtype_dir/$SUBDIR"/persist*; do
+                for f in "$logtype_dir/$SUBDIR"/persist* "$logtype_dir/$SUBDIR"/*.db "$logtype_dir/$SUBDIR"/*_direct.sql "$logtype_dir/$SUBDIR"/*.sql; do
                     if [[ -f "$f" ]]; then
                         local s
                         s=$(stat -c%s "$f" 2>/dev/null || echo 0)
@@ -298,10 +363,13 @@ HDR
                 local rel_path="test_results/$(basename "$logtype_dir")/$SUBDIR/${COMPILER}.log"
                 local log_link="[log*]($rel_path)"
 
+                local display_ltype=${LOGTYPE}
+                if [[ "$LOGTYPE" == "none" ]]; then display_ltype="inmem"; fi
+
                 rowkey="${COMPILER}|${SUBDIR}|${LOGTYPE}|${TEST_OUTPUT_MODE}"
                 if [[ -z "${seen[$rowkey]:-}" ]]; then
                     seen[$rowkey]=1
-                    rows+=("| ${COMPILER} | ${SUBDIR} | ${LOGTYPE} | ${TEST_OUTPUT_MODE} | ${RECORDS:-?} | ${DURATION_SEC}s | ${persist_human} | ${persist_mbs} | ${STATUS} | ${log_link} |")
+                    rows+=("| ${COMPILER} | ${SUBDIR} | ${display_ltype} | ${TEST_OUTPUT_MODE} | ${RECORDS:-?} | ${DURATION_SEC}s | ${persist_human} | ${persist_mbs} | ${STATUS} | ${log_link} |")
                 fi
 
                 # for faster + smaller computation: store b_dur b_size b_rec j_dur j_size j_rec per output mode
@@ -316,7 +384,17 @@ HDR
                     b_dur="${DURATION_SEC}"
                     b_size="${persist_bytes}"
                     b_rec="${RECORDS}"
+                elif [[ "$LOGTYPE" == "jtext" ]]; then
+                    j_dur="${DURATION_SEC}"
+                    j_size="${persist_bytes}"
+                    j_rec="${RECORDS}"
+                elif [[ "$LOGTYPE" == "sql" ]]; then
+                    # treat sql like jtext for comparison
+                    j_dur="${DURATION_SEC}"
+                    j_size="${persist_bytes}"
+                    j_rec="${RECORDS}"
                 else
+                    # none/inmem
                     j_dur="${DURATION_SEC}"
                     j_size="${persist_bytes}"
                     j_rec="${RECORDS}"
@@ -328,7 +406,7 @@ HDR
 
     # Fill missing combinations from persist files so summary is never "short"
     for tname in "${!KNOWN_TESTS[@]}"; do
-        for pdir in binary_logs jText_logs; do
+        for pdir in binary_logs jText_logs sql_logs inmem_logs; do
             local ltype=${KNOWN_PERSIST[$pdir]}
             for om in on off; do
                 local rkey="${COMPILER}|${tname}|${ltype}|${om}"
@@ -374,7 +452,12 @@ HDR
                         cb_dur="$dur"
                         cb_size="$pbytes"
                         cb_rec="$rec"
+                    elif [[ "$ltype" == "jtext" || "$ltype" == "sql" ]]; then
+                        cj_dur="$dur"
+                        cj_size="$pbytes"
+                        cj_rec="$rec"
                     else
+                        # none/inmem
                         cj_dur="$dur"
                         cj_size="$pbytes"
                         cj_rec="$rec"
@@ -495,20 +578,22 @@ FASTER
 ## Notes
 - All tests now attach a `DoubleBufferedWriter` + chosen sink (`BinaryEventSink` or `JTextEventSink`) for asynchronous background persistence. Hot path remains fast.
 - Persist artifacts (`.bin` or the 3 `.jtext` files) are written using the `--base-name` passed by the runner so they land inside the corresponding `test_results/*/TS_STORE_TEST_.../` subdirectory.
-- `Records` are best-effort parsed from test output (tests now use reduced counts ~100 events for SSD longevity per matrix * instructions; old 1M-scale numbers were for prior full-stress runs).
+- `Records` are best-effort parsed from test output (tests now use reduced counts ~100 events for SSD longevity per matrix * instructions; old 1M-scale numbers were for prior full-stress runs). Inmem/none shows pure in-memory (no persist). SQL shows direct DB writes + debug INSERT file.
 - Size and Rate columns: measured on-disk persist artifact size and effective MB/s (size / full test duration). The "Log" column links to the captured stdout for that run.
-- Each (test, logtype) is executed twice: once with output=on (live console, ANSI colors enabled via --color=1) and once with output=off (silent capture, --color=0). This shows the overhead of console output (many events set LogConsole). Live "on" runs are colorful and pretty; saved logs are always plain text (ANSI stripped).
-- Per-compiler times show build + full test suite execution time for that compiler (60 scenarios). Total suite duration is wall time across all compilers.
+- Each (test, persisttype) is executed twice: once with output=on (live console, ANSI colors enabled via --color=1) and once with output=off (silent capture, --color=0). Persist types: binary, jtext, sql (direct), none (in-memory only). This shows the overhead of console output. Live "on" runs are colorful and pretty; saved logs are always plain text (ANSI stripped).
+- Per-compiler times show build + full test suite execution time for that compiler (120 scenarios). Total suite duration is wall time across all compilers.
 - Default (no --compiler or --compiler all) runs gcc then clang internally in one invocation. Use --compiler gcc|clang to run just one. The summary table and faster comparisons will include all compilers' data.
-- Separate `TS_STORE_InMemory_Summary.md` is also generated for pure in-memory runs of the heavy tests (no persistence).
+- Separate `TS_STORE_InMemory_Summary.md` is also generated for pure in-memory runs (the "none" scenario) of the heavy tests (detailed internal rate reporting).
+- Separate `TS_STORE_SQL_Roundtrip_Summary.md` is generated for the post-test jText → SQL roundtrips (via CLI tools: emit .sql + load + queries + export-back) that run after every jtext persist scenario. .sql + *_fulltrip artifacts are co-located with jText logs for size/timing (this is jText-mediated, not native direct INSERTs from ts_store).
+- The main summary now includes rows for all 4 persist types (binary, jtext, sql, inmem/none).
 - Legacy `results/<compiler>/` tree may still exist from prior versions; new canonical location is `test_results/`.
 
 ## Config settings used by the tests (LogConfig)
-- 001/002/003/006/007 (TS): `ts_store_config<true, 6, 20, 43, 9, 6, false>`
+- 001/002/003/006/007 (TS): `ts_store_config<true, 6, 20, 43, 9, 6, false>` (size from test_params.txt / --threads etc; smoke 5×20, full high)
 - 001/002/003/006/007 (XS): `ts_store_config<false, 6, 20, 43, 9, 6, false>`
-- 004 (TS): `ts_store_config<true, 6, 20, 75, 9, 6, false>` (main) + result config
+- 004 (TS): `ts_store_config<true, 6, 20, 75, 9, 6, false>` (main) + result config (size configurable)
 - 004 (XS): `ts_store_config<false, 6, 20, 75, 9, 6, false>`
-- 005 (TS): `ts_store_config<true, 6, 20, 43, 9, 6, false>` (reduced: 5 threads × 20 × 1 run for SSD; prior full was larger)
+- 005 (TS): `ts_store_config<true, 6, 20, 43, 9, 6, false>` (size from test_params.txt / --threads etc; smoke 5×20×1, full 250×4000×50 etc)
 - 005 (XS): `ts_store_config<false, 6, 20, 43, 9, 6, false>`
 - flags: standalone `TsStoreFlags` unit test (no store / no persist)
 
@@ -543,6 +628,7 @@ usage() {
     echo "  --output yes : live console output with ANSI colors (pretty)"
     echo "  --output no  : silent (logs only)"
     echo "  Additionally runs pure in-memory (no logs) for 005/007 and produces separate TS_STORE_InMemory_Summary.md with compile times."
+    echo "  Runs selected persist types (binary, jtext, sql direct with debug INSERT file, none/inmem) + post roundtrips. Controlled by tests/test_params.txt (SIZE=smoke|full, [x] tests). Produces TS_STORE_Test_Summary.md (all), InMemory (none for heavy), SQL_Roundtrip."
     exit 1
 }
 
@@ -611,13 +697,13 @@ for COMPILER in "${COMPILER_LIST[@]}"; do
 
   # Clean previous run's log/meta files for *this* compiler (keep data from other compilers)
   echo "Cleaning previous $COMPILER artifacts from test_results/..."
-  for logdir in "$BINARY_LOGS" "$JTEXT_LOGS"; do
+  for logdir in "$BINARY_LOGS" "$JTEXT_LOGS" "$SQL_LOGS" "$INMEM_LOGS"; do
     for sub in "$logdir"/TS_STORE_TEST_* ; do
       [ -d "$sub" ] || continue
       rm -f "$sub/${COMPILER}_"*.log "$sub/${COMPILER}_"*.meta 2>/dev/null || true
       # Also remove previous persist artifacts so re-runs always produce files with current
       # standardized //File Name / //Date / //Purpose headers (for jtext/sql/bin + field lists).
-      rm -f "$sub"/{persist,persist_Ints,persist_Floats}.{bin,jtext,sql} 2>/dev/null || true
+      rm -f "$sub"/{persist,persist_Ints,persist_Floats}.{bin,jtext,sql,db} 2>/dev/null || true
     done
   done
 
@@ -630,13 +716,13 @@ CMAKE_CMD="cmake"
 BUILD_CMD="cmake --build . --target"
 
 if [[ "$COMPILER" == "gcc" ]]; then
-    CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ -DTS_STORE_ENABLE_JTEXT_PERSIST=ON"
+    CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON"
     # Enable jText for the big double-buffer tests (005/007) so they can use
     # JTextSplitEventLog via JTextEventSink, producing separate _Ints.jtext and
     # _Floats.jtext files with all the metric data (in addition to the main log).
     # The stress tests (001-007) are always built.
 else
-    CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DTS_STORE_ENABLE_JTEXT_PERSIST=ON"
+    CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON"
 fi
 
 echo "Using build dir: $BUILD_DIR"
@@ -652,9 +738,14 @@ done
 
 # Force rebuild if key sources (tests, CMake, options parser) are newer than the binaries.
 # This ensures the new --persist / double-buffer attach code is compiled in for all tests.
+# Also watch the tunable heavy tests (005/007) so size reductions for SSD etc. force rebuild of the right bins.
 for src in "$PROJECT_ROOT/tests/ts_store_001/test_001_TS.cpp" \
            "$PROJECT_ROOT/CMakeLists.txt" \
-           "$PROJECT_ROOT/include/beman/ts_store/ts_store_headers/impl_details/test_options.hpp" ; do
+           "$PROJECT_ROOT/include/beman/ts_store/ts_store_headers/impl_details/test_options.hpp" \
+           "$PROJECT_ROOT/tests/ts_store_005/test_005_TS.cpp" \
+           "$PROJECT_ROOT/tests/ts_store_005/test_005_XS.cpp" \
+           "$PROJECT_ROOT/tests/ts_store_007/test_007_TS.cpp" \
+           "$PROJECT_ROOT/tests/ts_store_007/test_007_XS.cpp" ; do
     if [[ -f "$src" && -f "$BUILD_DIR/ts_store_001_TS" && "$src" -nt "$BUILD_DIR/ts_store_001_TS" ]]; then
         NEED_BUILD=1
         echo "Source newer than existing binaries ($src) — forcing clean build"
@@ -729,34 +820,19 @@ TEST_START_EP=$(date +%s)
 #
 # Subdirectory layout (one per test dimension value):
 #   test_results/binary_logs/TS_STORE_TEST_00N_XX/   (and same under jText_logs/)
-declare -a TESTS=(
-    "ts_store_001_TS"
-    "ts_store_001_XS"
-    "ts_store_002_TS"
-    "ts_store_002_XS"
-    "ts_store_003_TS"
-    "ts_store_003_XS"
-    "ts_store_004_TS"
-    "ts_store_004_XS"
-    "ts_store_005_TS"
-    "ts_store_005_XS"
-    "ts_store_006_TS"
-    "ts_store_006_XS"
-    "ts_store_007_TS"
-    "ts_store_007_XS"
-    "ts_store_flags"
-)
+# (TESTS array is built above from test_params.txt or defaults to all)
 
 echo
 echo "=== Running all tests (double-buffered async persist for every test) ==="
 echo "Binary logs : $BINARY_LOGS/"
 echo "jText logs  : $JTEXT_LOGS/"
-echo "Combinatorics: ${#TESTS[@]} tests × 2 logtypes × 2 output modes = 60 per compiler (120 when both)"
+echo "Combinatorics: ${#TESTS[@]} tests × 4 persist types (binary, jtext, sql direct, none/inmem) × 2 output modes (from test_params.txt)"
+echo "SIZE=$SIZE (smoke ~100 records or full); sizes: threads=$THREADS events=$EVENTS_PER_THREAD runs=$RUNS"
 echo "Each (test, logtype) is run twice per compiler: once with output=on (live console + ANSI colors), once with output=off (silent, no color)."
 echo "Additionally: pure in-memory (no persistence) runs for 005/007 throughput tests."
 echo
 
-TOTAL_SCENARIOS=$(( ${#TESTS[@]} * 2 * 2 ))  # 15 tests × 2 logtypes × 2 output modes = 60 per compiler
+TOTAL_SCENARIOS=$(( ${#TESTS[@]} * 4 * 2 ))  # from config selection × 4 persist × 2 output modes
 RUN_PASSED=0
 RUN_FAILED=0
 
@@ -782,7 +858,7 @@ for test in "${TESTS[@]}"; do
         continue
     fi
 
-    for persist_val in binary jtext; do
+    for persist_val in binary jtext sql none; do
         logtype="$persist_val"
         prepare_log_dir "$test" "$persist_val"
         persist_base="$ldir/persist"
@@ -797,14 +873,16 @@ for test in "${TESTS[@]}"; do
             if [[ "$test_output_mode" == "on" ]]; then
                 # "on" = live console with ANSI colors enabled (pretty output visible)
                 set +e
-                "$bin" --interactive=0 --color=1 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
+                "$bin" --interactive=0 --color=1 --persist="$logtype" --base-name="$persist_base" \
+                    --threads=$THREADS --events-per-thread=$EVENTS_PER_THREAD --runs=$RUNS < /dev/null 2>&1 \
                     | tee >(strip_ansi > "$run_log")
                 bin_status=${PIPESTATUS[0]}
                 set -e
             else
                 # "off" = silent, force no color (clean for logs; we strip anyway)
                 set +e
-                "$bin" --interactive=0 --color=0 --persist="$logtype" --base-name="$persist_base" < /dev/null 2>&1 \
+                "$bin" --interactive=0 --color=0 --persist="$logtype" --base-name="$persist_base" \
+                    --threads=$THREADS --events-per-thread=$EVENTS_PER_THREAD --runs=$RUNS < /dev/null 2>&1 \
                     | strip_ansi > "$run_log"
                 bin_status=${PIPESTATUS[0]}
                 set -e
@@ -823,64 +901,81 @@ for test in "${TESTS[@]}"; do
                 RUN_PASSED=$((RUN_PASSED + 1))
             fi
 
-            if [[ "$logtype" == "jtext" && $bin_status -eq 0 ]]; then
-                echo "  -> post-test: jtext to SQL (emit .sql + straight-to-DB via CLI), load, queries, export-back-to-jText for $test ..."
-                # Use discovered tools (CLI only, no hardcoded core logic in runner)
+            sql_post_start=0
+            sql_post_dur=0
+            sql_size_bytes=0
+            fulltrip_size_bytes=0
+            sql_rows_loaded=0
+            if [[ ("$logtype" == "jtext" || "$logtype" == "sql") && $bin_status -eq 0 ]]; then
+                sql_post_start=$(date +%s)
+                if [[ "$logtype" == "jtext" ]]; then
+                    echo "  -> post-test: jText → SQL roundtrip (via CLI tools), for $test ..."
+                else
+                    echo "  -> post-test: SQL → jText roundtrip (export DB to jtext), for $test ..."
+                fi
+                # Note: "sql" persist is native direct-to-SQL from ts_store (SqlEventSink writes INSERTs).
+                # "jtext" uses jText interchange + CLI for the SQL step (interim).
                 JPROC="$JTEXT_PROCESS_BIN"
                 J2S="$JAC_J2S_BIN"
                 S2J="$JAC_S2J_BIN"
-                DBF="/tmp/ts_${test}_${COMPILER}_${logtype}.db"
-                rm -f "$DBF"
-                for bname in persist persist_Ints persist_Floats; do
-                    # 1. Emit .sql companion via jText CLI (for inspection / "the jText sql files")
-                    SQLF="$ldir/${bname}.sql"
-                    if [[ -x "$JPROC" ]]; then
-                        $JPROC "$ldir" $bname "$SQLF" >/dev/null 2>&1 || echo "    process $bname -> .sql failed"
-                        sed -i "s|${ldir}/${bname}|test_${bname}|g" "$SQLF" 2>/dev/null || true
-                        sed -i "s|/home/jay/git/ts_store/test_results/jText_logs/[^ ]*/${bname}|test_${bname}|g" "$SQLF" 2>/dev/null || true
-                    else
-                        echo "    (no jtext_process, skipping .sql emit for $bname)"
-                    fi
-                    # 2. Straight-to-SQL load via jacQLite jtext_to_sqlite CLI (point 6 "round of tests that go straight to SQL")
-                    if [[ -x "$J2S" ]]; then
-                        $J2S "$ldir" $bname "$DBF" 2>&1 | tail -1 || echo "    j2s load $bname failed"
-                    elif [[ -f "$SQLF" ]]; then
-                        # fallback to sqlite3 on emitted .sql
-                        sqlite3 "$DBF" < "$SQLF" 2>&1 | tail -1 || true
-                    fi
-                done
-                # 3. Queries on loaded DB (point 3)
-                echo "    Post-load queries (straight SQL set):"
-                for tbl in test_persist test_persist_Ints test_persist_Floats persist persist_Ints persist_Floats; do
+                if [[ "$logtype" == "jtext" ]]; then
+                    DBF="/tmp/ts_${test}_${COMPILER}_${logtype}.db"
+                    rm -f "$DBF"
+                    for bname in persist persist_Ints persist_Floats; do
+                        SQLF="$ldir/${bname}.sql"
+                        if [[ -x "$JPROC" ]]; then
+                            $JPROC "$ldir" $bname "$SQLF" >/dev/null 2>&1 || echo "    process $bname -> .sql failed"
+                            sed -i "s|${ldir}/${bname}|test_${bname}|g" "$SQLF" 2>/dev/null || true
+                        fi
+                        if [[ -x "$J2S" ]]; then
+                            $J2S "$ldir" $bname "$DBF" 2>&1 | tail -1 || echo "    j2s load $bname failed"
+                        elif [[ -f "$SQLF" ]]; then
+                            sqlite3 "$DBF" < "$SQLF" 2>&1 | tail -1 || true
+                        fi
+                    done
+                else
+                    # for sql persist, the sink wrote persist.db (and debug .sql)
+                    DBF="$ldir/persist.db"
+                fi
+                # Queries
+                echo "    Post-load queries:"
+                for tbl in persist persist_Ints persist_Floats test_persist test_persist_Ints test_persist_Floats; do
                     cnt=$(sqlite3 "$DBF" "SELECT count(*) FROM $tbl;" 2>/dev/null || echo 0)
-                    if [[ "$cnt" -gt 0 ]]; then echo "      $tbl: $cnt rows"; fi
+                    if [[ "$cnt" -gt 0 ]]; then
+                        echo "      $tbl: $cnt rows"
+                        sql_rows_loaded=$((sql_rows_loaded > cnt ? sql_rows_loaded : cnt))
+                    fi
                 done
-                # 4. After-test: export the (now populated) SQL back to jText (point 7 "after test- test, to export the SQL to jText")
-                echo "    Export-back roundtrip (SQL -> jText via CLI):"
+                # Export to jtext for roundtrip (for both jtext and sql cases)
+                echo "    Export roundtrip (to jText):"
                 for bname in persist persist_Ints persist_Floats; do
-                    for tbl in "test_${bname}" "${bname}"; do
+                    tbls=("persist" "persist_Ints" "persist_Floats" "test_persist" "test_persist_Ints" "test_persist_Floats")
+                    for tbl in "${tbls[@]}"; do
                         outdir="$ldir/${bname}_fulltrip"
                         mkdir -p "$outdir"
-                        if [[ -x "$S2J" ]]; then
+                        if [[ -x "$S2J" && -f "$DBF" ]]; then
                             if sqlite3 "$DBF" "SELECT 1 FROM $tbl LIMIT 1;" >/dev/null 2>&1; then
                                 $S2J "$DBF" "$tbl" "$outdir" >/dev/null 2>&1 || echo "      export $tbl failed"
                                 produced=$( (ls "$outdir"/* 2>/dev/null || true) | wc -l | tr -d ' ' || echo 0 )
                                 echo "      $tbl -> $outdir/ ($produced files)"
-                                jf="$outdir/${tbl}.jtext"
-                                if [[ ! -f "$jf" ]]; then jf="$outdir/${bname}.jtext"; fi
-                                if [[ -f "$jf" ]]; then
-                                    rc=$(grep -c '^[0-9][0-9]*\.' "$jf" 2>/dev/null || echo 0)
-                                    echo "        exported data rows: $rc"
-                                fi
                                 break
                             fi
-                        else
-                            echo "      (no sqlite_to_jtext, skipping export for $tbl)"
-                            break
                         fi
                     done
                 done
-                # optional: leave DB for manual inspect; rm -f "$DBF" if want clean
+                sql_post_end=$(date +%s)
+                sql_post_dur=$((sql_post_end - sql_post_start))
+                # Capture sizes for SQL artifacts
+                for f in "$ldir"/*.sql "$ldir"/*.db; do
+                    [[ -f "$f" ]] && sql_size_bytes=$((sql_size_bytes + $(stat -c%s "$f" 2>/dev/null || echo 0)))
+                done
+                for d in "$ldir"/*_fulltrip; do
+                    if [[ -d "$d" ]]; then
+                        for ff in "$d"/*; do
+                            [[ -f "$ff" ]] && fulltrip_size_bytes=$((fulltrip_size_bytes + $(stat -c%s "$ff" 2>/dev/null || echo 0)))
+                        done
+                    fi
+                done
             fi
 
             # Write a tiny meta for easy summary scanning
@@ -899,6 +994,10 @@ DURATION_SEC=${dur_sec}
 STATUS=$([ $bin_status -eq 0 ] && echo PASS || echo FAIL)
 RECORDS=$(extract_record_count "$run_log")
 PERSIST_SIZE_BYTES=${pbytes}
+SQL_POST_DUR_SEC=${sql_post_dur}
+SQL_SIZE_BYTES=${sql_size_bytes}
+FULLTRIP_SIZE_BYTES=${fulltrip_size_bytes}
+SQL_ROWS_LOADED=${sql_rows_loaded}
 META
         done
     done
@@ -923,21 +1022,41 @@ done
     if [[ ! -x "./$heavy" ]]; then
       continue
     fi
+    # respect config selection for the additional inmem detailed run of heavy
+    if [[ "$heavy" =~ ts_store_([0-9]{3}) ]]; then
+      k=${BASH_REMATCH[1]}
+      if [[ ${#SELECTED_TESTS[@]} -gt 0 && -z "${SELECTED_TESTS[$k]:-}" ]]; then
+        continue
+      fi
+    fi
     echo "  Running $heavy pure in-memory..."
     inmem_log="$INMEM_DIR/${COMPILER}_${heavy}_inmem.log"
-    start_im=$(date +%s)
-    ./${heavy} --persist=none --interactive=0 --color=0 > "$inmem_log" 2>&1 || true
-    end_im=$(date +%s)
-    im_dur=$((end_im - start_im))
-    # Parse the average ops/sec reported by the test (for 1M events per run)
-    avg_ops=$(grep -o 'Average .* → *[0-9,]* ops/sec' "$inmem_log" | tail -1 | sed 's/.*→ *//' | tr -d ', ops/sec' | head -1 || echo "0")
-    echo "    Full in-mem run: ${im_dur}s, parsed avg ~${avg_ops} ops/sec (per 1M-event run)"
+    start_im=$(date +%s.%N)
+    ./${heavy} --persist=none --interactive=0 --color=0 \
+        --threads=$THREADS --events-per-thread=$EVENTS_PER_THREAD --runs=$RUNS > "$inmem_log" 2>&1 || true
+    end_im=$(date +%s.%N)
+    im_dur=$(echo "$end_im - $start_im" | bc -l 2>/dev/null || echo "0")
+    # Parse the actual scale and average from the test output (no longer assume 1M)
+    scale_line=$(grep 'FINAL MASSIVE TEST — ' "$inmem_log" | tail -1 || echo "")
+    # e.g. "=== FINAL MASSIVE TEST — 100 entries × 1 runs ==="
+    entries=$(echo "$scale_line" | sed -n 's/.*— \([0-9,]*\) entries.*/\1/p' | tr -d ',' | head -1 || echo "0")
+    runs=$(echo "$scale_line" | sed -n 's/.*× \([0-9]*\) runs.*/\1/p' | head -1 || echo "1")
+    # The avg line has both us and the extrapolated ops/sec
+    avg_line=$(grep 'Average            : ' "$inmem_log" | tail -1 || echo "")
+    # e.g. "  Average            :       174 µs  →    574713 ops/sec"
+    avg_us=$(echo "$avg_line" | sed -n 's/.*: *\([0-9]*\) µs.*/\1/p' | head -1 || echo "0")
+    avg_ops=$(echo "$avg_line" | sed -n 's/.*→ *\([0-9,]*\) ops\/sec.*/\1/p' | tr -d ',' | head -1 || echo "0")
+    printf "    Full in-mem run: %.3fs (scale: %s entries × %s runs, measured %.0f µs) → ~%s ops/sec (extrapolated)\n" \
+      "$im_dur" "${entries:-?}" "${runs:-?}" "${avg_us:-0}" "${avg_ops:-0}"
     inmem_meta="$INMEM_DIR/${COMPILER}_${heavy}.meta"
     cat > "$inmem_meta" <<META
 COMPILER=${COMPILER}
 TEST=${heavy}
 DURATION_SEC=${im_dur}
 AVG_OPS_PER_SEC=${avg_ops}
+TOTAL_EVENTS=${entries:-0}
+RUNS=${runs:-1}
+AVG_US=${avg_us:-0}
 META
   done
 
@@ -1005,7 +1124,7 @@ else
 fi
 
 cat > "$INMEM_SUMMARY" <<'IMHDR'
-# TS_STORE In-Memory Hot Path Summary (no persistence / no logs)
+# TS_STORE In-Memory Hot Path Summary (no persistence / no logs) - the "none" / pure inmem scenario for heavy tests (detailed rate)
 
 **Date**: $inmem_now  
 **OS**: $inmem_os  
@@ -1030,7 +1149,17 @@ for c in "${COMPILER_LIST[@]}"; do
       . "$m" 2>/dev/null || true
       aops=${AVG_OPS_PER_SEC:-?}
       idur=${DURATION_SEC:-?}
-      echo "- ${h} (small reduced events/run for SSD): ~${aops} ops/sec (full in-mem run: ${idur}s)" >> "$INMEM_SUMMARY"
+      ev=${TOTAL_EVENTS:-?}
+      rn=${RUNS:-?}
+      aus=${AVG_US:-?}
+      # Use precise measured us if available, else the shell dur (for small runs dur may be 0)
+      dur_display=${aus:-${idur}}
+      if [[ "$aus" != "?" && "$aus" != "" ]]; then
+        dur_display="${aus} µs"
+      else
+        dur_display="${idur}s"
+      fi
+      echo "- ${h} (${ev} entries × ${rn} runs): ~${aops} ops/sec (measured ${dur_display})" >> "$INMEM_SUMMARY"
     fi
   done
   echo "" >> "$INMEM_SUMMARY"
@@ -1043,6 +1172,8 @@ cat >> "$INMEM_SUMMARY" <<'IMNOTES'
 - Compare to main `TS_STORE_Test_Summary.md` (which includes async persistence) to see the cost of durable logging.
 - Higher artificial rates are easy without recording (e.g. just a counter). The meaningful engineering number is sustained rate *while recording*.
 - Compile times are the same as used for the log runs (binaries built once per compiler).
+- The scale (N entries × M runs) and measured time come from the test binary itself (high_resolution_clock + verify). Rates are extrapolated to 1M-event equivalent for historical comparison, but actual run size is shown.
+- In-memory runs use --persist=none (no DoubleBufferedWriter attached).
 
 See main [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md) for the full matrix with persistence (binary/jText, on/off, etc.).
 IMNOTES
@@ -1063,3 +1194,114 @@ with open(sys.argv[1], "w") as f: f.write(content)
 ' "$INMEM_SUMMARY"
 
 echo "In-memory summary written to: $INMEM_SUMMARY"
+
+# =============================================================================
+# SQL Roundtrip Summary (jText -> SQL direct via CLI + queries + export back)
+# =============================================================================
+echo "Generating SQL roundtrip summary (from jtext post-processing)..."
+
+SQL_SUMMARY="$PROJECT_ROOT/TS_STORE_SQL_Roundtrip_Summary.md"
+
+sql_now=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+sql_os="unknown"
+if [[ -r /etc/os-release ]]; then
+    . /etc/os-release 2>/dev/null || true
+    sql_os="${PRETTY_NAME:-$NAME $VERSION}"
+else
+    sql_os=$(uname -sr)
+fi
+
+cat > "$SQL_SUMMARY" <<'SQLHDR'
+//File:    TS_STORE_SQL_Roundtrip_Summary.md
+//Date:    $sql_now
+//Purpose: SQL Roundtrip Summary File - documents jText -> SQL direct (CLI) loads, queries, and export-back roundtrips performed after every jtext persist test run
+//Related: type=ts_store summary=SQL
+//
+// (This file is auto-generated by the test runner; the // header follows project jText standardization for all committed/generated files.)
+# TS_STORE jText-to-SQL Roundtrip Summary (via CLI tools + export back)
+
+**Date**: $sql_now  
+**OS**: $sql_os  
+**Generated by**: scripts/run_all_tests.sh (post-test for every jtext persist scenario)
+
+## Purpose
+**Important note** (per clarification): jText → SQL (via CLI tools) is **not** native "direct to SQL".
+
+True direct-to-SQL would mean the ts_store executable (or a SqlEventSink attached via DoubleBufferedWriter) emitting INSERT statements / using prepared statements directly to a database at persist time, without going through an intermediate jText file.
+
+What this summary covers is the current jText-mediated roundtrip mechanism used as an interim step to exercise "SQL direct" loads + after-test exports (matrix * points 3/4/6/7):
+- jtext_process CLI to emit .sql companions (with canonical // headers)
+- jtext_to_sqlite CLI to load jText data into SQLite (jText → SQL via interchange + tools)
+- sqlite queries for row counts
+- sqlite_to_jtext CLI to export the loaded data back to *_fulltrip/ jText (roundtrip verification)
+
+This is performed after every jtext persist run (on/off). Artifacts (.sql, *_fulltrip dirs) live alongside the jText logs under test_results/jText_logs/TS_STORE_TEST_.../ so they are included for size and timing.
+
+## Per-Compiler jText-to-SQL Post-Processing (load + export)
+SQLHDR
+
+for c in "${COMPILER_LIST[@]}"; do
+  echo "### Compiler: $c" >> "$SQL_SUMMARY"
+  echo "" >> "$SQL_SUMMARY"
+  for sub in TS_STORE_TEST_* ; do
+    for om in on off; do
+      m="$JTEXT_LOGS/$sub/${c}_jtext_${om}.meta"
+      if [[ -f "$m" ]]; then
+        # shellcheck disable=SC1090
+        . "$m" 2>/dev/null || true
+        if [[ "${LOGTYPE:-}" == "jtext" ]]; then
+          sql_dur=${SQL_POST_DUR_SEC:-0}
+          sql_sz=${SQL_SIZE_BYTES:-0}
+          ft_sz=${FULLTRIP_SIZE_BYTES:-0}
+          rows=${SQL_ROWS_LOADED:-0}
+          testn=${TEST:-$sub}
+          if [[ "$sql_dur" -gt 0 || "$sql_sz" -gt 0 || "$rows" -gt 0 ]]; then
+            # human sizes
+            sql_h="0B"; ft_h="0B"
+            if command -v numfmt >/dev/null 2>&1; then
+              sql_h=$(numfmt --to=iec-i --suffix=B --format="%.1f" "$sql_sz" 2>/dev/null || echo "${sql_sz}B")
+              ft_h=$(numfmt --to=iec-i --suffix=B --format="%.1f" "$ft_sz" 2>/dev/null || echo "${ft_sz}B")
+            else
+              sql_h="${sql_sz}B"; ft_h="${ft_sz}B"
+            fi
+            echo "- ${testn} / jtext / ${om} : post-dur ${sql_dur}s | .sql ${sql_h} | fulltrip ${ft_h} | rows ${rows}" >> "$SQL_SUMMARY"
+          fi
+        fi
+      fi
+    done
+  done
+  echo "" >> "$SQL_SUMMARY"
+done
+
+cat >> "$SQL_SUMMARY" <<'SQLNOTES'
+
+## Notes
+- Timings and sizes captured in the runner's per-scenario .meta files (SQL_POST_DUR_SEC, SQL_SIZE_BYTES, FULLTRIP_SIZE_BYTES, SQL_ROWS_LOADED).
+- .sql files are the companions generated by jtext_process (usable directly with sqlite3).
+- fulltrip dirs contain the exported jText from the DB (for fidelity roundtrip checks).
+- Queries are simple COUNT(*) per table (main + ints + floats splits).
+- This is "after test" verification on top of the jtext persist runs; the core test binaries still use binary or jtext (or none for inmem).
+- This is jText → SQL via CLI tools as an interim step. A real direct-to-SQL writer (INSERTs emitted straight from ts_store / a Sql sink) is still future work.
+
+See main [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md) for the full binary/jtext matrix and [README.md](README.md) for overall usage.
+SQLNOTES
+
+    # Regional formatting for any large numbers in the SQL summary
+    python3 -c '
+import locale, re, sys
+locale.setlocale(locale.LC_ALL, "")
+with open(sys.argv[1]) as f: content = f.read()
+def fmt_num(m):
+    n = int(m.group(0))
+    try:
+        return locale.format_string("%d", n, grouping=True)
+    except Exception:
+        return "{:,}".format(n)
+content = re.sub(r"\b\d{4,}\b", fmt_num, content)
+with open(sys.argv[1], "w") as f: f.write(content)
+' "$SQL_SUMMARY"
+
+    # Expand the $sql_now / $sql_os that were written literally (because of quoted heredoc) so the //Date and **Date** have real values (InMemory summary has the same literal-$ quirk today)
+    sed -i "s/\$sql_now/$sql_now/g; s/\$sql_os/$sql_os/g" "$SQL_SUMMARY"
+
+echo "SQL roundtrip summary written to: $SQL_SUMMARY"

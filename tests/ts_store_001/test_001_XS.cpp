@@ -19,8 +19,11 @@ int main(int argc, char** argv) {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 
-    constexpr size_t threads = 8;
-    constexpr size_t events  = 8;
+    size_t threads = 8;
+    size_t events  = 8;
+    if (_opts.threads > 0) threads = _opts.threads;
+    if (_opts.events_per_thread > 0) events = _opts.events_per_thread;
+
     std::cout << ansi::blue() << "=== ts_store — Simple Test 001 XS "
                                "-- Equivalent to MultiThread Hello World  ===" << ansi::reset() << "\n\n";
 

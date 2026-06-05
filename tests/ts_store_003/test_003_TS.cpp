@@ -6,16 +6,21 @@
 #include "../../include/beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/PersistCommon.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/EventSink.hpp"
+#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
+#include "../../include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.hpp"
+#endif
 
-// — Aggressive tail-reader stress test (500 threads × 100 ops)
+// — Aggressive tail-reader stress test (configurable; smoke ~100 records or full high via CLI/test_params)
 
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
 // ———————————————————— Test configuration ————————————————————
-constexpr size_t WRITER_THREADS     = 5;
-constexpr size_t OPS_PER_THREAD     = 20;
-constexpr size_t MAX_ENTRIES        = WRITER_THREADS * OPS_PER_THREAD;
+// Runtime configurable via --threads --events-per-thread (from runner/test_params.txt)
+// MAX_ENTRIES is compile-time upper bound for the tracking array (safe for high/full).
+size_t WRITER_THREADS;
+size_t OPS_PER_THREAD;
+constexpr size_t MAX_ENTRIES        = 100000;  // enough for full intensity (e.g. 50*400 or 250*400)
 
 alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 inline std::array<size_t, MAX_ENTRIES> log_stream_array{};
@@ -27,7 +32,8 @@ using LogxStore = ts_store<LogConfig>;
 
 int main(int argc, char** argv) {
     auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
-    (void)_opts; // silence -Wunused
+    WRITER_THREADS = _opts.threads;
+    OPS_PER_THREAD = _opts.events_per_thread;
     LogxStore store(WRITER_THREADS, OPS_PER_THREAD);
 
     // Attach double-buffered (asynchronous) persistence for this test run.
@@ -38,16 +44,27 @@ int main(int argc, char** argv) {
         std::string bname = _opts.base_name;
         if (bname.empty()) bname = "persist";
 
-        std::unique_ptr<IEventSink> sink;
-        const size_t im = LogConfig::the_IntMetrics;
-        const size_t dm = LogConfig::the_DblMetrics;
-        if (ptype == "binary") {
-            sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+        if (ptype != "none") {
+            std::unique_ptr<IEventSink> sink;
+            const size_t im = LogConfig::the_IntMetrics;
+            const size_t dm = LogConfig::the_DblMetrics;
+            if (ptype == "binary") {
+                sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+            } else if (ptype == "sql") {
+#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
+                sink = std::make_unique<SqlEventSink>(bname, im, dm, PersistMode::All, true /* write debug INSERT .sql file */);
+#else
+                std::cerr << "ERROR: SQL persistence not enabled at compile time (rebuild with -DTS_STORE_ENABLE_SQLITE_PERSIST=ON)\n";
+                return 1;
+#endif
+            } else {
+                sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+            }
+            auto writer = std::make_unique<DoubleBufferedWriter>(std::move(sink), 10'000);
+            store.attach_persistence(std::move(writer));
         } else {
-            sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+            std::cout << "No persistence attached — pure in-memory hot path\n";
         }
-        auto writer = std::make_unique<DoubleBufferedWriter>(std::move(sink), 10'000);
-        store.attach_persistence(std::move(writer));
     }
 
     std::vector<std::thread> writers;

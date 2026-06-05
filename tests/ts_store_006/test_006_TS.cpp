@@ -13,9 +13,10 @@ using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
 // ———————————————————— Test configuration ————————————————————
-constexpr size_t WRITER_THREADS     = 5;
-constexpr size_t OPS_PER_THREAD     = 20;
-constexpr size_t MAX_ENTRIES        = WRITER_THREADS * OPS_PER_THREAD;
+// Runtime (see 003/005 pattern)
+size_t WRITER_THREADS;
+size_t OPS_PER_THREAD;
+constexpr size_t MAX_ENTRIES        = 100000;
 
 alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};
 inline std::array<size_t, MAX_ENTRIES> log_stream_array{};
@@ -27,7 +28,8 @@ using LogxStore = ts_store<LogConfig>;
 
 int main(int argc, char** argv) {
     auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
-    (void)_opts; // silence -Wunused
+    WRITER_THREADS = _opts.threads;
+    OPS_PER_THREAD = _opts.events_per_thread;
     LogxStore store(WRITER_THREADS, OPS_PER_THREAD);
 
     // Attach double-buffered (asynchronous) persistence for this test run.

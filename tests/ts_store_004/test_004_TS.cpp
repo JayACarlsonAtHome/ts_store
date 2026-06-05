@@ -9,9 +9,10 @@
 
 using namespace jac::ts_store::inline_v001;
 
-constexpr size_t THREADS           = 5;
-constexpr size_t EVENTS_PER_THREAD = 20;
-constexpr size_t TOTAL_EVENTS      = size_t(THREADS) * EVENTS_PER_THREAD;
+// Runtime configurable via opts (high default in TestOptions, smoke via config/CLI)
+size_t THREADS;
+size_t EVENTS_PER_THREAD;
+size_t TOTAL_EVENTS;
 
 using LogConfigxMainx = ts_store_config<true, 6, 20, 75, 9, 6, false>;
 using LogxStore = ts_store<LogConfigxMainx>;
@@ -21,7 +22,11 @@ using LogResult = ts_store<LogConfigResult>;
 
 int main(int argc, char** argv) {
     auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
-    (void)_opts; // silence -Wunused
+
+    THREADS = _opts.threads;
+    EVENTS_PER_THREAD = _opts.events_per_thread;
+    TOTAL_EVENTS = THREADS * EVENTS_PER_THREAD;
+
     LogxStore  safepay(THREADS, EVENTS_PER_THREAD);
     LogResult  results(THREADS, 1);
 

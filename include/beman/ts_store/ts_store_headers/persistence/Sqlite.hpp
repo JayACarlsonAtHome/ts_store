@@ -166,6 +166,24 @@ public:
             sqlite3_reset(stmt_);
         }
 
+        void clear_bindings() {
+            sqlite3_clear_bindings(stmt_);
+        }
+
+        // Runtime bind helpers for dynamic number of columns (used by SqlEventSink for metric tables)
+        void bind_int64(int idx, int64_t v) {
+            sqlite3_bind_int64(stmt_, idx, v);
+        }
+        void bind_double(int idx, double v) {
+            sqlite3_bind_double(stmt_, idx, v);
+        }
+        void bind_text(int idx, const std::string& v) {
+            sqlite3_bind_text(stmt_, idx, v.c_str(), static_cast<int>(v.size()), SQLITE_TRANSIENT);
+        }
+        void bind_null(int idx) {
+            sqlite3_bind_null(stmt_, idx);
+        }
+
         // Variadic extraction using the "peel first, recurse on ellipses" pattern
         template<typename... Ts>
         void get(Ts&... values) {

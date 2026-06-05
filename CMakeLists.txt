@@ -17,6 +17,8 @@ target_compile_options(project_warnings INTERFACE
 add_library(project_options INTERFACE)
 target_compile_options(project_options INTERFACE
           $<$<CONFIG:Release>:-O3>
+          $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-march=native -mtune=native -fno-semantic-interposition>
+          $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-march=native -mtune=native -flto=thin>
 )
 option(ENABLE_CUSTOM_LLVM "Use custom LLVM/libc++ paths" OFF)
 
@@ -301,6 +303,18 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         )
         target_sources(ts_store_${num}_XS PRIVATE
             include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
+        )
+    endforeach()
+endif()
+
+if(TS_STORE_ENABLE_SQLITE_PERSIST)
+    foreach(num IN LISTS TEST_NUMBERS)
+        # Compile the direct SQL sink into the stress test targets.
+        target_sources(ts_store_${num}_TS PRIVATE
+            include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.cpp
+        )
+        target_sources(ts_store_${num}_XS PRIVATE
+            include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.cpp
         )
     endforeach()
 endif()
