@@ -1,3 +1,7 @@
+//File:    /home/jay/git/ts_store/README.md
+//Date:    2026-06-05
+//Purpose: README for ts_store Library
+//
 # ts_store — Ultra-Fast, Thread-Safe Event Buffer
 
 **High-throughput in-memory event collection with optional durable persistence.**

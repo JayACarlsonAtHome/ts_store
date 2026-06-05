@@ -17,10 +17,10 @@
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
-constexpr size_t THREADS           = 250;
-constexpr size_t EVENTS_PER_THREAD = 4000;
+constexpr size_t THREADS           = 5;
+constexpr size_t EVENTS_PER_THREAD = 20;
 constexpr size_t TOTAL             = size_t(THREADS) * EVENTS_PER_THREAD;
-constexpr size_t RUNS              = 50;
+constexpr size_t RUNS              = 1;
 
 using LogConfig = ts_store_config<false, 6, 20, 43, 9, 6, false>;
 using LogxStore = ts_store<LogConfig>;

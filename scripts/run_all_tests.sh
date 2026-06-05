@@ -63,6 +63,17 @@ mkdir -p "$BINARY_LOGS"
 mkdir -p "$JTEXT_LOGS"
 mkdir -p "$INMEM_DIR"
 
+# Roundtrip / SQL-direct tools (prefer jacQLite sqlite-aware CLIs for our SQLite usage;
+# jText jtext_process still used to emit the .sql companions per header standards).
+# These enable "after test" insert-to-SQL + queries + export-back-to-jText (points 3,6,7 in matrix *).
+JTEXT_PROCESS_BIN="/home/jay/git/jText/cmake-build-debug/jtext_process"
+JAC_J2S_BIN="/home/jay/git/jacQLite/build/tools/jtext_integration/jtext_to_sqlite"
+JAC_S2J_BIN="/home/jay/git/jacQLite/build/tools/jtext_integration/sqlite_to_jtext"
+# Fallback search if moved
+for cand in "$JTEXT_PROCESS_BIN" /home/jay/git/jText/build*/jtext_process /home/jay/git/jText/cmake-build-*/jtext_process; do [[ -x "$cand" ]] && JTEXT_PROCESS_BIN="$cand" && break; done
+for cand in "$JAC_J2S_BIN" /home/jay/git/jacQLite/build*/tools/jtext_integration/jtext_to_sqlite; do [[ -x "$cand" ]] && JAC_J2S_BIN="$cand" && break; done
+for cand in "$JAC_S2J_BIN" /home/jay/git/jacQLite/build*/tools/jtext_integration/sqlite_to_jtext; do [[ -x "$cand" ]] && JAC_S2J_BIN="$cand" && break; done
+
 # === Cleanup of legacy/unused stuff (part of the runner now) ===
 # Remove old results/ dir (legacy)
 if [ -d "$PROJECT_ROOT/results" ]; then
@@ -229,18 +240,18 @@ HDR
     declare -A KNOWN_TESTS=(
         ["TS_STORE_TEST_001_TS"]=64
         ["TS_STORE_TEST_001_XS"]=64
-        ["TS_STORE_TEST_002_TS"]=2500
-        ["TS_STORE_TEST_002_XS"]=2500
-        ["TS_STORE_TEST_003_TS"]=20000
-        ["TS_STORE_TEST_003_XS"]=20000
-        ["TS_STORE_TEST_004_TS"]=100000
-        ["TS_STORE_TEST_004_XS"]=100000
-        ["TS_STORE_TEST_005_TS"]=1000000
-        ["TS_STORE_TEST_005_XS"]=1000000
-        ["TS_STORE_TEST_006_TS"]=20000
-        ["TS_STORE_TEST_006_XS"]=20000
-        ["TS_STORE_TEST_007_TS"]=1000000
-        ["TS_STORE_TEST_007_XS"]=1000000
+        ["TS_STORE_TEST_002_TS"]=100
+        ["TS_STORE_TEST_002_XS"]=100
+        ["TS_STORE_TEST_003_TS"]=100
+        ["TS_STORE_TEST_003_XS"]=100
+        ["TS_STORE_TEST_004_TS"]=100
+        ["TS_STORE_TEST_004_XS"]=100
+        ["TS_STORE_TEST_005_TS"]=100
+        ["TS_STORE_TEST_005_XS"]=100
+        ["TS_STORE_TEST_006_TS"]=100
+        ["TS_STORE_TEST_006_XS"]=100
+        ["TS_STORE_TEST_007_TS"]=100
+        ["TS_STORE_TEST_007_XS"]=100
         ["TS_STORE_TEST_flags"]="?"
     )
     declare -A KNOWN_PERSIST=( ["binary_logs"]="binary" ["jText_logs"]="jtext" )
@@ -484,7 +495,7 @@ FASTER
 ## Notes
 - All tests now attach a `DoubleBufferedWriter` + chosen sink (`BinaryEventSink` or `JTextEventSink`) for asynchronous background persistence. Hot path remains fast.
 - Persist artifacts (`.bin` or the 3 `.jtext` files) are written using the `--base-name` passed by the runner so they land inside the corresponding `test_results/*/TS_STORE_TEST_.../` subdirectory.
-- `Records` are best-effort parsed from test output (for 005/007 this is typically 1,000,000 × 50 = 50M per invocation).
+- `Records` are best-effort parsed from test output (tests now use reduced counts ~100 events for SSD longevity per matrix * instructions; old 1M-scale numbers were for prior full-stress runs).
 - Size and Rate columns: measured on-disk persist artifact size and effective MB/s (size / full test duration). The "Log" column links to the captured stdout for that run.
 - Each (test, logtype) is executed twice: once with output=on (live console, ANSI colors enabled via --color=1) and once with output=off (silent capture, --color=0). This shows the overhead of console output (many events set LogConsole). Live "on" runs are colorful and pretty; saved logs are always plain text (ANSI stripped).
 - Per-compiler times show build + full test suite execution time for that compiler (60 scenarios). Total suite duration is wall time across all compilers.
@@ -497,13 +508,28 @@ FASTER
 - 001/002/003/006/007 (XS): `ts_store_config<false, 6, 20, 43, 9, 6, false>`
 - 004 (TS): `ts_store_config<true, 6, 20, 75, 9, 6, false>` (main) + result config
 - 004 (XS): `ts_store_config<false, 6, 20, 75, 9, 6, false>`
-- 005 (TS): `ts_store_config<true, 6, 20, 43, 9, 6, false>` (250 threads × 4000 × 50 runs)
+- 005 (TS): `ts_store_config<true, 6, 20, 43, 9, 6, false>` (reduced: 5 threads × 20 × 1 run for SSD; prior full was larger)
 - 005 (XS): `ts_store_config<false, 6, 20, 43, 9, 6, false>`
 - flags: standalone `TsStoreFlags` unit test (no store / no persist)
 
 See main [README.md](README.md) and the test sources under `tests/` for details.
 
 NOTES
+
+    # Post-process to format numbers regional-aware (locale grouping e.g. 1,234,567 or 1.234.567 as appropriate per system locale)
+    python3 -c '
+import locale, re, sys
+locale.setlocale(locale.LC_ALL, "")
+with open(sys.argv[1]) as f: content = f.read()
+def fmt_num(m):
+    n = int(m.group(0))
+    try:
+        return locale.format_string("%d", n, grouping=True)
+    except Exception:
+        return "{:,}".format(n)
+content = re.sub(r"\b\d{4,}\b", fmt_num, content)
+with open(sys.argv[1], "w") as f: f.write(content)
+' "$out_file"
 
     echo "Summary updated: $out_file"
 }
@@ -797,6 +823,66 @@ for test in "${TESTS[@]}"; do
                 RUN_PASSED=$((RUN_PASSED + 1))
             fi
 
+            if [[ "$logtype" == "jtext" && $bin_status -eq 0 ]]; then
+                echo "  -> post-test: jtext to SQL (emit .sql + straight-to-DB via CLI), load, queries, export-back-to-jText for $test ..."
+                # Use discovered tools (CLI only, no hardcoded core logic in runner)
+                JPROC="$JTEXT_PROCESS_BIN"
+                J2S="$JAC_J2S_BIN"
+                S2J="$JAC_S2J_BIN"
+                DBF="/tmp/ts_${test}_${COMPILER}_${logtype}.db"
+                rm -f "$DBF"
+                for bname in persist persist_Ints persist_Floats; do
+                    # 1. Emit .sql companion via jText CLI (for inspection / "the jText sql files")
+                    SQLF="$ldir/${bname}.sql"
+                    if [[ -x "$JPROC" ]]; then
+                        $JPROC "$ldir" $bname "$SQLF" >/dev/null 2>&1 || echo "    process $bname -> .sql failed"
+                        sed -i "s|${ldir}/${bname}|test_${bname}|g" "$SQLF" 2>/dev/null || true
+                        sed -i "s|/home/jay/git/ts_store/test_results/jText_logs/[^ ]*/${bname}|test_${bname}|g" "$SQLF" 2>/dev/null || true
+                    else
+                        echo "    (no jtext_process, skipping .sql emit for $bname)"
+                    fi
+                    # 2. Straight-to-SQL load via jacQLite jtext_to_sqlite CLI (point 6 "round of tests that go straight to SQL")
+                    if [[ -x "$J2S" ]]; then
+                        $J2S "$ldir" $bname "$DBF" 2>&1 | tail -1 || echo "    j2s load $bname failed"
+                    elif [[ -f "$SQLF" ]]; then
+                        # fallback to sqlite3 on emitted .sql
+                        sqlite3 "$DBF" < "$SQLF" 2>&1 | tail -1 || true
+                    fi
+                done
+                # 3. Queries on loaded DB (point 3)
+                echo "    Post-load queries (straight SQL set):"
+                for tbl in test_persist test_persist_Ints test_persist_Floats persist persist_Ints persist_Floats; do
+                    cnt=$(sqlite3 "$DBF" "SELECT count(*) FROM $tbl;" 2>/dev/null || echo 0)
+                    if [[ "$cnt" -gt 0 ]]; then echo "      $tbl: $cnt rows"; fi
+                done
+                # 4. After-test: export the (now populated) SQL back to jText (point 7 "after test- test, to export the SQL to jText")
+                echo "    Export-back roundtrip (SQL -> jText via CLI):"
+                for bname in persist persist_Ints persist_Floats; do
+                    for tbl in "test_${bname}" "${bname}"; do
+                        outdir="$ldir/${bname}_fulltrip"
+                        mkdir -p "$outdir"
+                        if [[ -x "$S2J" ]]; then
+                            if sqlite3 "$DBF" "SELECT 1 FROM $tbl LIMIT 1;" >/dev/null 2>&1; then
+                                $S2J "$DBF" "$tbl" "$outdir" >/dev/null 2>&1 || echo "      export $tbl failed"
+                                produced=$( (ls "$outdir"/* 2>/dev/null || true) | wc -l | tr -d ' ' || echo 0 )
+                                echo "      $tbl -> $outdir/ ($produced files)"
+                                jf="$outdir/${tbl}.jtext"
+                                if [[ ! -f "$jf" ]]; then jf="$outdir/${bname}.jtext"; fi
+                                if [[ -f "$jf" ]]; then
+                                    rc=$(grep -c '^[0-9][0-9]*\.' "$jf" 2>/dev/null || echo 0)
+                                    echo "        exported data rows: $rc"
+                                fi
+                                break
+                            fi
+                        else
+                            echo "      (no sqlite_to_jtext, skipping export for $tbl)"
+                            break
+                        fi
+                    done
+                done
+                # optional: leave DB for manual inspect; rm -f "$DBF" if want clean
+            fi
+
             # Write a tiny meta for easy summary scanning
             # Also capture persist size right after run (for cases where summary is regenerated later)
             pbytes=0
@@ -918,7 +1004,7 @@ else
     inmem_os=$(uname -sr)
 fi
 
-cat > "$INMEM_SUMMARY" <<IMHDR
+cat > "$INMEM_SUMMARY" <<'IMHDR'
 # TS_STORE In-Memory Hot Path Summary (no persistence / no logs)
 
 **Date**: $inmem_now  
@@ -944,13 +1030,13 @@ for c in "${COMPILER_LIST[@]}"; do
       . "$m" 2>/dev/null || true
       aops=${AVG_OPS_PER_SEC:-?}
       idur=${DURATION_SEC:-?}
-      echo "- ${h} (1M events/run × 50 runs): ~${aops} ops/sec (full in-mem run: ${idur}s)" >> "$INMEM_SUMMARY"
+      echo "- ${h} (small reduced events/run for SSD): ~${aops} ops/sec (full in-mem run: ${idur}s)" >> "$INMEM_SUMMARY"
     fi
   done
   echo "" >> "$INMEM_SUMMARY"
 done
 
-cat >> "$INMEM_SUMMARY" <<IMNOTES
+cat >> "$INMEM_SUMMARY" <<'IMNOTES'
 
 ## Notes
 - These are **pure in-memory** numbers (no logging, no double-buffer submit cost beyond the in-memory store work).
@@ -960,5 +1046,20 @@ cat >> "$INMEM_SUMMARY" <<IMNOTES
 
 See main [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md) for the full matrix with persistence (binary/jText, on/off, etc.).
 IMNOTES
+
+    # Regional number formatting for any large nums in inmem summary too
+    python3 -c '
+import locale, re, sys
+locale.setlocale(locale.LC_ALL, "")
+with open(sys.argv[1]) as f: content = f.read()
+def fmt_num(m):
+    n = int(m.group(0))
+    try:
+        return locale.format_string("%d", n, grouping=True)
+    except Exception:
+        return "{:,}".format(n)
+content = re.sub(r"\b\d{4,}\b", fmt_num, content)
+with open(sys.argv[1], "w") as f: f.write(content)
+' "$INMEM_SUMMARY"
 
 echo "In-memory summary written to: $INMEM_SUMMARY"

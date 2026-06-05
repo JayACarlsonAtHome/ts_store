@@ -21,6 +21,77 @@ private:
     int code_;
 };
 
+// Column extractors and bind helpers (moved early for template visibility in Statement)
+template<typename T>
+T column(sqlite3_stmt* stmt, int col);
+
+template<>
+inline int64_t column<int64_t>(sqlite3_stmt* stmt, int col) {
+    return sqlite3_column_int64(stmt, col);
+}
+
+template<>
+inline double column<double>(sqlite3_stmt* stmt, int col) {
+    return sqlite3_column_double(stmt, col);
+}
+
+template<>
+inline std::string column<std::string>(sqlite3_stmt* stmt, int col) {
+    const unsigned char* txt = sqlite3_column_text(stmt, col);
+    if (!txt) return {};
+    int len = sqlite3_column_bytes(stmt, col);
+    return std::string(reinterpret_cast<const char*>(txt), static_cast<size_t>(len));
+}
+
+template<>
+inline std::optional<int64_t> column<std::optional<int64_t>>(sqlite3_stmt* stmt, int col) {
+    if (sqlite3_column_type(stmt, col) == SQLITE_NULL) return std::nullopt;
+    return sqlite3_column_int64(stmt, col);
+}
+
+template<>
+inline std::optional<double> column<std::optional<double>>(sqlite3_stmt* stmt, int col) {
+    if (sqlite3_column_type(stmt, col) == SQLITE_NULL) return std::nullopt;
+    return sqlite3_column_double(stmt, col);
+}
+
+template<>
+inline std::optional<std::string> column<std::optional<std::string>>(sqlite3_stmt* stmt, int col) {
+    if (sqlite3_column_type(stmt, col) == SQLITE_NULL) return std::nullopt;
+    return column<std::string>(stmt, col);
+}
+
+// Bind value overloads
+inline void bind_value(sqlite3_stmt* stmt, int idx, int64_t v) {
+    sqlite3_bind_int64(stmt, idx, v);
+}
+
+inline void bind_value(sqlite3_stmt* stmt, int idx, double v) {
+    sqlite3_bind_double(stmt, idx, v);
+}
+
+inline void bind_value(sqlite3_stmt* stmt, int idx, const std::string& v) {
+    sqlite3_bind_text(stmt, idx, v.c_str(), static_cast<int>(v.size()), SQLITE_TRANSIENT);
+}
+
+inline void bind_value(sqlite3_stmt* stmt, int idx, const char* v) {
+    if (v) sqlite3_bind_text(stmt, idx, v, -1, SQLITE_TRANSIENT);
+    else   sqlite3_bind_null(stmt, idx);
+}
+
+inline void bind_value(sqlite3_stmt* stmt, int idx, std::nullopt_t) {
+    sqlite3_bind_null(stmt, idx);
+}
+
+template<typename T>
+inline void bind_value(sqlite3_stmt* stmt, int idx, const std::optional<T>& v) {
+    if (v.has_value()) {
+        bind_value(stmt, idx, *v);
+    } else {
+        sqlite3_bind_null(stmt, idx);
+    }
+}
+
 class Sqlite {
 public:
     explicit Sqlite(const std::string& filename,
@@ -152,76 +223,5 @@ public:
 private:
     sqlite3* db_ = nullptr;
 };
-
-// Column extractors - one per return type
-template<typename T>
-T column(sqlite3_stmt* stmt, int col);
-
-template<>
-inline int64_t column<int64_t>(sqlite3_stmt* stmt, int col) {
-    return sqlite3_column_int64(stmt, col);
-}
-
-template<>
-inline double column<double>(sqlite3_stmt* stmt, int col) {
-    return sqlite3_column_double(stmt, col);
-}
-
-template<>
-inline std::string column<std::string>(sqlite3_stmt* stmt, int col) {
-    const unsigned char* txt = sqlite3_column_text(stmt, col);
-    if (!txt) return {};
-    int len = sqlite3_column_bytes(stmt, col);
-    return std::string(reinterpret_cast<const char*>(txt), len);
-}
-
-template<>
-inline std::optional<int64_t> column<std::optional<int64_t>>(sqlite3_stmt* stmt, int col) {
-    if (sqlite3_column_type(stmt, col) == SQLITE_NULL) return std::nullopt;
-    return sqlite3_column_int64(stmt, col);
-}
-
-template<>
-inline std::optional<double> column<std::optional<double>>(sqlite3_stmt* stmt, int col) {
-    if (sqlite3_column_type(stmt, col) == SQLITE_NULL) return std::nullopt;
-    return sqlite3_column_double(stmt, col);
-}
-
-template<>
-inline std::optional<std::string> column<std::optional<std::string>>(sqlite3_stmt* stmt, int col) {
-    if (sqlite3_column_type(stmt, col) == SQLITE_NULL) return std::nullopt;
-    return column<std::string>(stmt, col);
-}
-
-// Bind value overloads - one per type (or family)
-inline void bind_value(sqlite3_stmt* stmt, int idx, int64_t v) {
-    sqlite3_bind_int64(stmt, idx, v);
-}
-
-inline void bind_value(sqlite3_stmt* stmt, int idx, double v) {
-    sqlite3_bind_double(stmt, idx, v);
-}
-
-inline void bind_value(sqlite3_stmt* stmt, int idx, const std::string& v) {
-    sqlite3_bind_text(stmt, idx, v.c_str(), static_cast<int>(v.size()), SQLITE_TRANSIENT);
-}
-
-inline void bind_value(sqlite3_stmt* stmt, int idx, const char* v) {
-    if (v) sqlite3_bind_text(stmt, idx, v, -1, SQLITE_TRANSIENT);
-    else   sqlite3_bind_null(stmt, idx);
-}
-
-inline void bind_value(sqlite3_stmt* stmt, int idx, std::nullopt_t) {
-    sqlite3_bind_null(stmt, idx);
-}
-
-template<typename T>
-inline void bind_value(sqlite3_stmt* stmt, int idx, const std::optional<T>& v) {
-    if (v.has_value()) {
-        bind_value(stmt, idx, *v);
-    } else {
-        sqlite3_bind_null(stmt, idx);
-    }
-}
 
 } // namespace jac::ts_store

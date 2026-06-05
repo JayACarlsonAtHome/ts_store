@@ -58,7 +58,7 @@ private:
     std::unique_ptr<Impl> impl_;
 
     void write_sql_companions(std::string_view base_name, size_t int_count, size_t dbl_count);
-    void write_all_headers(size_t int_count, size_t dbl_count);
+    void write_all_headers(std::string_view base_name, size_t int_count, size_t dbl_count);
 };
 
 } // namespace jac::ts_store::inline_v001

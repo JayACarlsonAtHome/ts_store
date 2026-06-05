@@ -13,8 +13,8 @@ using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;
 
 // ———————————————————— Test configuration ————————————————————
-constexpr size_t WRITER_THREADS     = 50;
-constexpr size_t OPS_PER_THREAD     = 400;
+constexpr size_t WRITER_THREADS     = 5;
+constexpr size_t OPS_PER_THREAD     = 20;
 constexpr size_t MAX_ENTRIES        = WRITER_THREADS * OPS_PER_THREAD;
 
 alignas(64) inline std::atomic<size_t> log_stream_write_pos{0};

@@ -84,7 +84,30 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         message(FATAL_ERROR "TS_STORE_ENABLE_JTEXT_PERSIST=ON but ../jText not found")
     endif()
 
+    # Tell the jText subdir not to define the CLI tool executables (we define our own copies below)
+    set(TS_STORE_BUILDING_JTEXT_TOOLS ON)
+
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../jText ${CMAKE_BINARY_DIR}/jText_build)
+
+    # jText CLI tools (copied from jText project for integration into ts_store build).
+    # These are built as part of the ts_store compile step when jText persistence is enabled.
+    # They can be used to process ts_store-generated .jtext logs (e.g. for roundtrips to SQL and back).
+    add_executable(jtext_process
+        tools/jtext_cli/jtext_process.cpp
+    )
+    target_link_libraries(jtext_process PRIVATE jtext_core)
+    target_include_directories(jtext_process PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/../jText/src
+    )
+    target_compile_features(jtext_process PRIVATE cxx_std_23)
+
+    add_executable(jtext_retrieve
+        tools/jtext_cli/jtext_retrieve.cpp
+    )
+    target_include_directories(jtext_retrieve PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/../jText/src
+    )
+    target_compile_features(jtext_retrieve PRIVATE cxx_std_23)
 
     # --- Compiler capability check (dual compiler support) ---
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

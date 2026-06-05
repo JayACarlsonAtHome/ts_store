@@ -9,8 +9,8 @@
 
 using namespace jac::ts_store::inline_v001;
 
-constexpr size_t THREADS           = 250;
-constexpr size_t EVENTS_PER_THREAD = 400;
+constexpr size_t THREADS           = 5;
+constexpr size_t EVENTS_PER_THREAD = 20;
 constexpr size_t TOTAL_EVENTS      = size_t(THREADS) * EVENTS_PER_THREAD;
 
 using LogConfigxMainx = ts_store_config<true, 6, 20, 75, 9, 6, false>;

@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <chrono>
+#include <format>
 
 namespace fs = std::filesystem;
 
@@ -22,7 +24,11 @@ void slurp_jtext_to_sqlite(const std::string& base_name, const std::string& db_p
         std::string schema = base_name + suffix + ".sql";
         if (fs::exists(schema)) {
             std::ifstream f(schema);
-            std::string sql((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+            std::string sql;
+            std::string line;
+            while (std::getline(f, line)) {
+                sql += line + "\n";
+            }
             try {
                 db.exec(sql);
             } catch (...) {
@@ -45,19 +51,18 @@ void slurp_jtext_to_sqlite(const std::string& base_name, const std::string& db_p
 
         db.begin();
         for (const auto& sec : main_jt.sections) {
-            if (sec.name != "Data Section") continue;
             for (const auto& entry : sec.entries) {
                 if (entry.fields.size() < 6) continue;
                 // fields from the writer: thread_id, per_thread..., flags, category, payload, timestamp
-                int64_t id = entry.number;
+                int64_t id = static_cast<int64_t>(entry.number);
                 stmt.bind(
                     id,
-                    std::stoll(entry.fields[0]),
-                    std::stoll(entry.fields[1]),
-                    std::stoll(entry.fields[2], nullptr, 16), // hex flags
+                    static_cast<int64_t>(std::stoll(entry.fields[0])),
+                    static_cast<int64_t>(std::stoll(entry.fields[1])),
+                    static_cast<int64_t>(std::stoll(entry.fields[2], nullptr, 16)), // hex flags
                     entry.fields[3],
                     entry.fields[4],
-                    std::stoll(entry.fields[5])
+                    static_cast<int64_t>(std::stoll(entry.fields[5]))
                 );
                 stmt.step();
                 stmt.reset();
@@ -81,13 +86,12 @@ void slurp_jtext_to_sqlite(const std::string& base_name, const std::string& db_p
 
             db.begin();
             for (const auto& sec : ints_jt.sections) {
-                if (sec.name != "Data Section") continue;
                 for (const auto& entry : sec.entries) {
                     if (entry.fields.empty()) continue;
-                    int64_t id = std::stoll(entry.fields[0]);
+                    int64_t id = static_cast<int64_t>(std::stoll(entry.fields[0]));
                     stmt.bind(id);
                     for (size_t i = 1; i < entry.fields.size() && i < 10; ++i) {
-                        stmt.bind(std::stoll(entry.fields[i]));  // simplistic, would use better bind in real code
+                        stmt.bind(static_cast<int64_t>(std::stoll(entry.fields[i])));  // simplistic, would use better bind in real code
                     }
                     stmt.step();
                     stmt.reset();
@@ -97,9 +101,83 @@ void slurp_jtext_to_sqlite(const std::string& base_name, const std::string& db_p
         }
     }
 
-    // Similar for Floats... (omitted for brevity, same pattern)
+    // Floats - same pattern
+    std::string floats_file = base_name + "_Floats.jtext";
+    if (fs::exists(floats_file)) {
+        JTextFile floats_jt;
+        if (auto res = floats_jt.read_full(floats_file); !res) {
+            std::cerr << "Warning: could not read floats file\n";
+        } else {
+            auto stmt = db.prepare(
+                "INSERT OR IGNORE INTO " + base_name + "_floats (id, dbl0, dbl1, dbl2, dbl3, dbl4, dbl5) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)");
 
-    std::cout << "Slurped " << base_name << " into " << db_path << "\n";
+            db.begin();
+            for (const auto& sec : floats_jt.sections) {
+                for (const auto& entry : sec.entries) {
+                    if (entry.fields.empty()) continue;
+                    int64_t id = static_cast<int64_t>(std::stoll(entry.fields[0]));
+                    stmt.bind(id);
+                    for (size_t i = 1; i < entry.fields.size() && i < 7; ++i) {
+                        stmt.bind(static_cast<double>(std::stod(entry.fields[i])));
+                    }
+                    stmt.step();
+                    stmt.reset();
+                }
+            }
+            db.commit();
+        }
+    }
+
+    // Export back to jText with new names (fulltrip) for easy comparison to originals.
+    // This is the "back to jText" part of the round trip, using new file names as requested.
+    {
+        std::string back_base = base_name + "_fulltrip";
+        std::ofstream out(back_base + ".jtext");
+        out << "//File:    " << back_base + ".jtext\n";
+        auto now = std::chrono::system_clock::now();
+        auto today = std::chrono::floor<std::chrono::days>(now);
+        std::string date_str = std::format("{:%Y-%m-%d}", today);
+        out << "//Date:    " << date_str << "\n";
+        out << "//Purpose: jText Data File (full roundtrip via SQL ingest)\n";
+        out << "//\n";
+        out << "=== jText File ===\n";
+        out << " 1. #?# " << back_base + ".jtext\n";
+        out << " 2. #?# " << date_str << "\n";
+        out << " 3. #?# Full roundtrip from ts_store jText logs via SQL\n";
+        out << "\n";
+        out << "=== Section: " << base_name << " ===\n";
+        out << "=== Fields ===\n";
+        out << " 1. #/# id/Number/Not Null\n";
+        out << " 2. #/# thread_id/Number/Not Null\n";
+        out << " 3. #/# per_thread_event_id/Number/Not Null\n";
+        out << " 4. #/# flags_raw/String\n";
+        out << " 5. #/# category/String\n";
+        out << " 6. #/# payload/String\n";
+        out << " 7. #/# timestamp_us/Number\n";
+        out << "=== Data ===\n";
+
+        auto stmt = db.prepare("SELECT id, thread_id, per_thread_event_id, flags_raw, category, payload, timestamp_us FROM " + base_name + " ORDER BY id");
+        while (stmt.step()) {
+            int64_t id, thread, per, ts;
+            std::string flags, cat, payload;
+            stmt.get(id, thread, per, flags, cat, payload, ts);
+            out << " 1. #?# " << id << "\n";
+            out << " 2. #?# " << thread << "\n";
+            out << " 3. #?# " << per << "\n";
+            out << " 4. #/# " << flags << "\n";
+            out << " 5. #?# " << cat << "\n";
+            out << " 6. #?# " << payload << "\n";
+            out << " 7. #?# " << ts << "\n\n";
+        }
+
+        out << "=== End Data ===\n";
+        out << "=== End Section ===\n";
+        out << "=== End File ===\n";
+        std::cout << "Exported roundtrip back to " << back_base << ".jtext\n";
+    }
+
+    std::cout << "Slurped " << base_name << " into " << db_path << " and exported fulltrip jText\n";
 }
 
 int main(int argc, char** argv) {

@@ -1,3 +1,7 @@
+//File:    /home/jay/git/ts_store/DUAL_COMPILER_BUILD.md
+//Date:    2026-06-05
+//Purpose: Build Documentation for ts_store
+//
 # Dual Compiler Builds (GCC + Clang)
 
 This project aims to build cleanly with **both** supported compilers when `TS_STORE_ENABLE_JTEXT_PERSIST=ON`:

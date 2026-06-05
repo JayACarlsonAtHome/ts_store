@@ -32,9 +32,9 @@ namespace {
         std::string date_str = std::format("{:%Y-%m-%d}", today);
 
         std::string h;
-        h += std::format("//File Name: {}\n", full_path);
-        h += std::format("//Date: {}\n", date_str);
-        h += "//Purpose - Binary Data File\n";
+        h += std::format("//File:    {}\n", full_path);
+        h += std::format("//Date:    {}\n", date_str);
+        h += "//Purpose: Binary Data File\n";
         h += "//\n";
         ::write(fd, h.data(), h.size());
         return h.size();
