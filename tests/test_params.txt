@@ -3,7 +3,7 @@
 # so test-results/x7k/ 10k/ ssd/ line up vertically when listed
 # (CLI --disk accepts 7k/7200/x7k etc. and normalizes to these)
 DISK_TYPE=x7k
-SIZE=smoke
+SIZE=full
 001=x
 002=x
 003=x

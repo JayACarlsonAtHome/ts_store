@@ -40,7 +40,6 @@ test-results/
 
 # Temporary files created during development / monitoring
 test-log.txt
-tail_test_progress.sh
 
 # IDE
 .idea/

@@ -11,17 +11,17 @@ This gives the "pure" in-memory throughput for comparison against the persisted 
 ## Per-Compiler Compile Times + In-Memory Throughput
 ### Compiler: gcc
 - Compile time: skipped
-- ts_store_005_TS (100 entries × 1 runs): ~220,264 ops/sec (measured 454 µs)
-- ts_store_005_XS (100 entries × 1 runs): ~349,650 ops/sec (measured 286 µs)
-- ts_store_007_TS (100 entries × 1 runs): ~172,117 ops/sec (measured 581 µs)
-- ts_store_007_XS (100 entries × 1 runs): ~253,807 ops/sec (measured 394 µs)
+- ts_store_005_TS (100 entries × 1 runs): ~215,517 ops/sec (measured 464 µs)
+- ts_store_005_XS (100 entries × 1 runs): ~167,224 ops/sec (measured 598 µs)
+- ts_store_007_TS (100 entries × 1 runs): ~163,132 ops/sec (measured 613 µs)
+- ts_store_007_XS (100 entries × 1 runs): ~230,415 ops/sec (measured 434 µs)
 
 ### Compiler: clang
 - Compile time: skipped
-- ts_store_005_TS (100 entries × 1 runs): ~327,869 ops/sec (measured 305 µs)
-- ts_store_005_XS (100 entries × 1 runs): ~330,033 ops/sec (measured 303 µs)
-- ts_store_007_TS (100 entries × 1 runs): ~251,889 ops/sec (measured 397 µs)
-- ts_store_007_XS (100 entries × 1 runs): ~185,874 ops/sec (measured 538 µs)
+- ts_store_005_TS (100 entries × 1 runs): ~255,102 ops/sec (measured 392 µs)
+- ts_store_005_XS (100 entries × 1 runs): ~224,215 ops/sec (measured 446 µs)
+- ts_store_007_TS (100 entries × 1 runs): ~192,308 ops/sec (measured 520 µs)
+- ts_store_007_XS (100 entries × 1 runs): ~290,698 ops/sec (measured 344 µs)
 
 
 ## Notes
