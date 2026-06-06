@@ -7,8 +7,8 @@
 # BinaryEventSink and once with JTextEventSink (via --persist).
 #
 # Output logs + persist artifacts go under:
-#   test_results/binary_logs/TS_STORE_TEST_001_TS/
-#   test_results/jText_logs/TS_STORE_TEST_001_TS/
+#   test-results/x7k/binary_logs/TS_STORE_TEST_001_TS/
+#   test-results/x7k/jText_logs/TS_STORE_TEST_001_TS/
 #   (and same for all other tests; flags gets logs in both for structure)
 #
 # Combinational fields (the dimensions whose product determines the scenario count):
@@ -33,11 +33,11 @@
 #   ./scripts/run_all_tests.sh --compiler all   # explicit all (both)
 #
 # After run (default does both compilers internally and one combined summary), see the summary and
-# test_results/ tree. README.md links to the summary.
+# test-results/<DISK_TYPE>/ tree. README.md links to the summary.
 #
 # Cleanup is automatic ("roll out the garbage"): stray/old artifacts, previous per-compiler
 # logs/metas/persists, inmem, and stray persist files in root/build dirs are removed at start
-# so you don't have to manually clean before re-running. test_results/ is .gitignore'd (only
+# so you don't have to manually clean before re-running. test-results/ is .gitignore'd (only
 # the root summaries are committed).
 #
 # Note: GCC path uses "scl enable gcc-toolset-15".
@@ -54,23 +54,11 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # as ./scripts/run_all_tests.sh from the scripts/ dir, from root, or with full path).
 cd "$PROJECT_ROOT" || { echo "ERROR: cannot change to project root $PROJECT_ROOT"; exit 1; }
 
-# test_results/ layout (define early so cleanup and everything can reference them)
-TEST_RESULTS_BASE="$PROJECT_ROOT/test_results"
-BINARY_LOGS="$TEST_RESULTS_BASE/binary_logs"
-JTEXT_LOGS="$TEST_RESULTS_BASE/jText_logs"
-SQL_LOGS="$TEST_RESULTS_BASE/sql_logs"
-INMEM_LOGS="$TEST_RESULTS_BASE/inmem_logs"
-INMEM_DIR="$TEST_RESULTS_BASE/inmem"
-mkdir -p "$BINARY_LOGS"
-mkdir -p "$JTEXT_LOGS"
-mkdir -p "$SQL_LOGS"
-mkdir -p "$INMEM_LOGS"
-mkdir -p "$INMEM_DIR"
-
 # =============================================================================
 # Load test parameters from tests/test_params.txt (if present).
 # This lets us [x] select tests and choose smoke (100 records, SSD friendly) vs full (high intensity).
 # Most runs use SIZE=smoke; occasional full for real stress.
+# DISK_TYPE controls storage-specific results dir: test-results/x7k , test-results/10k , test-results/ssd (all exactly 3 chars so they line up vertically)
 # =============================================================================
 CONFIG_FILE="$PROJECT_ROOT/tests/test_params.txt"
 SIZE="smoke"
@@ -79,6 +67,7 @@ EVENTS_PER_THREAD=20
 RUNS=1
 WRITER_THREADS=5
 OPS_PER_THREAD=20
+DISK_TYPE=""
 declare -A SELECTED_TESTS=()
 if [[ -f "$CONFIG_FILE" ]]; then
     echo "Loading test params from $CONFIG_FILE"
@@ -98,6 +87,8 @@ if [[ -f "$CONFIG_FILE" ]]; then
             WRITER_THREADS="${BASH_REMATCH[1]}"
         elif [[ "$line" =~ ^OPS_PER_THREAD=(.*)$ ]]; then
             OPS_PER_THREAD="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ ^DISK_TYPE=(.*)$ ]]; then
+            DISK_TYPE="${BASH_REMATCH[1]}"
         elif [[ "$line" =~ ^([0-9]{3})=[xX] ]]; then
             SELECTED_TESTS["${BASH_REMATCH[1]}"]=1
         fi
@@ -110,6 +101,19 @@ if [[ "$SIZE" == "smoke" ]]; then
 elif [[ "$SIZE" == "full" ]]; then
     THREADS=250; EVENTS_PER_THREAD=4000; RUNS=50; WRITER_THREADS=50; OPS_PER_THREAD=400
 fi
+
+# test-results/ layout per disk type (define early after params load, before any use of the vars in garbage/cleanup)
+TEST_RESULTS_BASE="$PROJECT_ROOT/test-results/$DISK_TYPE"
+BINARY_LOGS="$TEST_RESULTS_BASE/binary_logs"
+JTEXT_LOGS="$TEST_RESULTS_BASE/jText_logs"
+SQL_LOGS="$TEST_RESULTS_BASE/sql_logs"
+INMEM_LOGS="$TEST_RESULTS_BASE/inmem_logs"
+INMEM_DIR="$TEST_RESULTS_BASE/inmem"
+mkdir -p "$BINARY_LOGS"
+mkdir -p "$JTEXT_LOGS"
+mkdir -p "$SQL_LOGS"
+mkdir -p "$INMEM_LOGS"
+mkdir -p "$INMEM_DIR"
 
 # Build list of tests to run (from config selection or all)
 declare -a TESTS=()
@@ -142,6 +146,12 @@ if [ -d "$PROJECT_ROOT/results" ]; then
   rm -rf "$PROJECT_ROOT/results"
 fi
 
+# Legacy flat test_results/ (before per-disk test-results/<DISK_TYPE>/ )
+if [ -d "$PROJECT_ROOT/test_results" ]; then
+  echo "Removing legacy flat test_results/ directory (now use test-results/<DISK_TYPE>/ )..."
+  rm -rf "$PROJECT_ROOT/test_results"
+fi
+
 # Remove historical unused build directories that clutter the tree
 for d in build-clean-check build-double-test build-dual build-no-persist; do
   if [ -d "$PROJECT_ROOT/$d" ]; then
@@ -150,10 +160,10 @@ for d in build-clean-check build-double-test build-dual build-no-persist; do
   fi
 done
 
-# Roll out the garbage: aggressively clean stray/old artifacts from test_results/
+# Roll out the garbage: aggressively clean stray/old artifacts from test-results/<DISK_TYPE>/
 # and other places (persist files left in root/build dirs from manual runs, old
 # non-prefixed logs, etc.). This is part of the runner so you don't have to
-# manually "rm -rf test_results/*" before every full run. Keeps the structure
+# manually "rm -rf test-results/*" before every full run. Keeps the structure
 # for the current run's data. Summaries are re-generated at the end.
 echo "Rolling out the garbage (stray artifacts from previous runs)..."
 for logdir in "$BINARY_LOGS" "$JTEXT_LOGS"; do
@@ -250,7 +260,7 @@ prepare_log_dir() {
 }
 
 # Generate the rich markdown summary document.
-# Scans test_results/... for .meta + .log files (supports multiple compilers).
+# Scans test-results/$DISK_TYPE/... for .meta + .log files (supports multiple compilers).
 # Includes OS info, compile time, per-compiler times (build + test suite), compiler column, faster log per scenario, total suite duration, etc.
 generate_test_summary() {
     local out_file="$1"
@@ -282,6 +292,7 @@ generate_test_summary() {
 
 **Date**: $now  
 **OS**: $os_pretty  
+**Disk/Storage**: $DISK_TYPE  
 **Summary generated by**: scripts/run_all_tests.sh (double-buffered persist on all tests)
 
 ## Build / Compile Info
@@ -360,7 +371,7 @@ HDR
                     persist_mbs="instant"
                 fi
 
-                local rel_path="test_results/$(basename "$logtype_dir")/$SUBDIR/${COMPILER}.log"
+                local rel_path="test-results/$DISK_TYPE/$(basename "$logtype_dir")/$SUBDIR/${COMPILER}.log"
                 local log_link="[log*]($rel_path)"
 
                 local display_ltype=${LOGTYPE}
@@ -441,7 +452,7 @@ HDR
                     if [[ "$dur" != "N/A" && "$pbytes" -gt 0 ]]; then
                         pmbs=$(echo "scale=1; $pbytes / 1024 / 1024 / ${dur%s}" | bc -l 2>/dev/null || echo "N/A")
                     fi
-                    local rlog="test_results/$pdir/$tname/${COMPILER}_${ltype}_${om}.log"
+                    local rlog="test-results/$DISK_TYPE/$pdir/$tname/${COMPILER}_${ltype}_${om}.log"
                     rows+=("| ${COMPILER} | ${tname} | ${ltype} | ${om} | ${rec} | ${dur} | ${phuman} | ${pmbs} | ? | [log*]($rlog) |")
 
                     # populate scenario_data for the faster section too
@@ -577,7 +588,7 @@ FASTER
 
 ## Notes
 - All tests now attach a `DoubleBufferedWriter` + chosen sink (`BinaryEventSink` or `JTextEventSink`) for asynchronous background persistence. Hot path remains fast.
-- Persist artifacts (`.bin` or the 3 `.jtext` files) are written using the `--base-name` passed by the runner so they land inside the corresponding `test_results/*/TS_STORE_TEST_.../` subdirectory.
+- Persist artifacts (`.bin` or the 3 `.jtext` files) are written using the `--base-name` passed by the runner so they land inside the corresponding `test-results/$DISK_TYPE/*/TS_STORE_TEST_.../` subdirectory.
 - `Records` are best-effort parsed from test output (tests now use reduced counts ~100 events for SSD longevity per matrix * instructions; old 1M-scale numbers were for prior full-stress runs). Inmem/none shows pure in-memory (no persist). SQL shows direct DB writes + debug INSERT file.
 - Size and Rate columns: measured on-disk persist artifact size and effective MB/s (size / full test duration). The "Log" column links to the captured stdout for that run.
 - Each (test, persisttype) is executed twice: once with output=on (live console, ANSI colors enabled via --color=1) and once with output=off (silent capture, --color=0). Persist types: binary, jtext, sql (direct), none (in-memory only). This shows the overhead of console output. Live "on" runs are colorful and pretty; saved logs are always plain text (ANSI stripped).
@@ -586,7 +597,7 @@ FASTER
 - Separate `TS_STORE_InMemory_Summary.md` is also generated for pure in-memory runs (the "none" scenario) of the heavy tests (detailed internal rate reporting).
 - Separate `TS_STORE_SQL_Roundtrip_Summary.md` is generated for the post-test jText → SQL roundtrips (via CLI tools: emit .sql + load + queries + export-back) that run after every jtext persist scenario. .sql + *_fulltrip artifacts are co-located with jText logs for size/timing (this is jText-mediated, not native direct INSERTs from ts_store).
 - The main summary now includes rows for all 4 persist types (binary, jtext, sql, inmem/none).
-- Legacy `results/<compiler>/` tree may still exist from prior versions; new canonical location is `test_results/`.
+- Legacy `results/<compiler>/` tree may still exist from prior versions; new canonical location is `test-results/<DISK_TYPE>/`.
 
 ## Config settings used by the tests (LogConfig)
 - 001/002/003/006/007 (TS): `ts_store_config<true, 6, 20, 43, 9, 6, false>` (size from test_params.txt / --threads etc; smoke 5×20, full high)
@@ -623,12 +634,13 @@ COMPILER="all"
 OUTPUT_MODE="yes"  # yes = live console (with ANSI colors for test output), no = silent (logs only)
 
 usage() {
-    echo "Usage: $0 [--compiler gcc|clang|all] [--output yes|no]"
+    echo "Usage: $0 [--compiler gcc|clang|all] [--output yes|no] [--disk x7k|10k|ssd]"
     echo "  Default: all (runs gcc then clang internally, one summary at end)"
     echo "  --output yes : live console output with ANSI colors (pretty)"
     echo "  --output no  : silent (logs only)"
+    echo "  --disk x7k|10k|ssd : selects storage type → test-results/<disk>/...  (accepts 7k/7200/x7k/10k etc.; normalized to x7k/10k/ssd (all exactly 3 chars) so dirs line up vertically when listed)"
     echo "  Additionally runs pure in-memory (no logs) for 005/007 and produces separate TS_STORE_InMemory_Summary.md with compile times."
-    echo "  Runs selected persist types (binary, jtext, sql direct with debug INSERT file, none/inmem) + post roundtrips. Controlled by tests/test_params.txt (SIZE=smoke|full, [x] tests). Produces TS_STORE_Test_Summary.md (all), InMemory (none for heavy), SQL_Roundtrip."
+    echo "  Runs selected persist types (binary, jtext, sql direct with debug INSERT file, none/inmem) + post roundtrips. Controlled by tests/test_params.txt (SIZE=smoke|full, [x] tests, DISK_TYPE). Produces per-disk summaries under test-results/<disk>/."
     exit 1
 }
 
@@ -642,6 +654,10 @@ while [[ $# -gt 0 ]]; do
             OUTPUT_MODE="$2"
             shift 2
             ;;
+        --disk)
+            DISK_TYPE="$2"
+            shift 2
+            ;;
         -h|--help)
             usage
             ;;
@@ -651,6 +667,22 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# After CLI overrides, ensure DISK_TYPE is set (CLI takes precedence over params file)
+if [[ -z "$DISK_TYPE" ]]; then
+    echo "ERROR: DISK_TYPE not set (use --disk x7k|10k|ssd or DISK_TYPE=... in tests/test_params.txt)"
+    exit 1
+fi
+
+# Normalize common variations so people don't have to remember exact case/spelling
+# Actual directories will be x7k / 10k / ssd (all exactly 3 chars) so they line up vertically when listed
+case "${DISK_TYPE,,}" in   # ,, makes lowercase
+    7k|7200|x7k|x7200)   DISK_TYPE=x7k ;;
+    10k|10000|x10k|x10000) DISK_TYPE=10k ;;
+    ssd|solidstate|xssd) DISK_TYPE=ssd ;;
+    x7k|10k|ssd)         ;;  # already good
+    *) echo "Warning: unknown DISK_TYPE '$DISK_TYPE' - using as-is. Recommended values: x7k, 10k, ssd";;
+esac
 
 if [[ "$OUTPUT_MODE" != "yes" && "$OUTPUT_MODE" != "no" ]]; then
     echo "--output must be yes or no"
@@ -668,10 +700,23 @@ else
     usage
 fi
 
-echo "=== ts_store All Stress Tests Runner (double-buffered persist for ALL tests) ==="
+# test-results/ layout per disk type (define after params load + CLI overrides)
+TEST_RESULTS_BASE="$PROJECT_ROOT/test-results/$DISK_TYPE"
+BINARY_LOGS="$TEST_RESULTS_BASE/binary_logs"
+JTEXT_LOGS="$TEST_RESULTS_BASE/jText_logs"
+SQL_LOGS="$TEST_RESULTS_BASE/sql_logs"
+INMEM_LOGS="$TEST_RESULTS_BASE/inmem_logs"
+INMEM_DIR="$TEST_RESULTS_BASE/inmem"
+mkdir -p "$BINARY_LOGS"
+mkdir -p "$JTEXT_LOGS"
+mkdir -p "$SQL_LOGS"
+mkdir -p "$INMEM_LOGS"
+mkdir -p "$INMEM_DIR"
+
+echo "=== ts_store All Stress Tests Runner (double-buffered persist for ALL tests) [DISK_TYPE=$DISK_TYPE] ==="
 echo "Compilers: ${COMPILER_LIST[*]}"
 echo "Output mode: $OUTPUT_MODE (live console + ANSI colors when 'yes')"
-echo "Primary output: test_results/binary_logs/ + jText_logs/ + TS_STORE_Test_Summary.md"
+echo "Primary output: test-results/$DISK_TYPE/ (binary_logs + jText_logs + ...) + per-disk TS_STORE_*_Summary.md"
 echo "Each test subdir will contain separate logs for output=on vs output=off."
 echo "Each (test, logtype) is run twice per compiler: once with output=on (live console + ANSI colors), once with output=off (silent, no color)."
 
@@ -696,7 +741,7 @@ for COMPILER in "${COMPILER_LIST[@]}"; do
   echo "=== Running for compiler: $COMPILER ==="
 
   # Clean previous run's log/meta files for *this* compiler (keep data from other compilers)
-  echo "Cleaning previous $COMPILER artifacts from test_results/..."
+  echo "Cleaning previous $COMPILER artifacts from test-results/$DISK_TYPE/..."
   for logdir in "$BINARY_LOGS" "$JTEXT_LOGS" "$SQL_LOGS" "$INMEM_LOGS"; do
     for sub in "$logdir"/TS_STORE_TEST_* ; do
       [ -d "$sub" ] || continue
@@ -722,7 +767,7 @@ if [[ "$COMPILER" == "gcc" ]]; then
     # _Floats.jtext files with all the metric data (in addition to the main log).
     # The stress tests (001-007) are always built.
 else
-    CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON"
+    CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld"
 fi
 
 echo "Using build dir: $BUILD_DIR"
@@ -794,7 +839,7 @@ COMPILER_BUILD_DURATIONS["$COMPILER"]=$BUILD_DURATION_SEC
 
 TEST_START_EP=$(date +%s)
 
-# === New structured run: every test x2 (binary + jtext), logs + persist artifacts under test_results/ ===
+# === New structured run: every test x2 (binary + jtext), logs + persist artifacts under test-results/$DISK_TYPE/ ===
 
 # Combinatorial matrix (the fields whose product gives the scenario count):
 # 1. Compiler dimension (from COMPILER_LIST): "gcc", "clang"  (1 or 2; "all" runs both sequentially)
@@ -819,7 +864,7 @@ TEST_START_EP=$(date +%s)
 #     placed in the TS_STORE_TEST_... subdir via --base-name
 #
 # Subdirectory layout (one per test dimension value):
-#   test_results/binary_logs/TS_STORE_TEST_00N_XX/   (and same under jText_logs/)
+#   test-results/$DISK_TYPE/binary_logs/TS_STORE_TEST_00N_XX/   (and same under jText_logs/)
 # (TESTS array is built above from test_params.txt or defaults to all)
 
 echo
@@ -1099,7 +1144,7 @@ SUITE_END_EP=$(date +%s)
 SUITE_DURATION_SEC=$((SUITE_END_EP - SUITE_START_EP))
 
 # Generate (or update) the rich combined summary document (table will contain data from all compilers)
-SUMMARY_FILE="$PROJECT_ROOT/TS_STORE_Test_Summary.md"
+SUMMARY_FILE="$TEST_RESULTS_BASE/TS_STORE_Test_Summary.md"
 generate_test_summary "$SUMMARY_FILE" "$COMPILER" "$COMPILER_DISPLAY" "$BUILD_INFO" "$TEST_RESULTS_BASE" "$RUN_PASSED" "$RUN_FAILED" "$TOTAL_SCENARIOS" "$SUITE_DURATION_SEC" "$PER_COMPILER_TIMES"
 
 echo "Rich summary written to: $SUMMARY_FILE"
@@ -1111,7 +1156,7 @@ echo "Done."
 # =============================================================================
 echo "Generating separate in-memory hot path summary..."
 
-INMEM_SUMMARY="$PROJECT_ROOT/TS_STORE_InMemory_Summary.md"
+INMEM_SUMMARY="$TEST_RESULTS_BASE/TS_STORE_InMemory_Summary.md"
 
 # Re-get basic info (dupe small logic from generate for standalone)
 inmem_now=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
@@ -1200,7 +1245,7 @@ echo "In-memory summary written to: $INMEM_SUMMARY"
 # =============================================================================
 echo "Generating SQL roundtrip summary (from jtext post-processing)..."
 
-SQL_SUMMARY="$PROJECT_ROOT/TS_STORE_SQL_Roundtrip_Summary.md"
+SQL_SUMMARY="$TEST_RESULTS_BASE/TS_STORE_SQL_Roundtrip_Summary.md"
 
 sql_now=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 sql_os="unknown"
@@ -1235,7 +1280,7 @@ What this summary covers is the current jText-mediated roundtrip mechanism used 
 - sqlite queries for row counts
 - sqlite_to_jtext CLI to export the loaded data back to *_fulltrip/ jText (roundtrip verification)
 
-This is performed after every jtext persist run (on/off). Artifacts (.sql, *_fulltrip dirs) live alongside the jText logs under test_results/jText_logs/TS_STORE_TEST_.../ so they are included for size and timing.
+This is performed after every jtext persist run (on/off). Artifacts (.sql, *_fulltrip dirs) live alongside the jText logs under test-results/$DISK_TYPE/jText_logs/TS_STORE_TEST_.../ so they are included for size and timing.
 
 ## Per-Compiler jText-to-SQL Post-Processing (load + export)
 SQLHDR

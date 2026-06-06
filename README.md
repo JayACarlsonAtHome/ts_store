@@ -252,7 +252,7 @@ Combinatorial fields (product = scenario count):
 
 Per compiler: 15 × 4 × 2 = 120 scenarios. Full run: 240 total.
 Additionally, roundtrip verification (jText<->SQL, DB<->jText) is performed after the relevant persist runs.
-- Structured output (runner logs + the actual persist artifacts `.bin` / `.jtext*`) goes to `test_results/binary_logs/TS_STORE_TEST_00N_XX/` and `test_results/jText_logs/TS_STORE_TEST_00N_XX/`.
+- Structured output (runner logs + the actual persist artifacts `.bin` / `.jtext*`) goes to `test-results/<DISK_TYPE>/binary_logs/TS_STORE_TEST_00N_XX/` and `test-results/<DISK_TYPE>/jText_logs/TS_STORE_TEST_00N_XX/`. (DISK_TYPE e.g. x7k/10k/ssd set in test_params.txt or via --disk; accepts 7k/7200/x7k/10k etc. and normalizes to x7k/10k/ssd (all exactly 3 chars) for alignment)
 - A rich summary (with OS, compiler column, per-compiler times (build + test suite per compiler), total suite duration, per-run durations, record counts, "which log was faster", Config settings, etc.) is generated at the project root.
 
 **Primary results document** (default `./scripts/run_all_tests.sh` runs both gcc and clang to get full cross-compiler + binary-vs-jText data):
@@ -261,7 +261,7 @@ Additionally, roundtrip verification (jText<->SQL, DB<->jText) is performed afte
 - [TS_STORE_InMemory_Summary.md](TS_STORE_InMemory_Summary.md) (pure in-memory hot path, no logs)
 - [TS_STORE_SQL_Roundtrip_Summary.md](TS_STORE_SQL_Roundtrip_Summary.md) (jText → SQL direct via CLIs + export-back for every jtext scenario; sizes + timings co-located with jText logs)
 
-See `scripts/run_all_tests.sh` for implementation details (default runs both compilers). The old `results/<compiler>/` tree is legacy (new output lives under `test_results/`).
+See `scripts/run_all_tests.sh` for implementation details (default runs both compilers). The old `results/<compiler>/` tree is legacy (new output lives under `test-results/<DISK_TYPE>/` with dirs x7k/10k/ssd (all exactly 3 chars) that line up vertically).
 
 The runner always passes `--interactive=0 --persist=... --base-name=...`.
 - For `--output yes` (live): uses `--color=1` so the console gets ANSI colors (pretty tables, headers, etc.).
@@ -269,7 +269,7 @@ The runner always passes `--interactive=0 --persist=... --base-name=...`.
 Captured `.log` files are always stripped of ANSI for cleanliness.
 You get pretty colors on live runs; direct execution of a test binary also respects `--color`.
 
-To view a captured log: `less -R test_results/binary_logs/TS_STORE_TEST_003_TS/gcc.log` (or the equivalent under `jText_logs/`).
+To view a captured log: `less -R test-results/x7k/binary_logs/TS_STORE_TEST_003_TS/gcc.log` (or the equivalent under `jText_logs/`). (use x7k/10k/ssd or --disk x7k; 7k/7200 etc. also accepted and normalized)
 
 ### jText-to-SQL Roundtrips (via CLI tools + export back)
 
@@ -284,7 +284,7 @@ What the automated `run_all_tests.sh` currently performs after every jtext persi
 - Simple COUNT(*) queries are run against the loaded tables (main + ints + floats splits).
 - `sqlite_to_jtext` CLI exports the DB content back out to `<base>_fulltrip/` directories (jText files + companions) for roundtrip fidelity verification.
 
-Artifacts (`.sql`, `*_fulltrip/`) are co-located with the source jText logs under `test_results/jText_logs/TS_STORE_TEST_.../` so they are included for size and timing tracking alongside the binary/jtext files.
+Artifacts (`.sql`, `*_fulltrip/`) are co-located with the source jText logs under `test-results/<DISK_TYPE>/jText_logs/TS_STORE_TEST_.../` so they are included for size and timing tracking alongside the binary/jtext files.
 
 A dedicated structured summary is produced:
 

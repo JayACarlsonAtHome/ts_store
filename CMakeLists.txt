@@ -66,13 +66,20 @@ endforeach()
 # Optional jText-based Persistence (high-throughput split file logging)
 # =============================================================================
 option(TS_STORE_ENABLE_JTEXT_PERSIST
-       "Enable jText file persistence (requires sibling ../jText checkout)" OFF)
+       "Enable jText file persistence" OFF)
 
 option(TS_STORE_ENABLE_SQLITE_PERSIST
        "Enable direct SQLite persistence (requires libsqlite3)" OFF)
 
+set(TS_STORE_JTEXT_MODE "reference" CACHE STRING
+    "jText source mode: 'reference' (use sibling ../jText) or 'vendored' (use local vendor/jText)")
+
 if(TS_STORE_ENABLE_JTEXT_PERSIST)
     message(STATUS "ts_store: jText persistence ENABLED")
+
+    # Tell the jText subdir (whether reference or vendored) not to define the CLI tool executables
+    # (we define our own copies below from the appropriate location).
+    set(TS_STORE_BUILDING_JTEXT_TOOLS ON)
 
     # We support building with either:
     #   - gcc-toolset-15 (GCC 15+)
@@ -81,33 +88,55 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     # No compiler is forced. The user chooses via -DCMAKE_CXX_COMPILER=...
     # We only perform a basic capability check below.
 
-    # Add jText as subdirectory (assumes sibling layout: ../jText)
-    if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../jText/CMakeLists.txt)
-        message(FATAL_ERROR "TS_STORE_ENABLE_JTEXT_PERSIST=ON but ../jText not found")
+    if(TS_STORE_JTEXT_MODE STREQUAL "vendored")
+        set(JTEXT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/jText")
+        set(JTEXT_CLI_DIR "${JTEXT_SOURCE_DIR}/CLI")
+        if(NOT EXISTS "${JTEXT_SOURCE_DIR}/CMakeLists.txt")
+            message(FATAL_ERROR
+                "TS_STORE_JTEXT_MODE=vendored but ${JTEXT_SOURCE_DIR} not found.\n"
+                "Run: ./scripts/Sync_dependencies.sh --sync jText")
+        endif()
+        add_subdirectory(${JTEXT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/jText_build)
+    else()
+        # reference mode (default for development with live sibling)
+        set(JTEXT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../jText")
+        set(JTEXT_CLI_DIR "${JTEXT_SOURCE_DIR}/src/tool")
+        if(NOT EXISTS "${JTEXT_SOURCE_DIR}/CMakeLists.txt")
+            message(FATAL_ERROR "TS_STORE_ENABLE_JTEXT_PERSIST=ON but ../jText not found")
+        endif()
+        add_subdirectory(${JTEXT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/jText_build)
     endif()
 
     # Tell the jText subdir not to define the CLI tool executables (we define our own copies below)
     set(TS_STORE_BUILDING_JTEXT_TOOLS ON)
 
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../jText ${CMAKE_BINARY_DIR}/jText_build)
+    # jText CLI tools.
+    # - In reference mode: use the local maintained copies in tools/jtext_cli/ (original behavior)
+    # - In vendored mode: use the synced copies from vendor/jText/CLI/
+    if(TS_STORE_JTEXT_MODE STREQUAL "vendored")
+        set(_jtext_cli_process_src "${JTEXT_CLI_DIR}/jtext_process.cpp")
+        set(_jtext_cli_retrieve_src "${JTEXT_CLI_DIR}/jtext_retrieve.cpp")
+    else()
+        set(_jtext_cli_process_src "tools/jtext_cli/jtext_process.cpp")
+        set(_jtext_cli_retrieve_src "tools/jtext_cli/jtext_retrieve.cpp")
+    endif()
 
-    # jText CLI tools (copied from jText project for integration into ts_store build).
-    # These are built as part of the ts_store compile step when jText persistence is enabled.
-    # They can be used to process ts_store-generated .jtext logs (e.g. for roundtrips to SQL and back).
     add_executable(jtext_process
-        tools/jtext_cli/jtext_process.cpp
+        ${_jtext_cli_process_src}
     )
     target_link_libraries(jtext_process PRIVATE jtext_core)
     target_include_directories(jtext_process PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../jText/src
+        ${JTEXT_SOURCE_DIR}/src
+        ${JTEXT_SOURCE_DIR}
     )
     target_compile_features(jtext_process PRIVATE cxx_std_23)
 
     add_executable(jtext_retrieve
-        tools/jtext_cli/jtext_retrieve.cpp
+        ${_jtext_cli_retrieve_src}
     )
     target_include_directories(jtext_retrieve PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../jText/src
+        ${JTEXT_SOURCE_DIR}/src
+        ${JTEXT_SOURCE_DIR}
     )
     target_compile_features(jtext_retrieve PRIVATE cxx_std_23)
 
@@ -133,7 +162,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
 
     target_include_directories(ts_store_jtext_high_throughput_test
         PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+            ${JTEXT_SOURCE_DIR}
     )
 
     target_link_libraries(ts_store_jtext_high_throughput_test
@@ -145,7 +174,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
 
     target_include_directories(ts_store_jtext_high_throughput_test
         PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+            ${JTEXT_SOURCE_DIR}
     )
 
     target_compile_definitions(ts_store_jtext_high_throughput_test
@@ -175,7 +204,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     target_include_directories(ts_store_jtext_throughput_test
         PRIVATE
             ${TS_STORE_INCLUDE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+            ${JTEXT_SOURCE_DIR}
     )
 
     target_link_libraries(ts_store_jtext_throughput_test
@@ -188,7 +217,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     target_include_directories(ts_store_jtext_split_demo
         PRIVATE
             ${TS_STORE_INCLUDE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+            ${JTEXT_SOURCE_DIR}
     )
 
     target_link_libraries(ts_store_jtext_split_demo
@@ -207,7 +236,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     target_include_directories(ts_store_binary_persist_demo
         PRIVATE
             ${TS_STORE_INCLUDE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+            ${JTEXT_SOURCE_DIR}
     )
 
     target_link_libraries(ts_store_binary_persist_demo
@@ -226,7 +255,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     target_include_directories(ts_store_jtext_payload_benchmark
         PRIVATE
             ${TS_STORE_INCLUDE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+            ${JTEXT_SOURCE_DIR}
     )
 
     target_link_libraries(ts_store_jtext_payload_benchmark
@@ -245,7 +274,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     target_include_directories(ts_store_double_buffer_demo
         PRIVATE
             ${TS_STORE_INCLUDE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+            ${JTEXT_SOURCE_DIR}
     )
 
     target_compile_definitions(ts_store_double_buffer_demo
@@ -270,7 +299,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     target_include_directories(ts_store_integrated_double_buffer_demo
         PRIVATE
             ${TS_STORE_INCLUDE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../jText
+            ${JTEXT_SOURCE_DIR}
     )
 
     target_compile_definitions(ts_store_integrated_double_buffer_demo
@@ -289,11 +318,11 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     #     with either JTextEventSink or BinaryEventSink (chosen at runtime via --persist).
     #     This enables the new test_results/ binary_logs / jText_logs output for every test.
     foreach(num IN LISTS TEST_NUMBERS)
-        target_include_directories(ts_store_${num}_TS PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../jText)
+        target_include_directories(ts_store_${num}_TS PRIVATE ${JTEXT_SOURCE_DIR})
         target_compile_definitions(ts_store_${num}_TS PRIVATE TS_STORE_ENABLE_JTEXT_PERSIST)
         target_link_libraries(ts_store_${num}_TS PRIVATE jtext_core)
 
-        target_include_directories(ts_store_${num}_XS PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../jText)
+        target_include_directories(ts_store_${num}_XS PRIVATE ${JTEXT_SOURCE_DIR})
         target_compile_definitions(ts_store_${num}_XS PRIVATE TS_STORE_ENABLE_JTEXT_PERSIST)
         target_link_libraries(ts_store_${num}_XS PRIVATE jtext_core)
 

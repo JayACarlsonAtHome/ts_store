@@ -1,4 +1,4 @@
-# TS_STORE In-Memory Hot Path Summary (no persistence / no logs)
+# TS_STORE In-Memory Hot Path Summary (no persistence / no logs) - the "none" / pure inmem scenario for heavy tests (detailed rate)
 
 **Date**: $inmem_now  
 **OS**: $inmem_os  
@@ -10,18 +10,18 @@ This gives the "pure" in-memory throughput for comparison against the persisted 
 
 ## Per-Compiler Compile Times + In-Memory Throughput
 ### Compiler: gcc
-- Compile time: skipped
-- ts_store_005_TS (small reduced events/run for SSD): ~609,756 ops/sec (full in-mem run: 0s)
-- ts_store_005_XS (small reduced events/run for SSD): ~763,359 ops/sec (full in-mem run: 0s)
-- ts_store_007_TS (small reduced events/run for SSD): ~1,041,667 ops/sec (full in-mem run: 0s)
-- ts_store_007_XS (small reduced events/run for SSD): ~793,651 ops/sec (full in-mem run: 0s)
+- Compile time:  3m 14s (194s)
+- ts_store_005_TS (100 entries × 1 runs): ~275,482 ops/sec (measured 363 µs)
+- ts_store_005_XS (100 entries × 1 runs): ~180,832 ops/sec (measured 553 µs)
+- ts_store_007_TS (100 entries × 1 runs): ~265,252 ops/sec (measured 377 µs)
+- ts_store_007_XS (100 entries × 1 runs): ~300,300 ops/sec (measured 333 µs)
 
 ### Compiler: clang
-- Compile time: skipped
-- ts_store_005_TS (small reduced events/run for SSD): ~23,858,923 ops/sec (full in-mem run: 3s)
-- ts_store_005_XS (small reduced events/run for SSD): ~16,868,891 ops/sec (full in-mem run: 3s)
-- ts_store_007_TS (small reduced events/run for SSD): ~16,758,767 ops/sec (full in-mem run: 3s)
-- ts_store_007_XS (small reduced events/run for SSD): ~17,500,881 ops/sec (full in-mem run: 4s)
+- Compile time:  2m 24s (144s)
+- ts_store_005_TS (100 entries × 1 runs): ~182,482 ops/sec (measured 548 µs)
+- ts_store_005_XS (100 entries × 1 runs): ~268,097 ops/sec (measured 373 µs)
+- ts_store_007_TS (100 entries × 1 runs): ~305,810 ops/sec (measured 327 µs)
+- ts_store_007_XS (100 entries × 1 runs): ~176,991 ops/sec (measured 565 µs)
 
 
 ## Notes
@@ -29,5 +29,7 @@ This gives the "pure" in-memory throughput for comparison against the persisted 
 - Compare to main `TS_STORE_Test_Summary.md` (which includes async persistence) to see the cost of durable logging.
 - Higher artificial rates are easy without recording (e.g. just a counter). The meaningful engineering number is sustained rate *while recording*.
 - Compile times are the same as used for the log runs (binaries built once per compiler).
+- The scale (N entries × M runs) and measured time come from the test binary itself (high_resolution_clock + verify). Rates are extrapolated to 1M-event equivalent for historical comparison, but actual run size is shown.
+- In-memory runs use --persist=none (no DoubleBufferedWriter attached).
 
 See main [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md) for the full matrix with persistence (binary/jText, on/off, etc.).

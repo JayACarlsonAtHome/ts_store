@@ -4,6 +4,7 @@
 // Size controlled at runtime via --threads --events-per-thread --runs (or --test-size=smoke|full)
 // or via the runner's test_params.txt (smoke ~100 records for SSD safety, full for high intensity).
 // See tests/test_params.txt and scripts/run_all_tests.sh .
+// Note: this variant uses 0 int metrics + 0 double metrics (pure payload + flags test).
 
 #include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/DoubleBufferedWriter.hpp"
@@ -27,7 +28,7 @@ size_t EVENTS_PER_THREAD;
 size_t TOTAL;
 size_t RUNS;
 
-using LogConfig = ts_store_config<true, 6, 20, 43, 9, 6, false>;
+using LogConfig = ts_store_config<true, 6, 20, 43, 0, 0, false>;
 using LogxStore = ts_store<LogConfig>;
 
 std::pair<bool, long int> run_single_test(LogxStore& store)
@@ -67,7 +68,14 @@ std::pair<bool, long int> run_single_test(LogxStore& store)
                     std::abort();
                 }
                 if (i == 42 && t == 0) {
-                    std::cout << "  sample metrics on event 42 (t=0): int=" << ints[0] << " dbl=" << dbls[0] << "\n";
+                    if (LogConfig::the_IntMetrics > 0 || LogConfig::the_DblMetrics > 0) {
+                        std::cout << "  sample metrics on event 42 (t=0): int=" 
+                                  << (LogConfig::the_IntMetrics > 0 ? std::to_string(ints[0]) : "n/a")
+                                  << " dbl=" 
+                                  << (LogConfig::the_DblMetrics > 0 ? std::to_string(dbls[0]) : "n/a") << "\n";
+                    } else {
+                        std::cout << "  sample event 42 (t=0) (0 metrics)\n";
+                    }
                 }
             }
         });
@@ -155,29 +163,39 @@ int main(int argc, char** argv)
     std::cout << "=== FINAL MASSIVE TEST — " << TOTAL << " entries × " << RUNS << " runs ===\n";
     std::cout << "Using store.clear() — fastest, most realistic reuse\n\n";
 
+    // To keep captured log files reasonable in size (especially with --output on / live mode),
+    // we only emit per-run progress + timing on the *last* iteration.
+    // All 50 runs still do the full work + structural verification + persistence.
+    // The final summary stats (min/max/avg across all runs) are still printed once at the end.
     for (size_t run = 0; run < RUNS; ++run) {
-        std::cout << "Run " << std::setw(2) << (run + 1) << " / " << RUNS << "\n";
+        bool is_last = (run == RUNS - 1);
+
+        if (is_last) {
+            std::cout << "Run " << std::setw(2) << (run + 1) << " / " << RUNS << "\n";
+        }
 
         auto [status, microseconds] = run_single_test(store);
 
         if (!status) {
-            std::cout << "FAILED\n";
+            if (is_last) std::cout << "FAILED\n";
             ++failed_runs;
         } else
         {
             total_write_us += static_cast<decltype(total_write_us)>(microseconds);
             durations[run] = static_cast<size_t>(microseconds);
 
-            if (microseconds == 0) {
-                std::cout << "PASS — 0 µs (too fast to measure)\n\n";
-            } else
-            {
-                double ops_per_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(microseconds);
-                std::cout << "PASS — "
-                          << std::setw(8) << microseconds << " µs → "
-                          << std::fixed << std::setprecision(0)
-                          << std::setw(9) << static_cast<size_t>(ops_per_sec + 0.5)
-                          << " ops/sec\n\n";
+            if (is_last) {
+                if (microseconds == 0) {
+                    std::cout << "PASS — 0 µs (too fast to measure)\n\n";
+                } else
+                {
+                    double ops_per_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(microseconds);
+                    std::cout << "PASS — "
+                              << std::setw(8) << microseconds << " µs → "
+                              << std::fixed << std::setprecision(0)
+                              << std::setw(9) << static_cast<size_t>(ops_per_sec + 0.5)
+                              << " ops/sec\n\n";
+                }
             }
         }
     }
@@ -188,10 +206,10 @@ int main(int argc, char** argv)
     }
 
     auto [min_it, max_it] = std::minmax_element(durations.begin(), durations.end());
-    double avg_us = static_cast<double>(total_write_us) / RUNS;
+    double avg_us      = static_cast<double>(total_write_us)      / static_cast<double>(RUNS);
     double max_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*min_it);
     double min_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*max_it);
-    double avg_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / avg_us;
+    double avg_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(avg_us);
 
     std::cout << "\n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";

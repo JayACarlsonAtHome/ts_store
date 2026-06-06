@@ -144,29 +144,39 @@ int main(int argc, char** argv)
         }
     }
 
+    // To keep captured log files reasonable in size (especially with --output on / live mode),
+    // we only emit per-run progress + timing on the *last* iteration.
+    // All 50 runs still do the full work + structural verification + persistence.
+    // The final summary stats (min/max/avg across all runs) are still printed once at the end.
     for (size_t run = 0; run < RUNS; ++run) {
-        std::cout << "Run " << std::setw(2) << (run + 1) << " / " << RUNS << "\n";
+        bool is_last = (run == RUNS - 1);
+
+        if (is_last) {
+            std::cout << "Run " << std::setw(2) << (run + 1) << " / " << RUNS << "\n";
+        }
 
         auto [status, microseconds] = run_single_test(store);
 
         if (!status) {
-            std::cout << "FAILED\n";
+            if (is_last) std::cout << "FAILED\n";
             ++failed_runs;
         } else
         {
             total_write_us += static_cast<decltype(total_write_us)>(microseconds);
             durations[run] = static_cast<size_t>(microseconds);
 
-            if (microseconds == 0) {
-                std::cout << "PASS — 0 µs (too fast to measure)\n\n";
-            } else
-            {
-                double ops_per_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(microseconds);
-                std::cout << "PASS — "
-                          << std::setw(8) << microseconds << " µs → "
-                          << std::fixed << std::setprecision(0)
-                          << std::setw(9) << static_cast<size_t>(ops_per_sec + 0.5)
-                          << " ops/sec\n\n";
+            if (is_last) {
+                if (microseconds == 0) {
+                    std::cout << "PASS — 0 µs (too fast to measure)\n\n";
+                } else
+                {
+                    double ops_per_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(microseconds);
+                    std::cout << "PASS — "
+                              << std::setw(8) << microseconds << " µs → "
+                              << std::fixed << std::setprecision(0)
+                              << std::setw(9) << static_cast<size_t>(ops_per_sec + 0.5)
+                              << " ops/sec\n\n";
+                }
             }
         }
     }
@@ -177,7 +187,7 @@ int main(int argc, char** argv)
     }
 
     auto [min_it, max_it] = std::minmax_element(durations.begin(), durations.end());
-    double avg_us = static_cast<double>(total_write_us) / RUNS;
+    double avg_us = static_cast<double>(total_write_us) / static_cast<double>(RUNS);
     double max_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*min_it);
     double min_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(*max_it);
     double avg_ops_sec = static_cast<double>(TOTAL) * 1'000'000.0 / avg_us;

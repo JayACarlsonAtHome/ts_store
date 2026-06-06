@@ -135,7 +135,7 @@ public:
 
     class Statement {
     public:
-        Statement(Sqlite& db, const std::string& sql) : db_(&db) {
+        Statement(Sqlite& db, const std::string& sql) {
             if (sqlite3_prepare_v2(db.db_, sql.c_str(), -1, &stmt_, nullptr) != SQLITE_OK) {
                 throw SqliteError("Failed to prepare: " + sql + " - " + sqlite3_errmsg(db.db_));
             }
@@ -224,7 +224,6 @@ public:
         }
 
         sqlite3_stmt* stmt_ = nullptr;
-        Sqlite* db_ = nullptr;
     };
 
     Statement prepare(const std::string& sql) {

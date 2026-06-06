@@ -27,8 +27,14 @@ JText_*
 Event_*
 
 # Test runner output (large persist logs, per-run artifacts, sizes, etc.)
-# The canonical summary (TS_STORE_Test_Summary.md at root) is committed.
-test_results/
+# Results are per-disk under test-results/x7k/ , test-results/10k/ , test-results/ssd/
+# (all 3-char names for alignment). These dirs are fully ignored.
+# Root-level summaries (TS_STORE_*_Summary.md) may be committed selectively.
+test-results/
+
+# Temporary files created during development / monitoring
+test-log.txt
+tail_test_progress.sh
 
 # IDE
 .idea/
