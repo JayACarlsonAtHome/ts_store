@@ -1350,3 +1350,8 @@ with open(sys.argv[1], "w") as f: f.write(content)
     sed -i "s/\$sql_now/$sql_now/g; s/\$sql_os/$sql_os/g" "$SQL_SUMMARY"
 
 echo "SQL roundtrip summary written to: $SQL_SUMMARY"
+
+# Promote the lightweight summaries out to the sibling test-summary/ tree.
+# These small .md files are safe (and intended) to commit for proof/archival.
+# The massive per-run logs, .jtext, .bin etc. remain in the ignored test-results/<disk>/ tree.
+"$SCRIPT_DIR/promote_summaries.sh" --all || true

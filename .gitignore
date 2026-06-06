@@ -29,8 +29,14 @@ Event_*
 # Test runner output (large persist logs, per-run artifacts, sizes, etc.)
 # Results are per-disk under test-results/x7k/ , test-results/10k/ , test-results/ssd/
 # (all 3-char names for alignment). These dirs are fully ignored.
-# Root-level summaries (TS_STORE_*_Summary.md) may be committed selectively.
 test-results/
+
+# Lightweight per-disk summaries (the three TS_STORE_*_Summary.md files) are
+# copied here by scripts/promote_summaries.sh (called at end of every run).
+# These live in a sibling tree so they can be git-tracked and committed as proof
+# while the huge test-results/ contents stay out of the repo.
+# test-summary/x7k/ , test-summary/10k/ , test-summary/ssd/
+!test-summary/
 
 # Temporary files created during development / monitoring
 test-log.txt
