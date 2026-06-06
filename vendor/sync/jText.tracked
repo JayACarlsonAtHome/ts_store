@@ -1,0 +1,20 @@
+# jText files to track for vendoring into ts_store
+# Paths relative to the jText sibling root.
+# The Sync_dependencies.sh script uses this list.
+#
+# When vendoring:
+# - Most files are copied preserving structure under vendor/jText/
+# - Files under src/tool/ are copied to vendor/jText/CLI/ (as per project convention)
+
+CMakeLists.txt
+src/CMakeLists.txt
+jText.h
+jText.cpp
+src/parser/line.hpp
+src/parser/line.cpp
+src/parser/section.hpp
+src/parser/section.cpp
+src/validator/validator.hpp
+src/validator/validator.cpp
+src/tool/jtext_process.cpp
+src/tool/jtext_retrieve.cpp
