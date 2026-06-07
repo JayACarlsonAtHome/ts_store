@@ -87,9 +87,9 @@ ts_test_cli
 | `jac.ts_store.core` | `ts_store<Config>` (+ impl_details members) | `jac_ts_store_core` |
 | `jac.ts_store.impl.testing` | umbrella: `core` + `test_options` + `memory_guard` | `jac_ts_store_impl_testing` |
 
-`jac.ts_store.core` `export import`s `config`, `flags`, `ansi`, `writer`. Stress tests link `jac_ts_store_impl_testing`. Persistence sink modules (`binary`, `jtext`, `sql`, `writer`) `export import jac.ts_store.persistence.common`. Linked into all stress tests + `ts_store_flags` (builds module; tests still use headers today).
+`jac.ts_store.core` `export import`s `config`, `flags`, `ansi`, `writer`. Stress tests link `jac_ts_store_impl_testing` and consume modules via `import` (001–007 TS/XS). Persistence sink modules (`binary`, `jtext`, `sql`, `writer`) `export import jac.ts_store.persistence.common`. `ts_store_flags` uses `import` (flags + test_options).
 
-**Not modularized yet:** `ts_store` core class, flags, ansi, persistence; jText internals (`jtext_core` still a static lib).
+**Not modularized yet:** jText internals (`jtext_core` still a static lib); examples still use `#include`.
 
 **Module roadmap status:**
 
@@ -147,7 +147,7 @@ test-summary/OS_003/x7k/Smoke/README.md
 - `jac.jtext` phase 2: split into `core` / `reader` / `writer` + umbrella
 - `jac.report` uses `import jac.jtext.reader` (not raw `#include <jText.h>`)
 
-### Verified smoke (2026-06-07, post-impl.testing module)
+### Verified smoke (2026-06-07, post-import migration)
 | Leaf | Scenarios | Status |
 |------|-----------|--------|
 | `OS_003/ssd/Smoke` | 226/226 (113 gcc + 113 clang) | PASS |
@@ -186,10 +186,7 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
 ## Open / next (prioritized)
 
-### ts_store module sections (remaining — reply with a number)
-1. **Migrate stress tests** to `import` (still mostly `#include`)
-
-### Near-term
+### Near-term (optional)
 1. **Continue ts_store modularization** — one section per commit (see above)
 2. **Re-run on other OS slots** — `OS_001` / `OS_002` leaves empty since legacy retirement
 
@@ -241,6 +238,6 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
 ---
 
-Testing framework + module reporting stack: **functionally complete** for smoke. Module migration: **4 of 5 roadmap steps done** (`ts_store` core modules remain).
+Testing framework + module reporting stack: **functionally complete** for smoke. **ts_store module migration: complete** (stress tests 001–007 TS/XS use `import`).
 
-— session handoff 2026-06-07 (updated after jac.ts_store.impl.testing)
+— session handoff 2026-06-07 (updated after stress-test import migration)

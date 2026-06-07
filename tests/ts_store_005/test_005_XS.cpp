@@ -7,18 +7,23 @@
 // See tests/test_params.txt and scripts/run_all_tests.sh .
 // Note: this variant uses 0 int metrics + 0 double metrics (pure payload + flags test).
 
-#include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/DoubleBufferedWriter.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/BinaryEventSink.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/PersistCommon.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/EventSink.hpp"
-#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
-#include "../../include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.hpp"
-#endif
-#include <utility>
-#include <vector>
+#include <array>
+#include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <format>
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <string>
+#include <thread>
 
+import jac.ts_store.impl.testing;
+import jac.ts_store.persistence.binary;
+import jac.ts_store.persistence.jtext;
+#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
+import jac.ts_store.persistence.sql;
+#endif
 
 using namespace jac::ts_store::inline_v001;
 using namespace std::chrono;

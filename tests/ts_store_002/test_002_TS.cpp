@@ -1,13 +1,21 @@
 //tests/ts_store_002/Test_002_TS.CPP
 
-#include "../../include/beman/ts_store/ts_store_headers/ts_store.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/DoubleBufferedWriter.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/BinaryEventSink.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/PersistCommon.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/persistence/EventSink.hpp"
+#include <array>
+#include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <format>
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <string>
+#include <thread>
+
+import jac.ts_store.impl.testing;
+import jac.ts_store.persistence.binary;
+import jac.ts_store.persistence.jtext;
 #ifdef TS_STORE_ENABLE_SQLITE_PERSIST
-#include "../../include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.hpp"
+import jac.ts_store.persistence.sql;
 #endif
 
 using namespace jac::ts_store::inline_v001;
