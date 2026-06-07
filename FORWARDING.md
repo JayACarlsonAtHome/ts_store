@@ -106,8 +106,8 @@ ts_test_cli
 ```bash
 ./scripts/build_dual_compilers.sh   # build-dual/{gcc,clang}, jtext+sqlite ON, Ninja
 ```
-- GCC 15 via `scl enable gcc-toolset-15`
-- Clang: system `clang++`
+- **GCC 15+** via `scl enable gcc-toolset-15` (tested: GCC 15.2.1)
+- **Clang 21+** system `clang++` (tested: Clang 21.1.8) — CMake and `build_dual_compilers.sh` reject older versions
 - jText: **reference** (`../jText`) in dev; **vendored** via `./scripts/Sync_dependencies.sh --sync jText`
 - jacQLite: **reference** (`../jacQlite`) — required for `ts_test_cli`; `TS_STORE_JACQLITE_MODE=vendored` is wired in CMake but `vendor/jacQlite/` + sync script do not exist yet
 - `ts_test_cli` / modules require **both** `TS_STORE_ENABLE_JTEXT_PERSIST=ON` and `TS_STORE_ENABLE_SQLITE_PERSIST=ON`
@@ -161,9 +161,9 @@ Hub: [test-summary/README.md](test-summary/README.md)
 ## How to run on a new machine
 
 ```bash
-# 1. Toolchain (RHEL-like)
-scl enable gcc-toolset-15 -- bash
-# sqlite-devel, clang++, ninja (or CLion-bundled ninja)
+# 1. Toolchain (RHEL 9-like): GCC 15 + Clang 21
+scl enable gcc-toolset-15 -- bash   # GCC 15.2.1+
+# sqlite-devel, clang++ 21+, ninja (or CLion-bundled / $NINJA)
 
 # 2. Siblings (reference mode)
 # ../jText, ../jacQlite next to ts_store

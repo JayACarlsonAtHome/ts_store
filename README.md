@@ -164,6 +164,8 @@ cmake --build . -j
 
 C++23 modules require **Ninja** (or another generator with `FILE_SET` support). The dual-compiler helper wires this up.
 
+**Compiler requirements:** **GCC 15+** (via `gcc-toolset-15` on RHEL) and **Clang 21+**. Smoke matrix is verified with GCC 15.2.1 and Clang 21.1.8. Older compilers are rejected at configure time when persistence is enabled.
+
 ### With jText + SQLite persistence (typical dev / test matrix)
 ```bash
 cmake -G Ninja -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON -DCMAKE_BUILD_TYPE=Debug ..
@@ -295,7 +297,7 @@ Pure binary (no jText) examples and benchmarks are always available even without
 - `SqlEventSink` exists and is in the stress matrix, but SQL persistence is optional at configure time and less battle-tested than jText/Binary on every OS leaf.
 - No rotation, compaction, or retention policy on the persisted side.
 - Query/aggregation beyond `select(id)` is not implemented at runtime.
-- The project has been exercised heavily on one OS/compiler family (RHEL + GCC 15 / recent Clang). Validate on your target platforms.
+- Smoke matrix evidence is from **RHEL 9.8 + GCC 15.2.1 + Clang 21.1.8** only. Other platforms need their own run + promote.
 - No automated CI yet — regression proof is manual smoke + promoted `test-summary/` commits.
 
 ---

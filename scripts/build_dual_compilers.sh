@@ -4,7 +4,7 @@
 #
 # Builds ts_store (with jText persistence enabled) using both supported compilers:
 #   1. gcc-toolset-15 (GCC 15)
-#   2. System clang (if available and recent enough)
+#   2. System clang++ (Clang 21+, if available)
 #
 # Usage:
 #   ./scripts/build_dual_compilers.sh
@@ -84,12 +84,12 @@ if command -v clang++ >/dev/null 2>&1; then
     CLANG_VERSION=$(clang++ --version | head -1)
     echo "Found clang++: $CLANG_VERSION"
 
-    # Only try if it looks reasonably modern (clang 16+)
+    # Only try if Clang meets project minimum (21+, same as CMake)
     MAJOR_VERSION=$(clang++ -dumpversion | cut -d. -f1)
-    if [ "$MAJOR_VERSION" -ge 16 ]; then
+    if [ "$MAJOR_VERSION" -ge 21 ]; then
         build_with_compiler "clang++" "$BUILD_BASE/clang" "clang++ $CLANG_VERSION"
     else
-        echo "Skipping clang build: detected version $MAJOR_VERSION is too old (need 16+)."
+        echo "Skipping clang build: detected version $MAJOR_VERSION is too old (need 21+)."
     fi
 else
     echo "clang++ not found in PATH. Skipping clang build."

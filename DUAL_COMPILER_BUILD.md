@@ -6,12 +6,14 @@
 
 This project builds with **both** supported compilers when persistence and the test matrix are enabled (`TS_STORE_ENABLE_JTEXT_PERSIST=ON` and `TS_STORE_ENABLE_SQLITE_PERSIST=ON`).
 
-**Toolchain (tested):**
+**Supported compilers (required and smoke-tested):**
 
-- **gcc-toolset-15** (GCC 15) on RHEL-like hosts via `scl enable gcc-toolset-15`
-- **Clang 16+** (21+ tested on this project)
+| Compiler | Minimum | Tested on this project |
+|----------|---------|------------------------|
+| **GCC** | **15** (`gcc-toolset-15` on RHEL 9) | GCC 15.2.1 |
+| **Clang** | **21** (system `clang++`) | Clang 21.1.8 |
 
-**CMake minimum:** GCC **13+** or Clang **16+** (enforced when jText persist is ON). GCC 15 via toolset is the documented dev default; system GCC 11 will not work for C++23 modules.
+CMake enforces these floors when jText persist is ON. System GCC 11 (default on RHEL 9) is **not** sufficient — use `scl enable gcc-toolset-15`.
 
 **Generator:** **Ninja** is required for C++23 `FILE_SET cxx_modules`. Plain Unix Makefiles will fail at module compile time.
 
@@ -27,7 +29,7 @@ This project builds with **both** supported compilers when persistence and the t
 
 This script:
 
-1. Clean-configures `build-dual/gcc` with gcc-toolset-15 and `build-dual/clang` with system `clang++` (if ≥ 16)
+1. Clean-configures `build-dual/gcc` with gcc-toolset-15 and `build-dual/clang` with system `clang++` (if ≥ 21)
 2. Uses **Ninja** (PATH, `$NINJA`, or CLion-bundled fallback)
 3. Enables jText + SQLite persist
 4. Builds these targets in **each** tree:

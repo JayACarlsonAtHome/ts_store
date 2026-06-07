@@ -254,9 +254,9 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     # (we define our own copies below from the appropriate location).
     set(TS_STORE_BUILDING_JTEXT_TOOLS ON)
 
-    # We support building with either:
-    #   - gcc-toolset-15 (GCC 15+)
-    #   - Recent clang++ (Clang 16+ recommended)
+    # Supported / tested toolchains (also enforced below):
+    #   - gcc-toolset-15 (GCC 15+) — smoke-tested with GCC 15.2.1
+    #   - clang++ (Clang 21+) — smoke-tested with Clang 21.1.8
     #
     # No compiler is forced. The user chooses via -DCMAKE_CXX_COMPILER=...
     # We only perform a basic capability check below.
@@ -332,16 +332,17 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
 
     # --- Compiler capability check (dual compiler support) ---
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "13")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "15")
             message(FATAL_ERROR
-                "TS_STORE_ENABLE_JTEXT_PERSIST requires GCC >= 13 or Clang >= 16.\n"
+                "TS_STORE_ENABLE_JTEXT_PERSIST requires GCC >= 15 (gcc-toolset-15) or Clang >= 21.\n"
                 "Current: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\n"
                 "Tip: Use 'scl enable gcc-toolset-15 -- cmake ...' or pass -DCMAKE_CXX_COMPILER=clang++")
         endif()
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "16")
-            message(WARNING
-                "Clang ${CMAKE_CXX_COMPILER_VERSION} may have incomplete C++23 support. Clang 16+ recommended.")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "21")
+            message(FATAL_ERROR
+                "TS_STORE_ENABLE_JTEXT_PERSIST requires Clang >= 21 (or GCC >= 15 via gcc-toolset-15).\n"
+                "Current: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
         endif()
     endif()
 
