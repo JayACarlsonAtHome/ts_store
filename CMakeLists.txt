@@ -63,6 +63,16 @@ target_sources(jac_report
 target_compile_features(jac_report PUBLIC cxx_std_23)
 target_include_directories(jac_report PUBLIC ${TS_STORE_INCLUDE_DIR})
 
+# jText module shim (re-exports public jText API as jac.jtext).
+add_library(jac_jtext)
+target_sources(jac_jtext
+    PUBLIC
+        FILE_SET cxx_modules TYPE CXX_MODULES
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES modules/jac.jtext/jac.jtext.cppm
+)
+target_compile_features(jac_jtext PUBLIC cxx_std_23)
+
 # jacQLite module shim (header-only wrapper re-exported as jac.qlite).
 add_library(jac_qlite)
 target_sources(jac_qlite
@@ -504,8 +514,9 @@ target_link_libraries(ts_store_binary_payload_benchmark
 
 # jac.report + ts_test_cli (jText write, SQLite views)
 if(TS_STORE_ENABLE_JTEXT_PERSIST)
-    target_include_directories(jac_report PUBLIC ${JTEXT_SOURCE_DIR} ${JTEXT_SOURCE_DIR}/src)
-    target_link_libraries(jac_report PUBLIC jtext_core)
+    target_include_directories(jac_jtext PUBLIC ${JTEXT_SOURCE_DIR} ${JTEXT_SOURCE_DIR}/src)
+    target_link_libraries(jac_jtext PUBLIC jtext_core)
+    target_link_libraries(jac_report PUBLIC jac_jtext)
     target_link_libraries(ts_test_cli PRIVATE project_warnings project_options)
 else()
     message(WARNING "jac.report run_manifest requires TS_STORE_ENABLE_JTEXT_PERSIST=ON")

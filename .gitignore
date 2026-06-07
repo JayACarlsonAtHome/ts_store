@@ -20,6 +20,9 @@ Makefile
 
 # Test / benchmark artifacts (runtime logs under test-results/)
 *.jtext
+# C++23 module shim (directory name matches *.jtext)
+!modules/jac.jtext/
+!modules/jac.jtext/**
 # Promoted manifests in test-summary/ are committed proof (override *.jtext above)
 !test-summary/**/run_manifest.jtext
 *.bin

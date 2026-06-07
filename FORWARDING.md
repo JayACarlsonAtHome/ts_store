@@ -1,125 +1,221 @@
-# FORWARDING / HANDOFF — ts_store session (2026-06-xx)
+# FORWARDING / HANDOFF — ts_store (2026-06-07)
 
-**Context**: User request: "look over the project, try to recompile the matrix, fix the sql errors in the smoke test, leave yourself a forwarding document".
+**Latest pushed commit:** `f815183` — *Add jac.qlite module shim; depend on sibling jacQLite* on `dev-work`.
 
-## What was done
+**Uncommitted work (this session):** `jac.jtext` module added; `jac.report` switched from `#include <jText.h>` to `import jac.jtext`. Smoke re-run 224/224 PASS. See [Modules](#modules-c23) below.
 
-### 1. Project survey
-- C++23 high-throughput thread-safe event buffer (`ts_store`) with optional double-buffered async persistence (BinaryEventSink, JTextEventSink, SqlEventSink).
-- Full stress matrix: tests 001–007 (TS=timestamped / XS=not) + flags unit test.
-- Two runners: legacy shell `scripts/run_all_tests.sh` + modern C++ `tools/test_cli` (built as `ts_test_cli`, wrapped by `scripts/ts-test`).
-- Test params in `tests/test_params.txt` (SIZE=smoke|full, DISK_TYPE, [001..007]=x selection, OS_ID).
-- Dual-compiler verification is the norm (GCC 15 via gcc-toolset-15 + recent Clang).
-- jText vendored or reference (sibling ../jText); SQLite optional via `-DTS_STORE_ENABLE_SQLITE_PERSIST=ON`.
-- Persistence attach uses `DoubleBufferedWriter` + `IEventSink`; "sql" mode is direct via `SqlEventSink` (writes .db + optional debug .sql of INSERTs).
-- Results layout: `test-results/OS_00n/<disk>/Smoke|xFull/...` + promoted summaries under `test-summary/`.
+**Context:** Test orchestration is C++ `ts_test_cli` + C++23 modules for reporting/runner. SQL persist works across 001–007. Legacy `TS_STORE_*_Summary.md` retired.
 
-### 2. Recompile the matrix (attempted + succeeded for core)
-- Clean configure + build with **both** jText persist **and** SQLite persist enabled:
-  - `build-matrix-smoke/` (GCC 15 via scl): full `ts_test_cli` + all 001–007 TS/XS + flags. **Succeeded**.
-  - `build-clang-smoke/` (clang++ 21): key targets including 001/005/007 variants + ts_test_cli + flags. **Succeeded**.
-- The official `./scripts/build_dual_compilers.sh` (which populates `build-dual/{gcc,clang}` and builds a long explicit target list) was reviewed; the targeted builds above cover the same compile surface (jtext+sqlite, all stress binaries). Running the full script is safe but long-running (it rm -rf's the build-dual tree first).
-- Key CMake paths: `TS_STORE_ENABLE_JTEXT_PERSIST`, `TS_STORE_ENABLE_SQLITE_PERSIST`, `TS_STORE_JTEXT_MODE=vendored|reference`.
-- All tests now compile cleanly when SQLITE_PERSIST=ON (SqlEventSink.cpp is pulled in by CMake for the 00N targets).
+---
 
-### 3. Fixed the SQL errors / gaps in the smoke test
-**Root cause**: The test binaries only handled `--persist binary|jtext` (defaulting everything else, including "sql" and "none", to JTextEventSink). The runner (both old shell and new `ts_test_cli`) generates scenarios for all 4 persist types (binary, jtext, sql, none) across TS/XS for 001–007. Only a subset of TS tests (003/005/007) had the guarded `#include` + `else if (ptype == "sql")` branch with the proper `#ifdef TS_STORE_ENABLE_SQLITE_PERSIST` error path. XS variants and several TS variants were missing it entirely → "sql" smoke scenarios were silently running as jtext (or would have failed to exercise SQL).
+## Resume quickly (if the agent console froze)
 
-**Fix applied** (to make the full smoke matrix actually cover SQL):
-- Added the conditional include to every deficient test:
-  ```cpp
-  #ifdef TS_STORE_ENABLE_SQLITE_PERSIST
-  #include ".../SqlEventSink.hpp"
-  #endif
-  ```
-- Updated the persistence attachment block in all 14 files (TS + XS for 001–007) to the canonical pattern (see e.g. `tests/ts_store_003/test_003_TS.cpp`):
-  - Parse `ptype` / `bname` from `parse_test_options`.
-  - `if (ptype != "none") { if (binary) ... else if (sql) { #ifdef ... SqlEventSink ... } else { JText... } attach; } else { print "pure in-memory" }`
-  - For the "only last run persists" tests (005/007 style) the logic lives inside the `is_last` block (sql branch added there too for the XS variants).
-- Also added "none" support to the light tests (001/002/004/006) that previously always attached a sink.
-- Result: `ts_store_*_?? --persist=sql ...` now produces `persist.db` + `persist.sql` (when built with the define) and exercises the real `SqlEventSink` path for **every** test in the matrix.
-- Verified post-fix:
-  - Rebuild (gcc + clang) with SQLITE=ON succeeded.
-  - Manual runs of 001_XS, 003_TS, 006_TS etc. with `--persist=sql --threads=N --events-per-thread=M` now create the .db/.sql artifacts and pass verification.
-  - `ts_test_cli run --dry-run` shows the 224 scenarios (incl. sql for the previously-missing binaries).
-
-**Files changed for the fix** (the 14 under tests/):
-- ts_store_001/{test_001_TS.cpp,test_001_XS.cpp}
-- ts_store_002/{..._TS,_XS}
-- ts_store_003/test_003_XS.cpp (TS was already good)
-- ts_store_004/{..._TS,_XS}
-- ts_store_005/test_005_XS.cpp (TS was already good)
-- ts_store_006/{..._TS,_XS}
-- ts_store_007/test_007_XS.cpp (TS was already good)
-
-(The other diffs you see in `git status` were pre-existing in the tree state.)
-
-### 4. Other notes / minor observations
-- `SqlEventSink` + `Sqlite.hpp` wrapper look solid; the CREATE TABLE for metric tables uses a slightly odd leading-comma style after the dynamic columns (`    , thread_id...`) but SQLite accepts it and runs succeeded.
-- The C++ `ts_test_cli` (recommended) currently only schedules the 001–007 matrix (no "flags" entry). The shell runner adds `ts_store_flags` in some paths; flags test is a pure unit test and ignores persist args gracefully in practice.
-- `test-results/cpp-runs/` is the layout used by the new cli (different from the OS_00n layout used by the shell runner + promotion).
-- Vendored jText was used successfully for the self-contained sqlite+persist builds.
-- `press_any_key` / interactive waits are bypassed by `--interactive=0` (the runners do this).
-
-## How to re-run / verify the smoke test now
+Long matrix runs or full dual-compiler rebuilds can stall the IDE agent. **Run heavy work yourself in a normal terminal** and point the next agent at the log/output.
 
 ```bash
-# 1. Preferred: use the C++ driver (after building ts_test_cli with sqlite+jtext)
-./scripts/ts-test run --disk ssd
-# or directly:
-./build-matrix-smoke/ts_test_cli run --disk ssd
+cd /slowdata/git/ts_store
 
-# 2. Or the full shell matrix runner (respects tests/test_params.txt)
-# (it also calls promote_summaries at the end)
-./scripts/run_all_tests.sh --compiler gcc --output no --disk ssd
+# Fast sanity (already-built tree, ~10s)
+cd build-dual/gcc && scl enable gcc-toolset-15 -- ./ts_test_cli run --compiler gcc --disk ssd
 
-# Current params (as left):
-#   SIZE=smoke, DISK_TYPE=ssd, OS_ID=OS_003, all 001-007 selected
-# To change: edit tests/test_params.txt then re-run.
+# Full dual-compiler smoke (~1–2 min total, two terminals or sequential)
+cd build-dual/gcc  && scl enable gcc-toolset-15 -- ./ts_test_cli run --compiler gcc --disk ssd
+cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
-# Quick manual verification of sql path on any binary (after a build with -DTS_STORE_ENABLE_SQLITE_PERSIST=ON):
-(echo; echo) | ./build-matrix-smoke/ts_store_006_XS \
-  --interactive=0 --color=0 --persist=sql --base-name=/tmp/check_sql \
-  --threads=2 --events-per-thread=5 --runs=1
-ls -l /tmp/check_sql*
-# Expect: ...db  and ...sql (plus PASS output)
+# Rebuild after CMake/module changes (Ninja required)
+./scripts/build_dual_compilers.sh          # clean rebuild both compilers (~few min)
+# or incremental:
+cd build-dual/gcc && scl enable gcc-toolset-15 -- cmake --build . --target ts_test_cli -j
 ```
 
-Rebuild example (self-contained, no sibling jText needed):
+**Build dirs on disk:** `build-dual/gcc`, `build-dual/clang` (Debug, jtext+sqlite ON). Modules need **Ninja** (`scripts/build_dual_compilers.sh` finds CLion-bundled ninja if not in PATH).
+
+**After a good run:** `./scripts/promote_summaries.sh --all` to refresh committed `test-summary/`.
+
+---
+
+## Current architecture
+
+### Runner (canonical)
+| Piece | Role |
+|-------|------|
+| `tools/test_cli/main.cpp` → `ts_test_cli` | Thin CLI; `import jac.test_framework` |
+| `modules/jac.test_framework/` | Params, scenarios, `run_scenario()` |
+| `modules/jac.report/` | Manifest write/merge, SQLite summarize, hub |
+| `scripts/ts-test` | Finds `build-dual/{gcc,clang}/ts_test_cli` and delegates |
+| `scripts/run_all_tests.sh` | Thin wrapper: gcc + clang `ts_test_cli run`, then promote |
+| `scripts/run_all_tests.py` | **Deleted** — do not resurrect |
+| `tests/test_params.txt` | `SIZE`, `DISK_TYPE`, `OS_ID`, `001..007=x` |
+
+### Modules (C++23)
+
+CMake targets use `FILE_SET cxx_modules`. Dependency chain:
+
+```
+ts_test_cli
+  └─ jac.test_framework  (modules/jac.test_framework/)
+       └─ jac.report     (modules/jac.report/)
+            ├─ jac.jtext   (modules/jac.jtext/)     ← NEW (uncommitted)
+            └─ jac.qlite   (modules/jac.qlite/)     ← shim over ../jacQlite
+```
+
+| Module | Interface | Implementation | Notes |
+|--------|-----------|----------------|-------|
+| `jac.jtext` | `jac.jtext.cppm` | — | Re-exports `JTextFile`, `JTextEntry`, `JTextSection`, `JTextWriter`, `CaseMode` |
+| `jac.qlite` | `jac.qlite.cppm` | — | Re-exports `jac::qlite::Sqlite`, `SqliteError` |
+| `jac.report` | `jac.report.cppm` | `manifest.cpp`, `summarize.cpp` | `import jac.jtext;` + `import jac.qlite;` in impl units |
+| `jac.test_framework` | `jac.test_framework.cppm` | `runner.cpp` | `export import jac.report` |
+
+**Not modularized yet:** `ts_store` core headers, stress test binaries, jText internals (`jtext_core` still a static lib).
+
+**Module roadmap status:**
+
+| Step | Item | Status |
+|------|------|--------|
+| 1 | Unified `test_framework` (dedupe includes) | **Done** — `jac.test_framework` |
+| 2 | `jac.qlite` module | **Done** |
+| 3 | jText module(s) | **Phase 1 done** — `jac.jtext` shim; deeper partition (reader/writer/core) **TODO** |
+| 4 | Reporting extracted from CLI | **Done** — `jac.report` |
+| 5 | `ts_store` core/persistence modules | **TODO** |
+
+### Build
 ```bash
-rm -rf build-smoke && mkdir build-smoke && cd build-smoke
-scl enable gcc-toolset-15 -- bash -c '
-  cmake -DCMAKE_BUILD_TYPE=Release \
-        -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
-        -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
-        -DTS_STORE_JTEXT_MODE=vendored \
-        ..
-  cmake --build . --target ts_test_cli ts_store_001_TS ... ts_store_007_XS -j
-'
+./scripts/build_dual_compilers.sh   # build-dual/{gcc,clang}, jtext+sqlite ON, Ninja
+```
+- GCC 15 via `scl enable gcc-toolset-15`
+- Clang: system `clang++`
+- jText: **reference** (`../jText`) in dev; **vendored** via `./scripts/Sync_dependencies.sh --sync jText`
+- jacQLite: **reference** (`../jacQlite`); `TS_STORE_JACQLITE_MODE=vendored` for vendor copy
+- `ts_test_cli` / modules require **both** `TS_STORE_ENABLE_JTEXT_PERSIST=ON` and `TS_STORE_ENABLE_SQLITE_PERSIST=ON`
+
+### Results layout
+```
+test-results/OS_00n/<disk>/<Smoke|xFull>/
+  run_manifest.jtext      # matrix manifest (jText, Case: Sensitive)
+  run_manifest.db         # SQLite views (gitignored)
+  README.md               # leaf hub → by_test/
+  by_test/<TEST>.md       # per-binary detail
+  binary_logs|jText_logs|sql_logs|inmem_logs/TS_STORE_TEST_*_{compiler}_{persist}_{on|off}.log
 ```
 
-Dual-compiler helper (for the "official" matrix recompile):
+### Promoted / committed proof (`test-summary/`)
+```
+test-summary/README.md
+test-summary/OS_003/ssd/Smoke/README.md
+test-summary/OS_003/x7k/Smoke/README.md
+```
+- `.gitignore`: `test-results/` ignored; `!test-summary/**/run_manifest.jtext` whitelisted
+
+### `ts_test_cli` commands
 ```bash
-./scripts/build_dual_compilers.sh   # populates build-dual/{gcc,clang}; long but canonical
+./ts_test_cli run [--compiler gcc|clang|all] --disk x7k|10k|ssd [--params file]
+./ts_test_cli summarize [--disk ...]
+./ts_test_cli summarize-hub
+./ts_test_cli promote [--all]
 ```
 
-## Next / open items (for follow-up session)
-- Run a **full end-to-end smoke** (not just dry-run or single binaries) with the current params + new binaries, then `scripts/promote_summaries.sh --all`. Inspect the generated summaries (esp. the sql rows) and any sql_logs/ artifacts.
-- Optionally run the complete `./scripts/build_dual_compilers.sh` and compare artifacts under build-dual.
-- If any runtime SQL errors appear in a full matrix run (constraint violations, binding count mismatches on metric tables, etc.), they will surface in the per-scenario logs under test-results/.../sql_logs/... . The debug .sql files are co-located for replay.
-- Consider making the metric table CREATE less "surprising" (trailing/leading commas) for human readers of the debug .sql.
-- The ts_test_cli results dir (`test-results/cpp-runs/...`) is a bit of a parallel universe vs the OS_00n layout; if we want one canonical runner, either extend the C++ cli or keep using the shell one for "official" results.
-- Flags test + persist scenarios: currently thin (the binary doesn't attach anything); if the shell runner still feeds --persist to it, it may log warnings or be ignored.
-- Git: the 14 test .cpp files are the intentional changes from this session. Other diffs (scripts, CMakeLists, vendor, README, test_params) were visible in the starting tree state — review before commit.
-- After a real smoke run, the `test-results/` tree (esp. under OS_003/ssd/Smoke/sql_logs/...) will have the fresh evidence that sql now actually executes for the whole matrix.
+---
+
+## What was completed
+
+### Testing framework (pushed through `f815183`)
+- C++ CLI replaces shell/Python orchestration
+- SQL matrix coverage 001–007 TS/XS (`binary | jtext | sql | none`)
+- Manifest → SQLite views → markdown (`run_manifest.jtext`, `by_test/*.md`)
+- Per-OS layout `test-results/OS_00n/<disk>/<Smoke|xFull>/`
+- `jac.report`, `jac.test_framework`, `jac.qlite` modules extracted
+
+### jac.jtext module (uncommitted, verified 2026-06-07)
+- Added `modules/jac.jtext/jac.jtext.cppm` + `jac_jtext` CMake target
+- `jac.report/manifest.cpp` and `summarize.cpp`: `#include <jText.h>` → `import jac.jtext`
+- **Compile:** GCC 15 + Clang, `ts_test_cli` — PASS
+- **Smoke:** `OS_003/ssd/Smoke` — **224/224** (112 gcc + 112 clang), manifest + summarize pipeline PASS
+
+### Prior verified smoke (still valid on x7k leaf)
+| Leaf | Scenarios | Status |
+|------|-----------|--------|
+| `OS_003/ssd/Smoke` | 224/224 | PASS (re-verified with jac.jtext) |
+| `OS_003/x7k/Smoke` | 224/224 | PASS (prior run; re-run after commit if desired) |
+
+---
+
+## How to run on a new machine
+
+```bash
+# 1. Toolchain (RHEL-like)
+scl enable gcc-toolset-15 -- bash
+# sqlite-devel, clang++, ninja (or CLion-bundled ninja)
+
+# 2. Siblings (reference mode)
+# ../jText, ../jacQlite next to ts_store
+
+# 3. Build
+./scripts/build_dual_compilers.sh
+
+# 4. Smoke (run from each compiler's build dir)
+cd build-dual/gcc  && ./ts_test_cli run --compiler gcc --disk ssd
+cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
+./scripts/promote_summaries.sh --all
+
+# 5. Before push
+./scripts/Sync_dependencies.sh --update-checksums jText
+./scripts/Sync_dependencies.sh --sync jText
+```
+
+**Params** (`tests/test_params.txt`): `SIZE=smoke`, `DISK_TYPE=ssd`, `OS_ID=OS_003`, all `001..007=x`.
+
+---
+
+## Open / next (prioritized)
+
+### Near-term
+1. **Commit jac.jtext** — stage `modules/jac.jtext/`, `CMakeLists.txt`, `modules/jac.report/{manifest,summarize}.cpp`
+2. **Re-run + promote** after commit; optionally refresh `OS_003/x7k/Smoke`
+3. **Re-run on other OS slots** — `OS_001` / `OS_002` leaves empty since legacy retirement
+4. **Flags test** — `ts_store_flags` not in matrix; optional add
+
+### Modules (continuing)
+1. **jText partition phase 2** — split `jac.jtext` into reader/writer/core modules (inside ts_store shim layer or upstream in `../jText`)
+2. **`ts_store` core/persistence modules** — last; highest risk / largest surface
+
+### Nice-to-have
+- Metric table CREATE formatting in `SqlEventSink` debug `.sql`
+- `xFull` matrix run + promote when ready for stress evidence
+
+---
 
 ## Quick pointers
-- Sql sink impl: `include/beman/ts_store/ts_store_headers/persistence/{SqlEventSink.hpp,SqlEventSink.cpp,Sqlite.hpp}`
-- Example of correct pattern: `tests/ts_store_003/test_003_TS.cpp` (and 005/007 TS)
-- Test options parser: `include/beman/ts_store/ts_store_headers/impl_details/test_options.hpp`
-- Runner (C++): `tools/test_cli/main.cpp`
-- Params + scaling: `tests/test_params.txt` + `get_test_params` in the runners.
 
-This doc is your on-ramp. The matrix should now compile cleanly for both compilers with sqlite enabled, and `--persist sql` scenarios will actually use SqlEventSink for 100% of the 001–007 TS/XS tests.
+| Topic | Path |
+|-------|------|
+| CLI entry | `tools/test_cli/main.cpp` |
+| Runner logic | `modules/jac.test_framework/runner.cpp` |
+| Manifest write/merge | `modules/jac.report/manifest.cpp` |
+| Summarize + hub | `modules/jac.report/summarize.cpp` |
+| jText module shim | `modules/jac.jtext/jac.jtext.cppm` |
+| jacQLite module shim | `modules/jac.qlite/jac.qlite.cppm` |
+| Sqlite forwarder | `include/.../persistence/Sqlite.hpp` → `../jacQlite` |
+| Promote script | `scripts/promote_summaries.sh` |
+| jText sibling | `../jText` / `vendor/jText` |
+| jacQLite sibling | `../jacQlite` |
+| Dual-compiler docs | `DUAL_COMPILER_BUILD.md` |
 
-— Grok (end of session)
+---
+
+## Pitfalls for the next agent
+
+1. **Agent console freezes** — avoid blocking on `build_dual_compilers.sh` or full matrix in-agent; use incremental builds and `--compiler gcc` smoke only, or tell user to run in external terminal
+2. **`[13/112]` in logs** — scenario progress index, not a compiler version
+3. **Ninja required** for C++ modules; plain Make generator fails
+4. **Minimal cmake** (jtext/sqlite OFF) breaks `ts_test_cli` — dual build always enables both
+5. **Compiler-specific binaries** — run gcc scenarios from `build-dual/gcc`, clang from `build-dual/clang`; `--compiler all` from one dir still uses that dir's binaries
+6. **Build uses `../jText`** unless `TS_STORE_JTEXT_MODE=vendored`
+7. **Manifest merge** — gcc then clang on same leaf → `compilers_csv: gcc,clang`, 224 scenarios
+8. **Do not resurrect** `tools/test_cli/manifest.cpp` / `summarize.cpp` — moved to `modules/jac.report/`
+9. **Do not regenerate** old `TS_STORE_*_Summary.md`
+
+---
+
+Testing framework + module reporting stack: **functionally complete** for smoke. Module migration: **4 of 5 roadmap steps done** (core `ts_store` modules remain).
+
+— session handoff 2026-06-07 (updated after jac.jtext)

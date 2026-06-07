@@ -1,7 +1,5 @@
 module;
 
-#include <jText.h>
-
 #include <filesystem>
 
 #include <algorithm>
@@ -18,6 +16,8 @@ module;
 #include <vector>
 
 module jac.report;
+
+import jac.jtext;
 
 namespace fs = std::filesystem;
 
