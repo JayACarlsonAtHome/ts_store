@@ -1,6 +1,6 @@
 # FORWARDING / HANDOFF — ts_store (2026-06-07)
 
-**Latest pushed commit:** *(updated on push)* — see `git log -1` on `dev-work`.
+**Latest pushed commit:** `8cf83c2` — *Partition jac.jtext into core/reader/writer modules* on `dev-work`.
 
 **Context:** Test orchestration is C++ `ts_test_cli` + C++23 modules for reporting/runner. SQL persist works across 001–007. Legacy `TS_STORE_*_Summary.md` retired.
 
