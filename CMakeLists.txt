@@ -465,18 +465,6 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     endforeach()
 endif()
 
-if(TS_STORE_ENABLE_SQLITE_PERSIST)
-    foreach(num IN LISTS TEST_NUMBERS)
-        # Compile the direct SQL sink into the stress test targets.
-        target_sources(ts_store_${num}_TS PRIVATE
-            include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.cpp
-        )
-        target_sources(ts_store_${num}_XS PRIVATE
-            include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.cpp
-        )
-    endforeach()
-endif()
-
 # =============================================================================
 # Optional direct SQLite persistence
 # =============================================================================
@@ -503,12 +491,26 @@ if(TS_STORE_ENABLE_SQLITE_PERSIST)
 
     target_link_libraries(jac_qlite PUBLIC jacQLite::jacQLite)
 
+    # ts_store SQL persistence module (SqlEventSink).
+    add_library(jac_ts_store_persistence_sql)
+    target_sources(jac_ts_store_persistence_sql
+        PUBLIC
+            FILE_SET cxx_modules TYPE CXX_MODULES
+            BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+            FILES modules/jac.ts_store/jac.ts_store.persistence.sql.cppm
+        PRIVATE
+            include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.cpp
+    )
+    target_compile_features(jac_ts_store_persistence_sql PUBLIC cxx_std_23)
+    target_include_directories(jac_ts_store_persistence_sql PUBLIC ${TS_STORE_INCLUDE_DIR})
+    target_link_libraries(jac_ts_store_persistence_sql PUBLIC jac_qlite PRIVATE jacQLite::jacQLite)
+
     foreach(num IN LISTS TEST_NUMBERS)
         target_compile_definitions(ts_store_${num}_TS PRIVATE TS_STORE_ENABLE_SQLITE_PERSIST)
-        target_link_libraries(ts_store_${num}_TS PRIVATE jacQLite::jacQLite)
+        target_link_libraries(ts_store_${num}_TS PRIVATE jac_ts_store_persistence_sql)
 
         target_compile_definitions(ts_store_${num}_XS PRIVATE TS_STORE_ENABLE_SQLITE_PERSIST)
-        target_link_libraries(ts_store_${num}_XS PRIVATE jacQLite::jacQLite)
+        target_link_libraries(ts_store_${num}_XS PRIVATE jac_ts_store_persistence_sql)
     endforeach()
 endif()
 

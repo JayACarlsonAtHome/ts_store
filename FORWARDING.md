@@ -81,6 +81,7 @@ ts_test_cli
 | `jac.ts_store.test_options` | `parse_test_options`, `TestOptions` | `jac_ts_store_test_options` |
 | `jac.ts_store.persistence.jtext` | `JTextSplitEventLog`, `JTextEventSink`, `IEventSink` | `jac_ts_store_persistence_jtext` |
 | `jac.ts_store.persistence.binary` | `BinaryEventLog`, `BinaryEventSink` | `jac_ts_store_persistence_binary` |
+| `jac.ts_store.persistence.sql` | `SqlEventSink`, `IEventSink` | `jac_ts_store_persistence_sql` |
 
 Linked into all stress tests + `ts_store_flags` (builds module; tests still use headers today).
 
@@ -142,7 +143,7 @@ test-summary/OS_003/x7k/Smoke/README.md
 - `jac.jtext` phase 2: split into `core` / `reader` / `writer` + umbrella
 - `jac.report` uses `import jac.jtext.reader` (not raw `#include <jText.h>`)
 
-### Verified smoke (2026-06-07, post-partition)
+### Verified smoke (2026-06-07, post-sql module)
 | Leaf | Scenarios | Status |
 |------|-----------|--------|
 | `OS_003/ssd/Smoke` | 224/224 (112 gcc + 112 clang) | PASS |
@@ -181,11 +182,13 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
 ## Open / next (prioritized)
 
-### ts_store module sections (remaining)
-1. **`jac.ts_store.core`** — `ts_store<Config>` + impl_details
-2. **`jac.ts_store.persistence.common`** — extract shared sink types (optional cleanup)
-3. **`jac.ts_store.persistence.sql`** — `SqlEventSink`
-5. **`jac.ts_store.persistence.writer`** — `DoubleBufferedWriter`
+### ts_store module sections (remaining — reply with a number)
+1. **`jac.ts_store.persistence.writer`** — `DoubleBufferedWriter`
+2. **`jac.ts_store.persistence.common`** — shared sink types only (optional cleanup)
+3. **`jac.ts_store.impl.testing`**
+4. **`jac.ts_store.core`** — `ts_store<Config>` + impl_details
+5. **Migrate stress tests** to `import` (still mostly `#include`)
+6. **Add `ts_store_flags` to `ts_test_cli` matrix**
 
 ### Near-term
 1. **Continue ts_store modularization** — one section per commit (see above)
@@ -211,6 +214,7 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 | ts_store config module | `modules/jac.ts_store/jac.ts_store.config.cppm` |
 | ts_store ansi module | `modules/jac.ts_store/jac.ts_store.ansi.cppm` |
 | ts_store flags module | `modules/jac.ts_store/jac.ts_store.flags.cppm` |
+| ts_store sql persistence module | `modules/jac.ts_store/jac.ts_store.persistence.sql.cppm` |
 | jacQLite module shim | `modules/jac.qlite/jac.qlite.cppm` |
 | Sqlite forwarder | `include/.../persistence/Sqlite.hpp` → `../jacQlite` |
 | Promote script | `scripts/promote_summaries.sh` |
@@ -237,4 +241,4 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
 Testing framework + module reporting stack: **functionally complete** for smoke. Module migration: **4 of 5 roadmap steps done** (`ts_store` core modules remain).
 
-— session handoff 2026-06-07 (updated after jac.jtext partition)
+— session handoff 2026-06-07 (updated after jac.ts_store.persistence.sql)
