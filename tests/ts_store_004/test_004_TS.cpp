@@ -6,6 +6,9 @@
 #include "../../include/beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/PersistCommon.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/EventSink.hpp"
+#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
+#include "../../include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.hpp"
+#endif
 
 using namespace jac::ts_store::inline_v001;
 
@@ -37,16 +40,27 @@ int main(int argc, char** argv) {
         std::string bname = _opts.base_name;
         if (bname.empty()) bname = "persist";
 
-        std::unique_ptr<IEventSink> sink;
-        const size_t im = LogConfigxMainx::the_IntMetrics;
-        const size_t dm = LogConfigxMainx::the_DblMetrics;
-        if (ptype == "binary") {
-            sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+        if (ptype != "none") {
+            std::unique_ptr<IEventSink> sink;
+            const size_t im = LogConfigxMainx::the_IntMetrics;
+            const size_t dm = LogConfigxMainx::the_DblMetrics;
+            if (ptype == "binary") {
+                sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+            } else if (ptype == "sql") {
+#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
+                sink = std::make_unique<SqlEventSink>(bname, im, dm, PersistMode::All, true /* write debug INSERT .sql file */);
+#else
+                std::cerr << "ERROR: SQL persistence not enabled at compile time (rebuild with -DTS_STORE_ENABLE_SQLITE_PERSIST=ON)\n";
+                return 1;
+#endif
+            } else {
+                sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+            }
+            auto writer = std::make_unique<DoubleBufferedWriter>(std::move(sink), 10'000);
+            safepay.attach_persistence(std::move(writer));
         } else {
-            sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+            std::cout << "No persistence attached — pure in-memory hot path\n";
         }
-        auto writer = std::make_unique<DoubleBufferedWriter>(std::move(sink), 10'000);
-        safepay.attach_persistence(std::move(writer));
     }
 
     std::vector<std::thread> threads;

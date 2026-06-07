@@ -48,6 +48,18 @@ add_executable(ts_store_flags tests/ts_store_flags/Test_Flags.cpp)
 target_include_directories(ts_store_flags PRIVATE ${TS_STORE_INCLUDE_DIR})
 target_link_libraries(ts_store_flags PRIVATE project_warnings project_options)
 
+# C++ Test CLI Tool - the proper CLI for running the full matrix.
+# Replaces the old shell and Python runners. Built as a first-class tool.
+# Run it from a directory that contains the built ts_store_* test binaries,
+# or extend it with --bin-dir support in the future.
+add_executable(ts_test_cli
+    tools/test_cli/main.cpp
+    tools/test_cli/manifest.cpp
+    tools/test_cli/summarize.cpp
+)
+target_compile_features(ts_test_cli PRIVATE cxx_std_23)
+target_include_directories(ts_test_cli PRIVATE ${TS_STORE_INCLUDE_DIR})
+
 set(TEST_NUMBERS 001 002 003 004 005 006 007)
 
 foreach(num IN LISTS TEST_NUMBERS)
@@ -439,3 +451,17 @@ target_link_libraries(ts_store_binary_payload_benchmark
         project_warnings
         project_options
 )
+
+# ts_test_cli manifest + summarize (jText write, SQLite views)
+if(TS_STORE_ENABLE_JTEXT_PERSIST)
+    target_include_directories(ts_test_cli PRIVATE ${JTEXT_SOURCE_DIR} ${JTEXT_SOURCE_DIR}/src)
+    target_link_libraries(ts_test_cli PRIVATE jtext_core project_warnings project_options)
+else()
+    message(WARNING "ts_test_cli run_manifest requires TS_STORE_ENABLE_JTEXT_PERSIST=ON")
+endif()
+
+if(TS_STORE_ENABLE_SQLITE_PERSIST)
+    target_link_libraries(ts_test_cli PRIVATE SQLite::SQLite3)
+else()
+    message(WARNING "ts_test_cli summarize requires TS_STORE_ENABLE_SQLITE_PERSIST=ON")
+endif()

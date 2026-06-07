@@ -1,8 +1,9 @@
 //tests/ts_store_005/Test_005_TS.CPP
 //
-// Massive multi-threaded throughput + correctness test (historically ~1,000,000 records per run).
-// Size controlled at runtime via --threads --events-per-thread --runs (or --test-size=smoke|full)
-// or via the runner's test_params.txt (smoke ~100 records for SSD safety, full for high intensity).
+// Massive multi-threaded throughput + correctness test.
+// Full mode: 100 threads × 10k events = 1M events per run, 5 runs total.
+// Only the last run performs persistence (previous runs are clean hot-path measurement).
+// Size controlled at runtime via --threads --events-per-thread --runs (or via test_params.txt).
 // See tests/test_params.txt and scripts/run_all_tests.sh .
 // Note: this variant uses 0 int metrics + 0 double metrics (pure payload + flags test).
 
@@ -121,40 +122,9 @@ int main(int argc, char** argv)
     }
     LogxStore  store(THREADS, EVENTS_PER_THREAD);
 
-    // Attach double-buffered (asynchronous) persistence.
-    // Sink (JText or Binary) chosen by --persist=... (default jtext).
-    // base_name (for output files) can be overridden by --base-name (runner points it
-    // into test_results/binary_logs/TS_STORE_TEST_005_TS/ or jText_logs/... so the
-    // .bin / .jtext + _Ints.jtext + _Floats.jtext land in the right place).
-    {
-        std::string ptype = _opts.persist.empty() ? "jtext" : _opts.persist;
-        if (ptype == "none") {
-            std::cout << "No persistence attached — pure in-memory hot path\n";
-        } else {
-            std::string bname = _opts.base_name.empty() ? "persist" : _opts.base_name;
-
-            std::unique_ptr<IEventSink> sink;
-            const size_t im = LogConfig::the_IntMetrics;
-            const size_t dm = LogConfig::the_DblMetrics;
-            if (ptype == "binary") {
-                sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
-            } else if (ptype == "sql") {
-#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
-                sink = std::make_unique<SqlEventSink>(bname, im, dm, PersistMode::All, true /* write debug INSERT .sql file */);
-#else
-                std::cerr << "ERROR: SQL persistence not enabled at compile time (rebuild with -DTS_STORE_ENABLE_SQLITE_PERSIST=ON)\n";
-                return 1;
-#endif
-            } else {
-                sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
-            }
-            auto writer = std::make_unique<DoubleBufferedWriter>(
-                std::move(sink),
-                10'000                   // batch size for double buffer
-            );
-            store.attach_persistence(std::move(writer));
-        }
-    }
+    // Parse persist type early (we only actually attach for the last run).
+    std::string ptype = _opts.persist.empty() ? "jtext" : _opts.persist;
+    std::string bname = _opts.base_name.empty() ? "persist" : _opts.base_name;
 
     size_t total_write_us = 0;
     std::vector<size_t> durations(RUNS, 0);
@@ -163,15 +133,49 @@ int main(int argc, char** argv)
     std::cout << "=== FINAL MASSIVE TEST — " << TOTAL << " entries × " << RUNS << " runs ===\n";
     std::cout << "Using store.clear() — fastest, most realistic reuse\n\n";
 
+    if (ptype == "none") {
+        std::cout << "No persistence attached — pure in-memory hot path\n\n";
+    } else {
+        std::cout << "Persistence will only be attached on the *last* run "
+                  << "(previous runs measure clean hot path; only final run produces persist artifacts).\n\n";
+    }
+
     // To keep captured log files reasonable in size (especially with --output on / live mode),
     // we only emit per-run progress + timing on the *last* iteration.
-    // All 50 runs still do the full work + structural verification + persistence.
+    // For persist modes, *only the last run* attaches the DoubleBufferedWriter + sink,
+    // so the .bin / .jtext artifacts contain data from only the final run.
+    // All runs do the full work + structural verification.
     // The final summary stats (min/max/avg across all runs) are still printed once at the end.
     for (size_t run = 0; run < RUNS; ++run) {
         bool is_last = (run == RUNS - 1);
 
         if (is_last) {
             std::cout << "Run " << std::setw(2) << (run + 1) << " / " << RUNS << "\n";
+
+            // Only attach persistence on the final run (when not --persist=none).
+            // This ensures persist data / log files are generated only from the last run.
+            if (ptype != "none") {
+                std::unique_ptr<IEventSink> sink;
+                const size_t im = LogConfig::the_IntMetrics;
+                const size_t dm = LogConfig::the_DblMetrics;
+                if (ptype == "binary") {
+                    sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+                } else if (ptype == "sql") {
+#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
+                    sink = std::make_unique<SqlEventSink>(bname, im, dm, PersistMode::All, true /* write debug INSERT .sql file */);
+#else
+                    std::cerr << "ERROR: SQL persistence not enabled at compile time (rebuild with -DTS_STORE_ENABLE_SQLITE_PERSIST=ON)\n";
+                    return 1;
+#endif
+                } else {
+                    sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+                }
+                auto writer = std::make_unique<DoubleBufferedWriter>(
+                    std::move(sink),
+                    10'000                   // batch size for double buffer
+                );
+                store.attach_persistence(std::move(writer));
+            }
         }
 
         auto [status, microseconds] = run_single_test(store);

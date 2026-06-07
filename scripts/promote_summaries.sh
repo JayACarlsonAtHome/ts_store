@@ -2,24 +2,20 @@
 #
 # promote_summaries.sh
 #
-# After a test run finishes, copy the lightweight TS_STORE_*_Summary.md files
-# out of the (git-ignored) test-results/ tree (which may be nested as
-# test-results/OS_001/<DISK_TYPE>/<SIZE_LABEL>/ using the padded OS_00n convention)
-# into the sibling test-summary/ tree (mirroring the nesting) so they can be committed and tracked.
+# After a test run finishes, copy manifest + markdown navigation from the
+# (git-ignored) test-results/ tree into test-summary/ for commit.
 #
-# This keeps huge log/persist artifacts out of the repo while preserving the
-# human-readable proof summaries per disk type (x7k/10k/ssd) and per OS/size.
+# Promoted per leaf (OS_00n/<disk>/<Smoke|xFull>/):
+#   run_manifest.jtext, README.md, by_test/*.md
 #
-# The central visible list lives in test-results/OS_MAP.txt (OS_001 = ..., OS_002 = ...).
-# Full OS details for each run are in OS_INFO.txt inside the leaf directory.
+# Then regenerates test-summary/README.md hub index via ts_test_cli summarize-hub.
 #
 # Usage:
-#   ./scripts/promote_summaries.sh                 # uses DISK_TYPE from env or tests/test_params.txt
+#   ./scripts/promote_summaries.sh                 # uses DISK_TYPE from tests/test_params.txt
 #   ./scripts/promote_summaries.sh --disk 10k
 #   ./scripts/promote_summaries.sh --all           # promote whatever exists under test-results/
 #
-# Called automatically at the end of run_all_tests.sh (after the three summaries
-# are written for the current DISK_TYPE). Safe to run manually too.
+# Called automatically at the end of run_all_tests.sh. Safe to run manually too.
 #
 
 set -euo pipefail
@@ -74,30 +70,23 @@ normalize_disk() {
 declare -a LEAVES=()
 
 if [[ $PROMOTE_ALL -eq 1 ]]; then
-    # Discover *any* leaf directories (any depth) under test-results/ that contain a summary.
-    # This supports both the old flat layout and the new nested layout:
-    #   test-results/OS_001/<DISK>/<SIZE_LABEL>/   (using the padded OS_00n convention)
-    # Full OS name lives in OS_INFO.txt inside the leaf; directory names stay short for alignment.
     while IFS= read -r -d '' f; do
         leaf_dir=$(dirname "$f")
-        # Compute the relative path under test-results (works for 1 or 3 levels)
         rel=${leaf_dir#test-results/}
         LEAVES+=("$rel")
-    done < <(find test-results -type f -name TS_STORE_Test_Summary.md -print0 2>/dev/null | sort -z)
+    done < <(find test-results \( -name run_manifest.jtext -o -name README.md \) -type f -print0 2>/dev/null | sort -z)
 elif [[ -n "$DISK" ]]; then
     nd="$(normalize_disk "$DISK")"
-    # For explicit --disk we still support the simple case; user can pass full relative if needed
     for cand in "$nd" "x7k" "10k" "ssd"; do
-        for f in $(find "test-results" -path "*$cand*/TS_STORE_Test_Summary.md" 2>/dev/null | head -5); do
+        for f in $(find "test-results" \( -path "*$cand*/README.md" -o -path "*$cand*/run_manifest.jtext" \) 2>/dev/null | head -10); do
             leaf_dir=$(dirname "$f")
             rel=${leaf_dir#test-results/}
             LEAVES+=("$rel")
         done
     done
 else
-    # Fallback: common simple disks (flat or under any OS)
     for cand in x7k 10k ssd; do
-        for f in $(find "test-results" -path "*$cand*/TS_STORE_Test_Summary.md" 2>/dev/null | head -3); do
+        for f in $(find "test-results" -path "*$cand*/README.md" 2>/dev/null | head -5); do
             leaf_dir=$(dirname "$f")
             rel=${leaf_dir#test-results/}
             LEAVES+=("$rel")
@@ -111,7 +100,7 @@ if [[ ${#LEAVES[@]} -gt 0 ]]; then
 fi
 
 if [[ ${#LEAVES[@]} -eq 0 ]]; then
-    echo "No summaries found to promote under test-results/ (any depth)."
+    echo "No manifests/READMEs found to promote under test-results/."
     exit 0
 fi
 
@@ -120,15 +109,41 @@ echo "Promoting summaries for: ${LEAVES[*]}"
 for rel in "${LEAVES[@]}"; do
     src="test-results/$rel"
     dst="test-summary/$rel"
-    if [[ ! -f "$src/TS_STORE_Test_Summary.md" ]]; then
-        echo "  skip $rel (no TS_STORE_Test_Summary.md)"
+    if [[ ! -f "$src/run_manifest.jtext" && ! -f "$src/README.md" ]]; then
+        echo "  skip $rel (no manifest or README)"
         continue
     fi
     mkdir -p "$dst"
-    cp -f "$src"/TS_STORE_*_Summary.md "$dst/" 2>/dev/null || true
-    count=$(ls "$dst"/ 2>/dev/null | wc -l | tr -d ' ')
+    cp -f "$src"/run_manifest.jtext "$dst/" 2>/dev/null || true
+    cp -f "$src"/README.md "$dst/" 2>/dev/null || true
+    if [[ -d "$src/by_test" ]]; then
+        mkdir -p "$dst/by_test"
+        cp -f "$src/by_test/"*.md "$dst/by_test/" 2>/dev/null || true
+    fi
+    count=$(find "$dst" -type f 2>/dev/null | wc -l | tr -d ' ')
     echo "  -> $dst/  (copied $count files)"
-    ls -1 "$dst/" | sed 's/^/     /'
+    find "$dst" -type f | sed 's/^/     /'
 done
+
+# Remove retired legacy summary files from promoted leaves
+find test-summary -name 'TS_STORE_*_Summary.md' -type f -delete 2>/dev/null || true
+
+# Regenerate hub index
+HUB_CLI=""
+for candidate in \
+    "$PROJECT_ROOT/build-dual/gcc/ts_test_cli" \
+    "$PROJECT_ROOT/build-dual/clang/ts_test_cli" \
+    "$PROJECT_ROOT/build-matrix-smoke/ts_test_cli"; do
+    if [[ -x "$candidate" ]]; then
+        HUB_CLI="$candidate"
+        break
+    fi
+done
+
+if [[ -n "$HUB_CLI" ]]; then
+    (cd "$PROJECT_ROOT" && "$HUB_CLI" summarize-hub) || echo "Warning: summarize-hub failed (rebuild ts_test_cli?)" >&2
+else
+    echo "Warning: ts_test_cli not found; skipped summarize-hub (run after ./scripts/build_dual_compilers.sh)" >&2
+fi
 
 echo "Done. test-summary/ contents are small and safe to git add/commit (test-results/ stays ignored)."

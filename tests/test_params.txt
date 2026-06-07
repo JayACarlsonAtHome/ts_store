@@ -4,7 +4,17 @@
 #   so that disk subdirs line up vertically when ls'ing: x7k/ 10k/ ssd/
 #   (CLI --disk accepts 7k/7200/x7k etc. and normalizes)
 #
-# SIZE: smoke (tiny, ~100 events, safe) or full (heavy stress, 50 runs of 1M for 005/007)
+# SIZE: smoke (tiny, ~100 events, safe) or full (heavy stress).
+#
+# In SIZE=full the runner uses *progressive* difficulty so that:
+#   001     : hello-world sanity (a few hundred events total)
+#   002     : small (~few thousand)
+#   003-004 : medium
+#   005/006/007 : heavy tests (100 threads × 10000 events = 1M events per run × 5 runs)
+#   006     : heavy writer stress (medium-heavy)
+#
+# This prevents "test 001 taking an hour" when you want full stress on the big tests.
+# The old blunt global override has been replaced by per-test scaling in the runner.
 #
 # OS_ID is normally **auto-detected** by the runner (you do not set it).
 # The code runs uname + parses /etc/os-release to identify the OS,

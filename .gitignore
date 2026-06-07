@@ -18,8 +18,10 @@ Makefile
 *.dylib
 *.dll
 
-# Test / benchmark artifacts
+# Test / benchmark artifacts (runtime logs under test-results/)
 *.jtext
+# Promoted manifests in test-summary/ are committed proof (override *.jtext above)
+!test-summary/**/run_manifest.jtext
 *.bin
 jtext_throughput_test.jtext
 Binary_*
@@ -31,12 +33,14 @@ Event_*
 # (all 3-char names for alignment). These dirs are fully ignored.
 test-results/
 
-# Lightweight per-disk summaries (the three TS_STORE_*_Summary.md files) are
-# copied here by scripts/promote_summaries.sh (called at end of every run).
-# These live in a sibling tree so they can be git-tracked and committed as proof
-# while the huge test-results/ contents stay out of the repo.
-# test-summary/x7k/ , test-summary/10k/ , test-summary/ssd/
+# Promoted lightweight summaries: test-summary/README.md hub, per-leaf README.md,
+# by_test/*.md, run_manifest.jtext (see exception above). Copied by promote_summaries.sh.
+# Layout: test-summary/OS_00n/<disk>/<Smoke|xFull>/...
 !test-summary/
+
+# SQLite slurp DBs are regeneratable from manifest (ignore everywhere)
+run_manifest.db
+**/run_manifest.db
 
 # Temporary files created during development / monitoring
 test-log.txt

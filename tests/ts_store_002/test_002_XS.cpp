@@ -6,6 +6,9 @@
 #include "../../include/beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/PersistCommon.hpp"
 #include "../../include/beman/ts_store/ts_store_headers/persistence/EventSink.hpp"
+#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
+#include "../../include/beman/ts_store/ts_store_headers/persistence/SqlEventSink.hpp"
+#endif
 
 using namespace jac::ts_store::inline_v001;
 
@@ -14,16 +17,19 @@ using LogxStore = ts_store<LogConfig>;
 
 int main(int argc, char** argv) {
     auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
-    (void)_opts; // silence -Wunused
     if (std::cin.rdbuf()->in_avail() > 0) {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 
-    constexpr size_t num_threads       = 25;
-    constexpr size_t events_per_thread = 100;
-    constexpr size_t total_entries     = uint64_t(num_threads) * events_per_thread;
+    // Respect runner / test_params.txt scaling (progressive difficulty).
+    // Defaults kept at the historical small values for this test.
+    size_t num_threads       = 25;
+    size_t events_per_thread = 100;
+    if (_opts.threads > 0)          num_threads = _opts.threads;
+    if (_opts.events_per_thread > 0) events_per_thread = _opts.events_per_thread;
+    size_t total_entries     = uint64_t(num_threads) * events_per_thread;
 
-    std::cout << ansi::yellow() << std::format( "=== ts_store Test 002 TS with {} entries ===\n", total_entries) << ansi::reset();
+    std::cout << ansi::yellow() << std::format( "=== ts_store Test 002 XS with {} entries ===\n", total_entries) << ansi::reset();
     std::cout << ansi::white()  << std::format("Threads: {}    Events/thread: {}    Total: {}\n\n",  num_threads, events_per_thread, total_entries) << ansi::reset();
 
     LogxStore store(num_threads, events_per_thread);
@@ -36,23 +42,34 @@ int main(int argc, char** argv) {
         std::string bname = _opts.base_name;
         if (bname.empty()) bname = "persist";
 
-        std::unique_ptr<IEventSink> sink;
-        const size_t im = LogConfig::the_IntMetrics;
-        const size_t dm = LogConfig::the_DblMetrics;
-        if (ptype == "binary") {
-            sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+        if (ptype != "none") {
+            std::unique_ptr<IEventSink> sink;
+            const size_t im = LogConfig::the_IntMetrics;
+            const size_t dm = LogConfig::the_DblMetrics;
+            if (ptype == "binary") {
+                sink = std::make_unique<BinaryEventSink>(bname, im, dm, PersistMode::All);
+            } else if (ptype == "sql") {
+#ifdef TS_STORE_ENABLE_SQLITE_PERSIST
+                sink = std::make_unique<SqlEventSink>(bname, im, dm, PersistMode::All, true /* write debug INSERT .sql file */);
+#else
+                std::cerr << "ERROR: SQL persistence not enabled at compile time (rebuild with -DTS_STORE_ENABLE_SQLITE_PERSIST=ON)\n";
+                return 1;
+#endif
+            } else {
+                sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+            }
+            auto writer = std::make_unique<DoubleBufferedWriter>(std::move(sink), 10'000);
+            store.attach_persistence(std::move(writer));
         } else {
-            sink = std::make_unique<JTextEventSink>(bname, im, dm, PersistMode::All);
+            std::cout << "No persistence attached — pure in-memory hot path\n";
         }
-        auto writer = std::make_unique<DoubleBufferedWriter>(std::move(sink), 10'000);
-        store.attach_persistence(std::move(writer));
     }
 
     std::vector<std::thread> threads;
     threads.reserve(num_threads);
 
     for (size_t t = 0; t < num_threads; ++t) {
-        threads.emplace_back([t, &store ] {
+        threads.emplace_back([t, &store, events_per_thread] {
             for (size_t i = 0; i < events_per_thread; ++i) {
 
                 std::string payload ( LogxStore::test_messages[i % LogxStore::test_messages.size()]);
