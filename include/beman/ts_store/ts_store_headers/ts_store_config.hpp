@@ -2,6 +2,11 @@
 
 #pragma once
 
+#include <cstdint>
+#include <cstring>
+#include <string>
+#include <string_view>
+
 namespace jac::ts_store::inline_v001 {
 
     /// Fixed-size storage for category/payload.

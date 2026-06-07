@@ -1,6 +1,6 @@
 # FORWARDING / HANDOFF — ts_store (2026-06-07)
 
-**Latest pushed commit:** `8cf83c2` — *Partition jac.jtext into core/reader/writer modules* on `dev-work`.
+**Latest pushed commit:** see `git log -1` on `dev-work`.
 
 **Context:** Test orchestration is C++ `ts_test_cli` + C++23 modules for reporting/runner. SQL persist works across 001–007. Legacy `TS_STORE_*_Summary.md` retired.
 
@@ -71,7 +71,15 @@ ts_test_cli
 | `jac.report` | `jac.report.cppm` + `manifest.cpp`, `summarize.cpp` | `import jac.jtext.reader;` + `import jac.qlite;` |
 | `jac.test_framework` | `jac.test_framework.cppm` + `runner.cpp` | `export import jac.report` |
 
-**Not modularized yet:** `ts_store` core headers, stress test binaries, jText internals (`jtext_core` still a static lib).
+**ts_store modules (incremental):**
+
+| Module | Exports | CMake target |
+|--------|---------|--------------|
+| `jac.ts_store.config` | `bounded_string`, `ts_store_config` | `jac_ts_store_config` |
+
+Linked into all stress tests + `ts_store_flags` (builds module; tests still use headers today).
+
+**Not modularized yet:** `ts_store` core class, flags, ansi, persistence; jText internals (`jtext_core` still a static lib).
 
 **Module roadmap status:**
 
@@ -81,7 +89,7 @@ ts_test_cli
 | 2 | `jac.qlite` module | **Done** |
 | 3 | jText module(s) | **Done** — partitioned `core` / `reader` / `writer` + umbrella |
 | 4 | Reporting extracted from CLI | **Done** — `jac.report` |
-| 5 | `ts_store` core/persistence modules | **TODO** |
+| 5 | `ts_store` core/persistence modules | **In progress** — `jac.ts_store.config` done |
 
 ### Build
 ```bash
@@ -168,8 +176,14 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
 ## Open / next (prioritized)
 
+### ts_store module sections (remaining)
+1. **`jac.ts_store.flags`** — `TsStoreFlags` + helpers
+2. **`jac.ts_store.ansi`** — terminal color helpers
+3. **`jac.ts_store.core`** — `ts_store<Config>` + impl_details
+4. **`jac.ts_store.persistence.*`** — sinks, double-buffer writer
+
 ### Near-term
-1. **`ts_store` core/persistence modules** — only remaining roadmap step; highest risk
+1. **Continue ts_store modularization** — one section per commit (see above)
 2. **Re-run on other OS slots** — `OS_001` / `OS_002` leaves empty since legacy retirement
 3. **Flags test** — `ts_store_flags` not in matrix; optional add
 
@@ -189,6 +203,7 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 | Manifest write/merge | `modules/jac.report/manifest.cpp` |
 | Summarize + hub | `modules/jac.report/summarize.cpp` |
 | jText modules | `modules/jac.jtext/jac.jtext.{core,reader,writer}.cppm` |
+| ts_store config module | `modules/jac.ts_store/jac.ts_store.config.cppm` |
 | jacQLite module shim | `modules/jac.qlite/jac.qlite.cppm` |
 | Sqlite forwarder | `include/.../persistence/Sqlite.hpp` → `../jacQlite` |
 | Promote script | `scripts/promote_summaries.sh` |
