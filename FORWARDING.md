@@ -191,7 +191,7 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 ### Near-term (optional)
 1. **Re-run `OS_003/x7k/Smoke`** — current leaf is 224/224 (predates `flags=x`); expect 226/226 after re-run + promote
 2. **Move ts_store implementation into module TUs** — bodies still in `include/beman/...`; modules are shims (step 6 above)
-3. **Re-run on other OS slots** — `OS_001` / `OS_002` leaves empty since legacy retirement
+3. **Re-run on other OS slots** when new machines join the matrix (`OS_001`, `OS_002`, …)
 
 
 ### Nice-to-have

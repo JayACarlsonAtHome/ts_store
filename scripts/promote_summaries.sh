@@ -11,12 +11,11 @@
 # Then regenerates test-summary/README.md hub index via ts_test_cli summarize-hub.
 #
 # Usage:
-#   ./scripts/promote_summaries.sh                 # uses DISK_TYPE from tests/test_params.txt
+#   ./scripts/promote_summaries.sh                 # DISK_TYPE from tests/test_params.txt
 #   ./scripts/promote_summaries.sh --disk 10k
-#   ./scripts/promote_summaries.sh --all           # promote whatever exists under test-results/
+#   ./scripts/promote_summaries.sh --all           # every leaf under test-results/
 #
 # Called automatically at the end of run_all_tests.sh. Safe to run manually too.
-#
 
 set -euo pipefail
 
@@ -40,7 +39,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# If no explicit disk, try to load the same way the runner does (from test_params.txt)
+# If no explicit disk, try test_params.txt (unless --all).
 if [[ -z "$DISK" && $PROMOTE_ALL -eq 0 ]]; then
     CONFIG_FILE="$PROJECT_ROOT/tests/test_params.txt"
     if [[ -f "$CONFIG_FILE" ]]; then
@@ -55,44 +54,57 @@ if [[ -z "$DISK" && $PROMOTE_ALL -eq 0 ]]; then
     fi
 fi
 
-# Normalize like the main runner (accepts many forms, outputs exactly 3-char for alignment)
+# Normalize like the main runner (exactly 3-char disk names).
 normalize_disk() {
-    local d="${1,,}"   # lowercase
+    local d="${1,,}"
     d="${d// /}"; d="${d//-/}"; d="${d//_/}"
     case "$d" in
         7k|7200|x7k|seven|seventyk) echo "x7k" ;;
-        10k|10| x10k|tenk|ten)       echo "10k" ;;
+        10k|10|x10k|tenk|ten)       echo "10k" ;;
         ssd|solid|flash)             echo "ssd" ;;
-        *) echo "$d" ;;   # pass through if already good or unknown
+        *) echo "$d" ;;
     esac
+}
+
+DISK_FILTER=""
+if [[ $PROMOTE_ALL -eq 0 && -n "$DISK" ]]; then
+    DISK_FILTER="$(normalize_disk "$DISK")"
+fi
+
+remove_legacy_summary_files() {
+    find test-summary -name 'TS_STORE_*_Summary.md' -type f -delete 2>/dev/null || true
+}
+
+# Drop empty placeholder leaves (no README + no manifest) and empty parents.
+prune_stale_summary_tree() {
+    local pruned=0
+    while IFS= read -r -d '' d; do
+        if [[ ! -f "$d/run_manifest.jtext" && ! -f "$d/README.md" ]]; then
+            echo "  prune empty leaf: ${d#./}"
+            rm -rf "$d"
+            pruned=1
+        fi
+    done < <(find test-summary -mindepth 3 -maxdepth 3 -type d -print0 2>/dev/null)
+    if [[ $pruned -eq 1 ]]; then
+        find test-summary -depth -type d -empty -delete 2>/dev/null || true
+    fi
 }
 
 declare -a LEAVES=()
 
-if [[ $PROMOTE_ALL -eq 1 ]]; then
+discover_leaves() {
     while IFS= read -r -d '' f; do
+        local leaf_dir rel
         leaf_dir=$(dirname "$f")
         rel=${leaf_dir#test-results/}
+        if [[ -n "$DISK_FILTER" && "$rel" != */"$DISK_FILTER"/* ]]; then
+            continue
+        fi
         LEAVES+=("$rel")
     done < <(find test-results \( -name run_manifest.jtext -o -name README.md \) -type f -print0 2>/dev/null | sort -z)
-elif [[ -n "$DISK" ]]; then
-    nd="$(normalize_disk "$DISK")"
-    for cand in "$nd" "x7k" "10k" "ssd"; do
-        for f in $(find "test-results" \( -path "*$cand*/README.md" -o -path "*$cand*/run_manifest.jtext" \) 2>/dev/null | head -10); do
-            leaf_dir=$(dirname "$f")
-            rel=${leaf_dir#test-results/}
-            LEAVES+=("$rel")
-        done
-    done
-else
-    for cand in x7k 10k ssd; do
-        for f in $(find "test-results" -path "*$cand*/README.md" 2>/dev/null | head -5); do
-            leaf_dir=$(dirname "$f")
-            rel=${leaf_dir#test-results/}
-            LEAVES+=("$rel")
-        done
-    done
-fi
+}
+
+discover_leaves
 
 # Dedup
 if [[ ${#LEAVES[@]} -gt 0 ]]; then
@@ -101,6 +113,7 @@ fi
 
 if [[ ${#LEAVES[@]} -eq 0 ]]; then
     echo "No manifests/READMEs found to promote under test-results/."
+    prune_stale_summary_tree
     exit 0
 fi
 
@@ -125,15 +138,14 @@ for rel in "${LEAVES[@]}"; do
     find "$dst" -type f | sed 's/^/     /'
 done
 
-# Remove retired legacy summary files from promoted leaves
-find test-summary -name 'TS_STORE_*_Summary.md' -type f -delete 2>/dev/null || true
+remove_legacy_summary_files
+prune_stale_summary_tree
 
-# Regenerate hub index
+# Hub index: canonical build trees only (build-dual/{gcc,clang}).
 HUB_CLI=""
 for candidate in \
     "$PROJECT_ROOT/build-dual/gcc/ts_test_cli" \
-    "$PROJECT_ROOT/build-dual/clang/ts_test_cli" \
-    "$PROJECT_ROOT/build-matrix-smoke/ts_test_cli"; do
+    "$PROJECT_ROOT/build-dual/clang/ts_test_cli"; do
     if [[ -x "$candidate" ]]; then
         HUB_CLI="$candidate"
         break
@@ -143,7 +155,7 @@ done
 if [[ -n "$HUB_CLI" ]]; then
     (cd "$PROJECT_ROOT" && "$HUB_CLI" summarize-hub) || echo "Warning: summarize-hub failed (rebuild ts_test_cli?)" >&2
 else
-    echo "Warning: ts_test_cli not found; skipped summarize-hub (run after ./scripts/build_dual_compilers.sh)" >&2
+    echo "Warning: ts_test_cli not found; skipped summarize-hub (run ./scripts/build_dual_compilers.sh)" >&2
 fi
 
 echo "Done. test-summary/ contents are small and safe to git add/commit (test-results/ stays ignored)."

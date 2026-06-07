@@ -173,13 +173,7 @@ cmake -G Ninja -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSI
 
 **Vendored mode is the default** — `vendor/jText` and `vendor/jacQlite` are committed so a plain clone builds without siblings. For live cross-project dev, place **`../jText`** and **`../jacQlite`** next to this repo and run `./scripts/build_dual_compilers.sh` (uses reference mode and auto-syncs siblings → `vendor/` after each matrix binary build).
 
-The project is routinely built in several configurations (see the various `build-*` directories in the tree):
-
-- **Local jText** (`build-local-*`): uses a sibling `../jText` checkout (fast iteration during development).
-- **Vendored jText** (`build-vendored-*`, `build-dual-vendored`): self-contained using `vendor/jText` (for releases or when you don't want an external jText tree).
-- **Results-oriented builds** (`build-results-*`): used by the test matrix for producing artifacts.
-
-Canonical dev trees: `build-dual/gcc` and `build-dual/clang` (jtext+sqlite ON). Use the dual-compiler helper for a clean rebuild:
+Canonical build trees: `build-dual/gcc` and `build-dual/clang` (jtext+sqlite ON, vendored deps by default). Use the dual-compiler helper for a clean rebuild:
 ```bash
 ./scripts/build_dual_compilers.sh
 ```

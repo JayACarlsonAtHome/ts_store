@@ -11,11 +11,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 for candidate in \
     "${PROJECT_ROOT}/build-dual/gcc/ts_test_cli" \
     "${PROJECT_ROOT}/build-dual/clang/ts_test_cli" \
-    "${PROJECT_ROOT}/build-cli-test/ts_test_cli" \
-    "${PROJECT_ROOT}/build/ts_test_cli" \
-    "${PROJECT_ROOT}/build-local-gcc/ts_test_cli" \
-    "${PROJECT_ROOT}/build-local-clang/ts_test_cli" \
-    "${PROJECT_ROOT}/ts_test_cli" \
+    "./ts_test_cli" \
     "$(command -v ts_test_cli 2>/dev/null || true)"
 do
     if [[ -x "$candidate" ]]; then
