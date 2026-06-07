@@ -1,0 +1,5 @@
+# jacQLite files vendored into ts_store (header-only dep for SQL persist + jac.qlite module).
+# Paths relative to the jacQlite sibling root.
+
+CMakeLists.txt
+include/jacQLite/Sqlite.hpp

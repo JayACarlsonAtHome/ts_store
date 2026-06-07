@@ -17,7 +17,9 @@ CMake enforces these floors when jText persist is ON. System GCC 11 (default on 
 
 **Generator:** **Ninja** is required for C++23 `FILE_SET cxx_modules`. Plain Unix Makefiles will fail at module compile time.
 
-**Siblings (reference mode, default):** `../jText` and `../jacQlite` must exist next to the repo for the canonical `ts_test_cli` build.
+**Vendored mode (default):** `vendor/jText` + `vendor/jacQlite` — no siblings required (GitHub clone).
+
+**Reference mode (dev):** when `../jText` and `../jacQlite` exist, `build_dual_compilers.sh` compiles from siblings and runs `--sync-all` afterward so `vendor/` stays push-ready.
 
 ---
 

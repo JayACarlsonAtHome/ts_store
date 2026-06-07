@@ -241,11 +241,11 @@ option(TS_STORE_ENABLE_JTEXT_PERSIST
 option(TS_STORE_ENABLE_SQLITE_PERSIST
        "Enable direct SQLite persistence (requires libsqlite3)" OFF)
 
-set(TS_STORE_JACQLITE_MODE "reference" CACHE STRING
+set(TS_STORE_JACQLITE_MODE "vendored" CACHE STRING
     "jacQLite source mode: 'reference' (sibling ../jacQlite) or 'vendored' (vendor/jacQlite)")
 
-set(TS_STORE_JTEXT_MODE "reference" CACHE STRING
-    "jText source mode: 'reference' (use sibling ../jText) or 'vendored' (use local vendor/jText)")
+set(TS_STORE_JTEXT_MODE "vendored" CACHE STRING
+    "jText source mode: 'reference' (sibling ../jText) or 'vendored' (vendor/jText)")
 
 if(TS_STORE_ENABLE_JTEXT_PERSIST)
     message(STATUS "ts_store: jText persistence ENABLED")
@@ -649,4 +649,28 @@ if(TS_STORE_ENABLE_SQLITE_PERSIST)
     target_link_libraries(jac_report PUBLIC jac_qlite)
 else()
     message(WARNING "jac.report summarize requires TS_STORE_ENABLE_SQLITE_PERSIST=ON")
+endif()
+
+# When siblings exist, refresh vendor/ after matrix binaries link (keeps git push self-contained).
+if(TS_STORE_ENABLE_JTEXT_PERSIST AND TS_STORE_ENABLE_SQLITE_PERSIST)
+    set(_ts_store_sibling_jtext "${CMAKE_SOURCE_DIR}/../jText")
+    set(_ts_store_sibling_jacqlite "${CMAKE_SOURCE_DIR}/../jacQlite")
+    if(EXISTS "${_ts_store_sibling_jtext}" AND EXISTS "${_ts_store_sibling_jacqlite}")
+        set(_ts_store_sync_script "${CMAKE_SOURCE_DIR}/scripts/Sync_dependencies.sh")
+        function(ts_store_vendor_sync_postbuild target_name)
+            add_custom_command(
+                TARGET ${target_name} POST_BUILD
+                COMMAND "${_ts_store_sync_script}" --sync-all
+                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                COMMENT "Sync sibling deps → vendor/ (${target_name})"
+                VERBATIM
+            )
+        endfunction()
+        ts_store_vendor_sync_postbuild(ts_test_cli)
+        ts_store_vendor_sync_postbuild(ts_store_flags)
+        foreach(num IN LISTS TEST_NUMBERS)
+            ts_store_vendor_sync_postbuild(ts_store_${num}_TS)
+            ts_store_vendor_sync_postbuild(ts_store_${num}_XS)
+        endforeach()
+    endif()
 endif()

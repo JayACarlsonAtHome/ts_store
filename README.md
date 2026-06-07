@@ -171,7 +171,7 @@ C++23 modules require **Ninja** (or another generator with `FILE_SET` support). 
 cmake -G Ninja -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON -DCMAKE_BUILD_TYPE=Debug ..
 ```
 
-Reference mode (default) expects sibling checkouts **`../jText`** and **`../jacQlite`** next to this repo. Both are required for `ts_test_cli` and the full smoke matrix. jText can be vendored (`-DTS_STORE_JTEXT_MODE=vendored`); jacQlite vendoring is not wired yet (`vendor/jacQlite/` does not exist).
+**Vendored mode is the default** — `vendor/jText` and `vendor/jacQlite` are committed so a plain clone builds without siblings. For live cross-project dev, place **`../jText`** and **`../jacQlite`** next to this repo and run `./scripts/build_dual_compilers.sh` (uses reference mode and auto-syncs siblings → `vendor/` after each matrix binary build).
 
 The project is routinely built in several configurations (see the various `build-*` directories in the tree):
 
@@ -188,11 +188,11 @@ Canonical dev trees: `build-dual/gcc` and `build-dual/clang` (jtext+sqlite ON). 
 - [CMakeLists.txt](CMakeLists.txt) (see `TS_STORE_ENABLE_JTEXT_PERSIST` and `TS_STORE_JTEXT_MODE`)
 - [DUAL_COMPILER_BUILD.md](DUAL_COMPILER_BUILD.md) for manual instructions
 
-jText mode is selected at configure time with:
-- `-DTS_STORE_JTEXT_MODE=reference` (default for development — expects sibling `../jText`)
-- `-DTS_STORE_JTEXT_MODE=vendored` (uses the copy in `vendor/jText`)
+Dependency mode at configure time (`TS_STORE_JTEXT_MODE`, `TS_STORE_JACQLITE_MODE`):
+- **`vendored`** (default) — `vendor/jText`, `vendor/jacQlite`
+- **`reference`** — live siblings `../jText`, `../jacQlite` (used automatically by `build_dual_compilers.sh` when siblings exist)
 
-The [scripts/Sync_dependencies.sh](scripts/Sync_dependencies.sh) script can be used to update the vendored copy when needed.
+[scripts/Sync_dependencies.sh](scripts/Sync_dependencies.sh) copies siblings → `vendor/` (`--sync-all`). Runs automatically after matrix binary builds when siblings are present.
 
 ---
 

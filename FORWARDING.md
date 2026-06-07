@@ -108,8 +108,9 @@ ts_test_cli
 ```
 - **GCC 15+** via `scl enable gcc-toolset-15` (tested: GCC 15.2.1)
 - **Clang 21+** system `clang++` (tested: Clang 21.1.8) — CMake and `build_dual_compilers.sh` reject older versions
-- jText: **reference** (`../jText`) in dev; **vendored** via `./scripts/Sync_dependencies.sh --sync jText`
-- jacQLite: **reference** (`../jacQlite`) — required for `ts_test_cli`; `TS_STORE_JACQLITE_MODE=vendored` is wired in CMake but `vendor/jacQlite/` + sync script do not exist yet
+- **Default (GitHub clone):** **vendored** — `vendor/jText` + `vendor/jacQlite` (no siblings required)
+- **Dev with siblings:** `build_dual_compilers.sh` uses **reference** (`../jText`, `../jacQlite`) when siblings exist
+- **After every matrix binary build:** auto `./scripts/Sync_dependencies.sh --sync-all` (POST_BUILD + end of dual-compiler script) → commit `vendor/` before push
 - `ts_test_cli` / modules require **both** `TS_STORE_ENABLE_JTEXT_PERSIST=ON` and `TS_STORE_ENABLE_SQLITE_PERSIST=ON`
 
 ### Results layout
@@ -165,10 +166,10 @@ Hub: [test-summary/README.md](test-summary/README.md)
 scl enable gcc-toolset-15 -- bash   # GCC 15.2.1+
 # sqlite-devel, clang++ 21+, ninja (or CLion-bundled / $NINJA)
 
-# 2. Siblings (reference mode)
-# ../jText, ../jacQlite next to ts_store
+# 2. (Optional) Siblings for live cross-project dev
+# ../jText, ../jacQlite next to ts_store — dual build uses reference when present
 
-# 3. Build
+# 3. Build (vendored if no siblings; sync-all after build when siblings exist)
 ./scripts/build_dual_compilers.sh
 
 # 4. Smoke (SEQUENTIAL — one compiler at a time)
@@ -176,9 +177,9 @@ cd build-dual/gcc  && ./ts_test_cli run --compiler gcc --disk ssd
 cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 ./scripts/promote_summaries.sh --all
 
-# 5. Before push (if sibling jText changed)
-./scripts/Sync_dependencies.sh --update-checksums jText
-./scripts/Sync_dependencies.sh --sync jText
+# 5. Before push — vendor/ should already be current if you built with siblings.
+#    Manual refresh: ./scripts/Sync_dependencies.sh --sync-all
+#    Verify: ./scripts/Sync_dependencies.sh --verify all
 ```
 
 **Params** (`tests/test_params.txt`): `SIZE=smoke`, `DISK_TYPE=ssd`, `OS_ID=OS_003`, all `001..007=x`, `flags=x`.
@@ -191,7 +192,7 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 1. **Re-run `OS_003/x7k/Smoke`** — current leaf is 224/224 (predates `flags=x`); expect 226/226 after re-run + promote
 2. **Move ts_store implementation into module TUs** — bodies still in `include/beman/...`; modules are shims (step 6 above)
 3. **Re-run on other OS slots** — `OS_001` / `OS_002` leaves empty since legacy retirement
-4. **jacQlite vendoring** — mirror jText (`vendor/jacQlite`, tracked list, sync script)
+
 
 ### Nice-to-have
 - CI workflow (build + ssd smoke gate)
@@ -236,7 +237,7 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 4. **Ninja required** for C++ modules; plain Make generator fails
 5. **Minimal cmake** (jtext/sqlite OFF) breaks `ts_test_cli` — dual build always enables both
 6. **Compiler-specific binaries** — run gcc from `build-dual/gcc`, clang from `build-dual/clang`
-7. **Build uses `../jText`** unless `TS_STORE_JTEXT_MODE=vendored`
+7. **Default build is vendored** — siblings optional; `build_dual_compilers.sh` uses reference only when `../jText` + `../jacQlite` exist
 8. **Manifest merge** — gcc then clang on same leaf → `compilers_csv: gcc,clang`, 226 scenarios (113 per compiler incl. `ts_store_flags`)
 9. **Do not resurrect** `tools/test_cli/manifest.cpp` / `summarize.cpp` — in `modules/jac.report/`
 10. **Do not regenerate** old `TS_STORE_*_Summary.md`

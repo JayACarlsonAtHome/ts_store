@@ -33,6 +33,24 @@ else
 fi
 CMAKE_NINJA_ARGS=(-G Ninja -DCMAKE_MAKE_PROGRAM="$NINJA")
 
+# Compile from siblings when present; otherwise vendor/ (self-contained clone).
+DEPS_CMAKE_ARGS=()
+if [[ -d "$PROJECT_ROOT/../jText" && -d "$PROJECT_ROOT/../jacQlite" ]]; then
+    DEPS_CMAKE_ARGS=(-DTS_STORE_JTEXT_MODE=reference -DTS_STORE_JACQLITE_MODE=reference)
+    echo "Siblings found — compile from ../jText + ../jacQlite (reference mode)."
+else
+    echo "Siblings missing — compile from vendor/ (vendored mode)."
+fi
+
+sync_vendor_from_siblings() {
+    if [[ -d "$PROJECT_ROOT/../jText" || -d "$PROJECT_ROOT/../jacQlite" ]]; then
+        echo "------------------------------------------------------------"
+        echo "Syncing siblings → vendor/ (commit vendor/ before push)"
+        echo "------------------------------------------------------------"
+        "$SCRIPT_DIR/Sync_dependencies.sh" --sync-all
+    fi
+}
+
 echo "=== ts_store Dual Compiler Build ==="
 echo "Project root: $PROJECT_ROOT"
 echo
@@ -58,6 +76,7 @@ build_with_compiler() {
             cmake "${CMAKE_NINJA_ARGS[@]}" -DCMAKE_BUILD_TYPE=Debug \
                   -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
                   -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+                  "${DEPS_CMAKE_ARGS[@]}" \
                   "$PROJECT_ROOT"
         scl enable gcc-toolset-15 -- \
             cmake --build . --target ts_test_cli ts_store_001_TS ts_store_001_XS ts_store_002_TS ts_store_002_XS ts_store_003_TS ts_store_003_XS ts_store_004_TS ts_store_004_XS ts_store_005_TS ts_store_005_XS ts_store_006_TS ts_store_006_XS ts_store_007_TS ts_store_007_XS ts_store_flags ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j "$(nproc)"
@@ -67,6 +86,7 @@ build_with_compiler() {
               -DCMAKE_CXX_COMPILER="$compiler" \
               -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
               -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+              "${DEPS_CMAKE_ARGS[@]}" \
               "$PROJECT_ROOT"
 
         cmake --build . --target ts_test_cli ts_store_001_TS ts_store_001_XS ts_store_002_TS ts_store_002_XS ts_store_003_TS ts_store_003_XS ts_store_004_TS ts_store_004_XS ts_store_005_TS ts_store_005_XS ts_store_006_TS ts_store_006_XS ts_store_007_TS ts_store_007_XS ts_store_flags ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j $(nproc)
@@ -94,6 +114,8 @@ if command -v clang++ >/dev/null 2>&1; then
 else
     echo "clang++ not found in PATH. Skipping clang build."
 fi
+
+sync_vendor_from_siblings
 
 echo "================================================================"
 echo "All requested dual-compiler builds completed."
