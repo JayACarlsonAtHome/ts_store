@@ -1,12 +1,13 @@
 // examples/jtext_throughput_test.cpp
 // Dedicated high-throughput test for the (optimized) jText debug path.
 
-#include <beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.hpp>
 
 #include <chrono>
 #include <iostream>
 #include <vector>
 #include <random>
+
+import jac.ts_store.persistence.jtext;
 
 using namespace jac::ts_store::inline_v001;
 

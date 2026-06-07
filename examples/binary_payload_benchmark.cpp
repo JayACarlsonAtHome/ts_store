@@ -2,13 +2,14 @@
 // Payload size scaling benchmark for the fast binary persistence path.
 // Uses 9 ints + 6 doubles + realistic other fields.
 
-#include <beman/ts_store/ts_store_headers/persistence/BinaryEventLog.hpp>
 
 #include <chrono>
 #include <iostream>
 #include <vector>
 #include <random>
 #include <string>
+
+import jac.ts_store.persistence.binary;
 
 using namespace jac::ts_store::inline_v001;
 

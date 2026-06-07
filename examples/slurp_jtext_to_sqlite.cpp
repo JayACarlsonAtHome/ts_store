@@ -1,21 +1,31 @@
-#include <jacQLite/Sqlite.hpp>
-#include <jText.h>   // for reading the jText data files
-
+#include <chrono>
+#include <filesystem>
+#include <format>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <filesystem>
-#include <chrono>
-#include <format>
+
+import jac.qlite;
+import jac.jtext.reader;
 
 namespace fs = std::filesystem;
+
+namespace {
+
+std::string jtext_field(const JTextEntry& entry, size_t i) {
+    if (i >= entry.fields.size()) return {};
+    return entry.fields[i].value_or(std::string{});
+}
+
+} // namespace
 
 // Simple slurper: reads the three jText files produced by JTextSplitEventLog
 // and inserts them into the matching SQLite tables (using the generated schema).
 // Assumes the .sql files have already been used to create the tables, or we exec them here.
 
 void slurp_jtext_to_sqlite(const std::string& base_name, const std::string& db_path) {
-    jac::qlite::Sqlite db(db_path);
+    Sqlite db(db_path);
     db.exec("PRAGMA synchronous = OFF;");
     db.exec("PRAGMA journal_mode = MEMORY;");
 
@@ -57,12 +67,12 @@ void slurp_jtext_to_sqlite(const std::string& base_name, const std::string& db_p
                 int64_t id = static_cast<int64_t>(entry.number);
                 stmt.bind(
                     id,
-                    static_cast<int64_t>(std::stoll(entry.fields[0])),
-                    static_cast<int64_t>(std::stoll(entry.fields[1])),
-                    static_cast<int64_t>(std::stoll(entry.fields[2], nullptr, 16)), // hex flags
-                    entry.fields[3],
-                    entry.fields[4],
-                    static_cast<int64_t>(std::stoll(entry.fields[5]))
+                    static_cast<int64_t>(std::stoll(jtext_field(entry, 0))),
+                    static_cast<int64_t>(std::stoll(jtext_field(entry, 1))),
+                    static_cast<int64_t>(std::stoll(jtext_field(entry, 2), nullptr, 16)), // hex flags
+                    jtext_field(entry, 3),
+                    jtext_field(entry, 4),
+                    static_cast<int64_t>(std::stoll(jtext_field(entry, 5)))
                 );
                 stmt.step();
                 stmt.reset();
@@ -88,10 +98,10 @@ void slurp_jtext_to_sqlite(const std::string& base_name, const std::string& db_p
             for (const auto& sec : ints_jt.sections) {
                 for (const auto& entry : sec.entries) {
                     if (entry.fields.empty()) continue;
-                    int64_t id = static_cast<int64_t>(std::stoll(entry.fields[0]));
+                    int64_t id = static_cast<int64_t>(std::stoll(jtext_field(entry, 0)));
                     stmt.bind(id);
                     for (size_t i = 1; i < entry.fields.size() && i < 10; ++i) {
-                        stmt.bind(static_cast<int64_t>(std::stoll(entry.fields[i])));  // simplistic, would use better bind in real code
+                        stmt.bind(static_cast<int64_t>(std::stoll(jtext_field(entry, i))));
                     }
                     stmt.step();
                     stmt.reset();
@@ -116,10 +126,10 @@ void slurp_jtext_to_sqlite(const std::string& base_name, const std::string& db_p
             for (const auto& sec : floats_jt.sections) {
                 for (const auto& entry : sec.entries) {
                     if (entry.fields.empty()) continue;
-                    int64_t id = static_cast<int64_t>(std::stoll(entry.fields[0]));
+                    int64_t id = static_cast<int64_t>(std::stoll(jtext_field(entry, 0)));
                     stmt.bind(id);
                     for (size_t i = 1; i < entry.fields.size() && i < 7; ++i) {
-                        stmt.bind(static_cast<double>(std::stod(entry.fields[i])));
+                        stmt.bind(static_cast<double>(std::stod(jtext_field(entry, i))));
                     }
                     stmt.step();
                     stmt.reset();

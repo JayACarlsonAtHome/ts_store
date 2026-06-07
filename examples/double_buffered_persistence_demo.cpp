@@ -5,16 +5,18 @@
 // - Hot path (submit_event) stays fast; draining happens in background thread
 // - Easy to plug in future SQL sinks the same way
 
-#include <beman/ts_store/ts_store_headers/persistence/EventSink.hpp>
-#include <beman/ts_store/ts_store_headers/persistence/DoubleBufferedWriter.hpp>
-#include <beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp>
-#include <beman/ts_store/ts_store_headers/persistence/BinaryEventSink.hpp>
 
 #include <chrono>
 #include <iostream>
 #include <random>
 #include <thread>
 #include <vector>
+#include <memory>
+#include <string>
+
+import jac.ts_store.persistence.binary;
+import jac.ts_store.persistence.jtext;
+import jac.ts_store.persistence.writer;
 
 using namespace jac::ts_store::inline_v001;
 

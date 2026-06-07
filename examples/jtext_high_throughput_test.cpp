@@ -1,11 +1,12 @@
 // Standalone high-throughput test using the improved jText directly
 // This proves early header + 10K auto-batching works and gives us metrics.
 
-#include <jText.h>
 #include <chrono>
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
+
+import jac.jtext.writer;
 
 int main() {
     constexpr size_t NUM_ROWS = 100'000;

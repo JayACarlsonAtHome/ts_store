@@ -1,13 +1,15 @@
 // examples/binary_persist_demo.cpp
 // Simple comparison between jText (debug) and BinaryEventLog (fast production path).
 
-#include <beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.hpp>
-#include <beman/ts_store/ts_store_headers/persistence/BinaryEventLog.hpp>
 
 #include <chrono>
 #include <iostream>
 #include <vector>
 #include <random>
+#include <string>
+
+import jac.ts_store.persistence.binary;
+import jac.ts_store.persistence.jtext;
 
 using namespace jac::ts_store::inline_v001;
 

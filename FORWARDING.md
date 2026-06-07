@@ -89,7 +89,7 @@ ts_test_cli
 
 `jac.ts_store.core` `export import`s `config`, `flags`, `ansi`, `writer`. Stress tests link `jac_ts_store_impl_testing` and consume modules via `import` (001–007 TS/XS). Persistence sink modules (`binary`, `jtext`, `sql`, `writer`) `export import jac.ts_store.persistence.common`. `ts_store_flags` uses `import` (flags + test_options).
 
-**Not modularized yet:** jText internals (`jtext_core` still a static lib); examples still use `#include`.
+**Not modularized yet:** jText internals (`jtext_core` still a static lib). Tests, examples, and `ts_store_flags` use `import`.
 
 **Module roadmap status:**
 

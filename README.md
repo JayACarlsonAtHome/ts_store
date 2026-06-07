@@ -10,10 +10,24 @@ The hot path (`save_event`) is designed to stay as close to pure in-memory speed
 
 ---
 
+## What this project is (and is becoming)
+
+ts_store began as a **learning experiment**: C++23, bounded hot-path storage, flags, and persistence sinks explored incrementally. It is growing into a **regression platform** — not finished yet, but aimed at verifying every meaningful change to ts_store before it lands.
+
+The automated matrix (`ts_test_cli`, tests 001–007 TS/XS, flags unit test, dual-compiler smoke) is the proof layer: millions of events, multiple persist modes, per-OS and per-disk result leaves, and promoted summaries under [test-summary/](test-summary/).
+
+**C++23 modules** are used throughout tests and examples. The goal is **not** to ship a reusable SDK for other repos (though the module boundaries could be reused on a similar toolchain). Modules exist so that when you touch one part of ts_store — flags, a sink, the core buffer — **only the affected module units recompile**, keeping iteration time down on a large tree.
+
+**New machine or toolchain?** Always do a **clean configure and full build from source** first (`./scripts/build_dual_compilers.sh` or equivalent). Prebuilt module artifacts are not portable across OS, compiler, or CPU. After a good full build, day-to-day work benefits from module granularity on that same system.
+
+---
+
 ## Quick Start (Core In-Memory)
 
 ```cpp
-#include <beman/ts_store/ts_store_headers/ts_store.hpp>
+#include <iostream>
+
+import jac.ts_store.impl.testing;
 
 using namespace jac::ts_store::inline_v001;
 
@@ -37,13 +51,15 @@ int main() {
 ```
 
 **Namespace**: `jac::ts_store::inline_v001`  
-**Single include**: `<beman/ts_store/ts_store_headers/ts_store.hpp>`
+**Typical imports**: `jac.ts_store.impl.testing` (core + test CLI helpers), plus `jac.ts_store.persistence.*` when attaching sinks. Legacy headers remain under [include/beman/ts_store/ts_store_headers/](include/beman/ts_store/ts_store_headers/) for reference; new code in this repo uses modules.
+
+Link the matching CMake targets (e.g. `jac_ts_store_impl_testing`) — see [CMakeLists.txt](CMakeLists.txt) and the [examples/](examples/) targets.
 
 ---
 
 ## Current Status (mid-2026)
 
-- **Extensively tested** — All stress tests (001–007 TS/XS + flags) exercise the full double-buffered persistence matrix (binary + jText + SQL roundtrips + pure in-memory) with zero corruption observed across millions of events. See [tests/](tests/) and [scripts/run_all_tests.sh](scripts/run_all_tests.sh).
+- **Extensively tested** — All stress tests (001–007 TS/XS + flags) exercise the full double-buffered persistence matrix (binary + jText + SQL + pure in-memory) via **module imports**. See [tests/](tests/) and [scripts/ts-test](scripts/ts-test).
 - Heavy tests (005/006/007) run at realistic scale (100 threads, 1M events per run, 5 runs for full mode) on spinning rust. Only the last run performs persistence (see the test sources for the exact "last run only" logic).
 - Per-OS + per-disk separation: results live under `test-results/OS_00n/<disk>/Smoke|xFull/` and lightweight summaries are promoted to the equivalent path under `test-summary/`. This keeps metrics from different machines and storage types (x7k = 7200 rpm HDD, 10k, ssd) cleanly separated while using short aligned directory names.
 - The lightweight summaries are automatically promoted to the tracked `test-summary/` tree so they can be committed as proof without pulling in gigabytes of logs.
@@ -96,6 +112,9 @@ A single `uint64_t` carries user hints (`KeeperRecord`, `LogConsole`, `SendNetwo
 Attach asynchronous persistence without blocking the hot path:
 
 ```cpp
+import jac.ts_store.impl.testing;
+import jac.ts_store.persistence.jtext;
+
 auto sink   = std::make_unique<JTextEventSink>("MyRun", 9, 6);
 auto writer = std::make_unique<DoubleBufferedWriter>(std::move(sink), 10'000);
 store.attach_persistence(std::move(writer));
@@ -103,14 +122,15 @@ store.attach_persistence(std::move(writer));
 auto [ok, id] = store.save_event(...);   // returns instantly
 ```
 
-Supported today:
-- [JTextEventSink](include/beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp) → 3-file split (main + _Ints + _Floats) with includes for shared schemas
-- [BinaryEventSink](include/beman/ts_store/ts_store_headers/persistence/BinaryEventSink.hpp) → fast length-prefixed mmap path
-- SQL roundtrips (via external jText CLI tools) are exercised after every jText persist run for verification
+Supported today (modules under `modules/jac.ts_store/`):
+- `jac.ts_store.persistence.jtext` — `JTextEventSink`, split files (main + _Ints + _Floats)
+- `jac.ts_store.persistence.binary` — `BinaryEventSink`, fast length-prefixed mmap path
+- `jac.ts_store.persistence.sql` — `SqlEventSink` (when SQLite persist is enabled at configure time)
+- `jac.ts_store.persistence.writer` — `DoubleBufferedWriter`
 
 `KeeperRecord` flag controls what must survive to durable storage.
 
-See [examples/](examples/) for `double_buffered_persistence_demo.cpp`, `ts_store_with_double_buffer_demo.cpp`, and the various throughput benchmarks. Also see the `DoubleBufferedWriter` header for the attachment API.
+See [examples/](examples/) — all demos and benchmarks use `import`, not raw ts_store headers.
 
 ---
 
@@ -140,13 +160,15 @@ Raw logs, .jtext/.bin artifacts, and per-run `.meta` files live under the (git-i
 
 ### Basic (in-memory only)
 ```bash
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . -j
 ```
 
-### With jText Persistence Enabled
+C++23 modules require **Ninja** (or another generator with `FILE_SET` support). The dual-compiler helper wires this up.
+
+### With jText + SQLite persistence (typical dev / test matrix)
 ```bash
-cmake -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DCMAKE_BUILD_TYPE=Release ..
+cmake -G Ninja -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON -DCMAKE_BUILD_TYPE=Debug ..
 ```
 
 The project is routinely built in several configurations (see the various `build-*` directories in the tree):
@@ -225,7 +247,7 @@ The corresponding summary is at `test-summary/OS_003/ssd/Smoke/README.md` (linke
 
 ## Examples
 
-Located in `examples/` (many are only built when `TS_STORE_ENABLE_JTEXT_PERSIST=ON`):
+Located in `examples/` (many are only built when `TS_STORE_ENABLE_JTEXT_PERSIST=ON`). All ts_store-facing examples use **module imports** and link the corresponding `jac_ts_store_*` CMake targets.
 
 **Recommended usage**
 - `ts_store_with_double_buffer_demo.cpp` — recommended integrated usage with `attach_persistence`
@@ -250,7 +272,8 @@ Pure binary (no jText) examples and benchmarks are always available even without
 
 ## Project Layout (key parts)
 
-- [include/beman/ts_store/ts_store_headers/](include/beman/ts_store/ts_store_headers/) — public headers + internal implementation + all persistence sinks (see `ts_store_config.hpp`, `ts_store.hpp`, and `persistence/`)
+- [modules/jac.ts_store/](modules/jac.ts_store/) — C++23 module interfaces (`config`, `flags`, `core`, `impl.testing`, `persistence.*`)
+- [include/beman/ts_store/ts_store_headers/](include/beman/ts_store/ts_store_headers/) — implementation headers (included by module units; prefer `import` in application code)
 - [tests/ts_store_00N/](tests/) — the numbered stress test suites (001–007 TS/XS + flags unit test)
 - [tests/test_params.txt](tests/test_params.txt) — controls `SIZE` (smoke/full), `DISK_TYPE`, selected tests, and `OS_ID`
 - [scripts/ts-test](scripts/ts-test) — thin wrapper around the C++ `ts_test_cli` tool

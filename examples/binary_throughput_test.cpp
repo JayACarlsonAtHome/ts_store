@@ -1,12 +1,13 @@
 // examples/binary_throughput_test.cpp
 // Dedicated high-throughput test for the fast binary path.
 
-#include <beman/ts_store/ts_store_headers/persistence/BinaryEventLog.hpp>
 
 #include <chrono>
 #include <iostream>
 #include <vector>
 #include <random>
+
+import jac.ts_store.persistence.binary;
 
 using namespace jac::ts_store::inline_v001;
 

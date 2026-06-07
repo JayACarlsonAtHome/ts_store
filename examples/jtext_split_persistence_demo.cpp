@@ -5,11 +5,12 @@
 // - 10K auto-batching enabled by default (max throughput)
 // - KeeperRecord filtering option
 
-#include <beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.hpp>
 #include <chrono>
 #include <iostream>
 #include <vector>
 #include <random>
+
+import jac.ts_store.persistence.jtext;
 
 using namespace jac::ts_store::inline_v001;
 

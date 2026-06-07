@@ -355,18 +355,6 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
             ${JTEXT_SOURCE_DIR}
     )
 
-    target_link_libraries(ts_store_jtext_high_throughput_test
-        PRIVATE
-            project_warnings
-            project_options
-            jtext_core
-    )
-
-    target_include_directories(ts_store_jtext_high_throughput_test
-        PRIVATE
-            ${JTEXT_SOURCE_DIR}
-    )
-
     target_compile_definitions(ts_store_jtext_high_throughput_test
         PRIVATE
             TS_STORE_ENABLE_JTEXT_PERSIST
@@ -376,19 +364,18 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
+            jac_jtext
             jtext_core
     )
 
     # jText split demo
     add_executable(ts_store_jtext_split_demo
         examples/jtext_split_persistence_demo.cpp
-        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
     # Dedicated jText high-throughput test (for fair comparison with binary)
     add_executable(ts_store_jtext_throughput_test
         examples/jtext_throughput_test.cpp
-        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
     target_include_directories(ts_store_jtext_throughput_test
@@ -401,6 +388,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
+            jac_ts_store_persistence_jtext
             jtext_core
     )
 
@@ -414,13 +402,13 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
+            jac_ts_store_persistence_jtext
             jtext_core
     )
 
     # Binary fast persistence demo / comparison tool
     add_executable(ts_store_binary_persist_demo
         examples/binary_persist_demo.cpp
-        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
     target_include_directories(ts_store_binary_persist_demo
@@ -433,13 +421,14 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
+            jac_ts_store_persistence_binary
+            jac_ts_store_persistence_jtext
             jtext_core
     )
 
     # Payload scaling benchmarks (user-requested matrix)
     add_executable(ts_store_jtext_payload_benchmark
         examples/jtext_payload_benchmark.cpp
-        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
     target_include_directories(ts_store_jtext_payload_benchmark
@@ -452,13 +441,13 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
+            jac_ts_store_persistence_jtext
             jtext_core
     )
 
     # Double-buffered pluggable persistence demo (jText + Binary sinks)
     add_executable(ts_store_double_buffer_demo
         examples/double_buffered_persistence_demo.cpp
-        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
     )
 
     target_include_directories(ts_store_double_buffer_demo
@@ -476,14 +465,15 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
+            jac_ts_store_persistence_binary
+            jac_ts_store_persistence_jtext
+            jac_ts_store_persistence_writer
             jtext_core
     )
 
     # Integrated demo: ts_store + attach_persistence (double buffered)
     add_executable(ts_store_integrated_double_buffer_demo
         examples/ts_store_with_double_buffer_demo.cpp
-        include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
-        include/beman/ts_store/ts_store_headers/persistence/BinaryEventLogReader.cpp
     )
 
     target_include_directories(ts_store_integrated_double_buffer_demo
@@ -501,6 +491,9 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PRIVATE
             project_warnings
             project_options
+            jac_ts_store_impl_testing
+            jac_ts_store_persistence_binary
+            jac_ts_store_persistence_jtext
             jtext_core
     )
 
@@ -585,6 +578,7 @@ target_link_libraries(ts_store_binary_throughput_test
     PRIVATE
         project_warnings
         project_options
+        jac_ts_store_persistence_binary
 )
 
 # Payload scaling benchmarks (user-requested matrix)
@@ -606,6 +600,7 @@ target_link_libraries(ts_store_in_memory_throughput
     PRIVATE
         project_warnings
         project_options
+        jac_ts_store_impl_testing
 )
 
 if(TS_STORE_ENABLE_SQLITE_PERSIST)
@@ -620,6 +615,8 @@ if(TS_STORE_ENABLE_SQLITE_PERSIST)
     target_link_libraries(ts_store_slurp_jtext_to_sqlite PRIVATE
         project_warnings
         project_options
+        jac_qlite
+        jac_jtext
         jacQLite::jacQLite
         jtext_core
     )
@@ -634,6 +631,7 @@ target_link_libraries(ts_store_binary_payload_benchmark
     PRIVATE
         project_warnings
         project_options
+        jac_ts_store_persistence_binary
 )
 
 # jac.report + ts_test_cli (jText write, SQLite views)

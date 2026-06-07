@@ -5,11 +5,15 @@
 // Pre-created data with variety + strided access so we switch it up (no tiny
 // repeat cheating, no per-event allocs in measured loop).
 
-#include <beman/ts_store/ts_store_headers/ts_store.hpp>
 
 #include <chrono>
 #include <iostream>
 #include <vector>
+#include <array>
+#include <cstdint>
+#include <thread>
+
+import jac.ts_store.impl.testing;
 
 using namespace jac::ts_store::inline_v001;
 

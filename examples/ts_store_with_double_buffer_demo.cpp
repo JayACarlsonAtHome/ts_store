@@ -7,16 +7,19 @@
 // - One call to attach_persistence(...)
 // - Background double-buffering to jText or Binary happens automatically on every save_event
 
-#include <beman/ts_store/ts_store_headers/ts_store.hpp>
 
-#include <beman/ts_store/ts_store_headers/persistence/DoubleBufferedWriter.hpp>
-#include <beman/ts_store/ts_store_headers/persistence/JTextEventSink.hpp>
-#include <beman/ts_store/ts_store_headers/persistence/BinaryEventSink.hpp>
 
+#include <array>
 #include <chrono>
 #include <iostream>
 #include <random>
 #include <thread>
+#include <string>
+#include <cstdint>
+
+import jac.ts_store.impl.testing;
+import jac.ts_store.persistence.binary;
+import jac.ts_store.persistence.jtext;
 
 using namespace jac::ts_store::inline_v001;
 
