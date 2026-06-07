@@ -46,8 +46,9 @@ set(TS_STORE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Flags test
 add_executable(ts_store_flags tests/ts_store_flags/Test_Flags.cpp)
+target_compile_features(ts_store_flags PRIVATE cxx_std_23)
 target_include_directories(ts_store_flags PRIVATE ${TS_STORE_INCLUDE_DIR})
-target_link_libraries(ts_store_flags PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags)
+target_link_libraries(ts_store_flags PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags jac_ts_store_test_options)
 
 # Reporting module: manifest + summarize + hub (incremental rebuild isolated from stress tests).
 add_library(jac_report)
@@ -119,6 +120,17 @@ target_sources(jac_ts_store_flags
 )
 target_compile_features(jac_ts_store_flags PUBLIC cxx_std_23)
 target_include_directories(jac_ts_store_flags PUBLIC ${TS_STORE_INCLUDE_DIR})
+
+# ts_store test CLI options (parse_test_options shim for module consumers).
+add_library(jac_ts_store_test_options)
+target_sources(jac_ts_store_test_options
+    PUBLIC
+        FILE_SET cxx_modules TYPE CXX_MODULES
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES modules/jac.ts_store/jac.ts_store.test_options.cppm
+)
+target_compile_features(jac_ts_store_test_options PUBLIC cxx_std_23)
+target_include_directories(jac_ts_store_test_options PUBLIC ${TS_STORE_INCLUDE_DIR})
 
 # Test matrix runner module (params, scenarios, execution). Re-exports jac.report.
 add_library(jac_test_framework)

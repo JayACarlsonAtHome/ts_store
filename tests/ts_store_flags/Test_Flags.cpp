@@ -1,14 +1,14 @@
 //tests/ts_store_flags/Test_Flags.cpp
-// Standalone unit test for TsStoreFlags — completely independent of other ts_store tests
+// Standalone unit test for TsStoreFlags — pure module consumer
 
-#include "../../include/beman/ts_store/ts_store_headers/ts_store_flags.hpp"
-#include "../../include/beman/ts_store/ts_store_headers/impl_details/test_options.hpp"
-#include <iostream>
 #include <cassert>
+#include <cstdint>
+#include <iostream>
 #include <string>
 #include <vector>
-#include <concepts>
-#include <type_traits>
+
+import jac.ts_store.flags;
+import jac.ts_store.test_options;
 
 int main(int argc, char** argv) {
     auto _opts = jac::ts_store::inline_v001::parse_test_options(argc, argv);
@@ -111,6 +111,17 @@ int main(int argc, char** argv) {
 
     flags.clear_severity();
     assert(flags.get_severity() == TsStoreFlags::Severity::NotSet);
+
+    // Test free-standing helpers
+    uint64_t raw = set_user_flag(0, TsStoreFlags::UserFlag::KeeperRecord);
+    raw = set_severity(raw, TsStoreFlags::Severity::Warn);
+    raw = set_metric_flag(raw, TsStoreFlags::MetricFlag::HasIntData);
+    raw = flags_set_has_data(raw);
+    TsStoreFlags flags_from_raw(raw);
+    assert(flags_from_raw.is_set(TsStoreFlags::UserFlag::KeeperRecord));
+    assert(flags_from_raw.get_severity() == TsStoreFlags::Severity::Warn);
+    assert(flags_from_raw.is_set(TsStoreFlags::MetricFlag::HasIntData));
+    assert(flags_from_raw.is_set(TsStoreFlags::InternalFlag::HasData));
 
     // Test to_string and serialization round-trip with all flag types set
     flags.set(TsStoreFlags::UserFlag::DatabaseEntry);
