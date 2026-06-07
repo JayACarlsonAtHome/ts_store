@@ -197,7 +197,7 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 ### Nice-to-have
 - CI workflow (build + ssd smoke gate)
 - Metric table CREATE formatting in `SqlEventSink` debug `.sql`
-- `xFull` matrix run + promote when ready for stress evidence
+- `xFull` matrix run + promote (`SIZE=full`, ~30 min dual-compiler target on x7k)
 - Upstream jText partition in `../jText` (ts_store shims can stay as thin re-exports)
 - Manifest file locking (parallel gcc+clang on same leaf races SQLite today)
 

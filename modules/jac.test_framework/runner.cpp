@@ -83,6 +83,8 @@ TestScaling get_test_params(const std::string& test_num_str, const std::string& 
         return res;
     }
 
+    // SIZE=full (xFull): progressive scale tuned for ~30 min dual-compiler matrix on x7k.
+    // Heavy 005/006/007: 50×2000 = 100k manifest records; 005/007 use 3 runs (300k events).
     if (tnum == "001") {
         res.threads           = 8;
         res.events_per_thread = 64;
@@ -90,34 +92,34 @@ TestScaling get_test_params(const std::string& test_num_str, const std::string& 
         res.writer_threads    = 4;
         res.ops_per_thread    = 32;
     } else if (tnum == "002") {
-        res.threads           = 16;
-        res.events_per_thread = 128;
+        res.threads           = 12;
+        res.events_per_thread = 64;
         res.runs              = 2;
         res.writer_threads    = 6;
         res.ops_per_thread    = 64;
     } else if (tnum == "003") {
-        res.threads           = 32;
-        res.events_per_thread = 128;
+        res.threads           = 24;
+        res.events_per_thread = 64;
         res.runs              = 3;
+        res.writer_threads    = 6;
+        res.ops_per_thread    = 64;
+    } else if (tnum == "004") {
+        res.threads           = 32;
+        res.events_per_thread = 80;
+        res.runs              = 4;
         res.writer_threads    = 8;
         res.ops_per_thread    = 80;
-    } else if (tnum == "004") {
-        res.threads           = 40;
-        res.events_per_thread = 200;
-        res.runs              = 4;
-        res.writer_threads    = 10;
-        res.ops_per_thread    = 100;
     } else if (tnum == "005" || tnum == "006" || tnum == "007") {
-        res.threads           = 100;
-        res.events_per_thread = 10000;
-        res.runs              = 5;
-        res.writer_threads    = 100;
-        res.ops_per_thread    = 10000;
-    } else {
-        res.threads           = 100;
-        res.events_per_thread = 10000;
-        res.runs              = 5;
+        res.threads           = 50;
+        res.events_per_thread = 2000;
+        res.runs              = 3;
         res.writer_threads    = 50;
+        res.ops_per_thread    = 2000;
+    } else {
+        res.threads           = 50;
+        res.events_per_thread = 2000;
+        res.runs              = 3;
+        res.writer_threads    = 25;
         res.ops_per_thread    = 2000;
     }
     return res;

@@ -4,14 +4,14 @@
 #   so that disk subdirs line up vertically when ls'ing: x7k/ 10k/ ssd/
 #   (CLI --disk accepts 7k/7200/x7k etc. and normalizes)
 #
-# SIZE: smoke (tiny, ~100 events, safe) or full (heavy stress).
+# SIZE: smoke (tiny, ~100 events, safe) or full (xFull matrix, ~30 min on x7k).
 #
 # In SIZE=full the runner uses *progressive* difficulty so that:
-#   001     : hello-world sanity (a few hundred events total)
-#   002     : small (~few thousand)
-#   003-004 : medium
-#   005/006/007 : heavy tests (100 threads × 10000 events = 1M events per run × 5 runs)
-#   006     : heavy writer stress (medium-heavy)
+#   001     : hello-world sanity (512 records)
+#   002     : small (~768 records)
+#   003-004 : medium (~1.5k–2.5k records)
+#   005/007 : heavy (50 threads × 2000 events × 3 runs = 300k events; 100k records in manifest)
+#   006     : tail-reader stress (50 × 2000 = 100k events, single pass)
 #
 # This prevents "test 001 taking an hour" when you want full stress on the big tests.
 # The old blunt global override has been replaced by per-test scaling in the runner.

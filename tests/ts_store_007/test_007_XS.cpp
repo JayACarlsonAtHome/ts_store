@@ -1,7 +1,7 @@
 //tests/ts_store_007/Test_007_XS.CPP
 //
 // Massive multi-threaded throughput + correctness test.
-// Full mode: 100 threads × 10k events = 1M events per run, 5 runs total.
+// Full mode sizing from runner (currently 50×2k × 3 runs). Only last run persists.
 // Only the last run performs persistence (previous runs are clean hot-path measurement).
 // Size controlled at runtime via --threads --events-per-thread --runs (or via test_params.txt).
 // See tests/test_params.txt and scripts/run_all_tests.sh .

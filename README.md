@@ -60,7 +60,7 @@ Link the matching CMake targets (e.g. `jac_ts_store_impl_testing`) — see [CMak
 ## Current Status (mid-2026)
 
 - **Extensively tested** — All stress tests (001–007 TS/XS + flags) exercise the full double-buffered persistence matrix (binary + jText + SQL + pure in-memory) via **module imports**. See [tests/](tests/) and [scripts/ts-test](scripts/ts-test).
-- Heavy tests (005/006/007) run at realistic scale (100 threads, 1M events per run, 5 runs for full mode) on spinning rust. Only the last run performs persistence (see the test sources for the exact "last run only" logic).
+- Heavy tests (005/006/007) scale up in `SIZE=full` (50 threads × 2k events; 005/007 × 3 runs) — tuned for ~30 min dual-compiler matrix on x7k. Only the last run performs persistence on 005/007 (see the test sources).
 - Per-OS + per-disk separation: results live under `test-results/OS_00n/<disk>/Smoke|xFull/` and lightweight summaries are promoted to the equivalent path under `test-summary/`. This keeps metrics from different machines and storage types (x7k = 7200 rpm HDD, 10k, ssd) cleanly separated while using short aligned directory names.
 - The lightweight summaries are automatically promoted to the tracked `test-summary/` tree so they can be committed as proof without pulling in gigabytes of logs.
 
@@ -219,7 +219,7 @@ This replaces the previous Python and shell versions for much better error handl
 ```
 
 **Key behaviors are implemented in the runner + test sources** (not duplicated here):
-- Progressive sizing (001–004 stay small; 005/006/007 capped at 1M events/run)
+- Progressive sizing (001–004 stay small; 005/006/007 reach 100k records/scenario in full mode)
 - "Only the last run performs persistence" for 005/006/007 (earlier runs are pure hot-path measurement)
 - OS auto-detection + `OS_00n` layout
 - Promotion of lightweight summaries
