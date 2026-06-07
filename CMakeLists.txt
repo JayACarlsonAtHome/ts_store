@@ -63,6 +63,19 @@ target_sources(jac_report
 target_compile_features(jac_report PUBLIC cxx_std_23)
 target_include_directories(jac_report PUBLIC ${TS_STORE_INCLUDE_DIR})
 
+# Test matrix runner module (params, scenarios, execution). Re-exports jac.report.
+add_library(jac_test_framework)
+target_sources(jac_test_framework
+    PUBLIC
+        FILE_SET cxx_modules TYPE CXX_MODULES
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES modules/jac.test_framework/jac.test_framework.cppm
+    PRIVATE
+        modules/jac.test_framework/runner.cpp
+)
+target_compile_features(jac_test_framework PUBLIC cxx_std_23)
+target_link_libraries(jac_test_framework PUBLIC jac_report)
+
 # C++ Test CLI Tool - the proper CLI for running the full matrix.
 # Replaces the old shell and Python runners. Built as a first-class tool.
 # Run it from a directory that contains the built ts_store_* test binaries,
@@ -70,7 +83,7 @@ target_include_directories(jac_report PUBLIC ${TS_STORE_INCLUDE_DIR})
 add_executable(ts_test_cli tools/test_cli/main.cpp)
 target_compile_features(ts_test_cli PRIVATE cxx_std_23)
 target_include_directories(ts_test_cli PRIVATE ${TS_STORE_INCLUDE_DIR})
-target_link_libraries(ts_test_cli PRIVATE jac_report)
+target_link_libraries(ts_test_cli PRIVATE jac_test_framework)
 
 set(TEST_NUMBERS 001 002 003 004 005 006 007)
 
