@@ -24,9 +24,9 @@
 
 namespace jac::ts_store::inline_v001 {
 
-namespace {
-    // Local helper (binary has no jText dep) to emit the required // header at file start.
-    size_t write_binary_file_header(int fd, std::string_view full_path) {
+namespace detail {
+    // Helper (binary has no jText dep) to emit the required // header at file start.
+    inline size_t write_binary_file_header(int fd, std::string_view full_path) {
         auto now = std::chrono::system_clock::now();
         auto today = std::chrono::floor<std::chrono::days>(now);
         std::string date_str = std::format("{:%Y-%m-%d}", today);
@@ -67,7 +67,7 @@ public:
         }
 
         // Write standardized // header comments first (per requirement for ALL persist files)
-        size_t header_size = write_binary_file_header(fd_, file_path_);
+        size_t header_size = detail::write_binary_file_header(fd_, file_path_);
 
         // Pre-allocate (mmap covers header prefix + data area)
         size_t initial_map = buffer_size_ + header_size + 4096;
