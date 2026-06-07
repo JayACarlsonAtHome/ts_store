@@ -64,7 +64,7 @@ Link the matching CMake targets (e.g. `jac_ts_store_impl_testing`) — see [CMak
 - Per-OS + per-disk separation: results live under `test-results/OS_00n/<disk>/Smoke|xFull/` and lightweight summaries are promoted to the equivalent path under `test-summary/`. This keeps metrics from different machines and storage types (x7k = 7200 rpm HDD, 10k, ssd) cleanly separated while using short aligned directory names.
 - The lightweight summaries are automatically promoted to the tracked `test-summary/` tree so they can be committed as proof without pulling in gigabytes of logs.
 
-The core in-memory path + `DoubleBufferedWriter` + pluggable sinks (JTextEventSink / BinaryEventSink) is the primary delivered capability. Direct-to-SQL from the hot path and advanced query features remain future work.
+The core in-memory path + `DoubleBufferedWriter` + pluggable sinks (JText, Binary, and SQL via `SqlEventSink`) is the primary delivered capability. Advanced query/aggregation beyond `select(id)` remains future work.
 
 ---
 
@@ -92,7 +92,7 @@ ts_store<Config> store(8, 10'000);
 Test-specific runtime sizing (threads, events, runs, and the "progressive difficulty" + "only last run persists" rules for 005/006/007) is controlled by:
 
 - [tests/test_params.txt](tests/test_params.txt)
-- The `get_test_params()` function and per-test logic in [scripts/run_all_tests.sh](scripts/run_all_tests.sh)
+- `get_test_params()` in [modules/jac.test_framework/runner.cpp](modules/jac.test_framework/runner.cpp) (invoked by `ts_test_cli`)
 - Individual heavy test implementations (e.g. [tests/ts_store_005/test_005_TS.cpp](tests/ts_store_005/test_005_TS.cpp))
 
 A 0-int / 0-float variant of the heaviest stress test (005) is also maintained for pure payload + flags pressure testing.
@@ -101,9 +101,7 @@ A 0-int / 0-float variant of the heaviest stress test (005) is also maintained f
 
 A single `uint64_t` carries user hints (`KeeperRecord`, `LogConsole`, `SendNetwork`, `IsResult`, severity, etc.) plus automatic `HasData` / `HasIntData` / `HasDblData` bits.
 
-**Full flag layout and helpers**:
-- [Doc/ts_store_flag_docs.md](Doc/ts_store_flag_docs.md)
-- Flag utilities are defined alongside the main headers (see `ts_store.hpp` and related impl_details).
+**Full flag layout and helpers**: [Doc/ts_store_flag_docs.md](Doc/ts_store_flag_docs.md) — module `jac.ts_store.flags`
 
 ---
 
@@ -177,7 +175,7 @@ The project is routinely built in several configurations (see the various `build
 - **Vendored jText** (`build-vendored-*`, `build-dual-vendored`): self-contained using `vendor/jText` (for releases or when you don't want an external jText tree).
 - **Results-oriented builds** (`build-results-*`): used by the test matrix for producing artifacts.
 
-Use the dual-compiler helper for repeatable GCC 15 + recent Clang verification:
+Canonical dev trees: `build-dual/gcc` and `build-dual/clang` (jtext+sqlite ON). Use the dual-compiler helper for a clean rebuild:
 ```bash
 ./scripts/build_dual_compilers.sh
 ```
@@ -222,7 +220,7 @@ This replaces the previous Python and shell versions for much better error handl
 - OS auto-detection + `OS_00n` layout
 - Promotion of lightweight summaries
 
-See the comments and `get_test_params()` inside the runner script, plus the `main()` functions in the heavy test sources (e.g. `tests/ts_store_005/` and `tests/ts_store_007/`) for the exact current rules.
+See `get_test_params()` / `build_scenario_list()` in [modules/jac.test_framework/runner.cpp](modules/jac.test_framework/runner.cpp), plus the `main()` functions in the heavy test sources (e.g. `tests/ts_store_005/`, `tests/ts_store_007/`). Smoke matrix: **113 scenarios per compiler** (001–007 × TS/XS × 4 persist × 2 output modes + `ts_store_flags`); **226** after gcc+clang merge on the same leaf.
 
 ### Important current practices
 
@@ -232,11 +230,11 @@ See the comments and `get_test_params()` inside the runner script, plus the `mai
   - Full details for the run (including the assigned ID) are written to `OS_INFO.txt` inside the leaf directory.
   - You can force a specific ID with `OS_ID=OS_001` in params or `--os-id` on the CLI (override kept for debugging, weird containers/WSL/CI, migration, etc.).
   This design keeps all directory names short for perfect vertical alignment (padded OS_00n + 3-char disks x7k/10k/ssd + 5-char sizes) while automatically tracking which real OS each result set came from across machines. The promotion script mirrors the structure under `test-summary/`. (Padded form chosen so the framework can scale if it is successful across many OS variants.)
-- After the runner finishes, `scripts/promote_summaries.sh --all` is called automatically. It copies `run_manifest.jtext`, `README.md`, and `by_test/*.md` into `test-summary/` and regenerates the hub index.
+- `./scripts/run_all_tests.sh` (wrapper) runs gcc+clang sequentially and then `promote_summaries.sh --all`. Direct `ts_test_cli run` does **not** promote — run `./scripts/promote_summaries.sh --all` yourself after a good matrix.
 
 View raw logs (example — current nested layout):
 ```bash
-less -R test-results/OS_003/ssd/Smoke/binary_logs/TS_STORE_TEST_005_TS/gcc.log
+less -R test-results/OS_003/ssd/Smoke/binary_logs/TS_STORE_TEST_005_TS/gcc_binary_on.log
 ```
 
 The corresponding summary is at `test-summary/OS_003/ssd/Smoke/README.md` (linked from `test-summary/README.md`).
@@ -272,7 +270,8 @@ Pure binary (no jText) examples and benchmarks are always available even without
 
 ## Project Layout (key parts)
 
-- [modules/jac.ts_store/](modules/jac.ts_store/) — C++23 module interfaces (`config`, `flags`, `core`, `impl.testing`, `persistence.*`)
+- [modules/jac.ts_store/](modules/jac.ts_store/) — C++23 modules (`config`, `flags`, `ansi`, `core`, `impl.testing`, `test_options`, `persistence.{common,binary,jtext,sql,writer}`)
+- [modules/jac.test_framework/](modules/jac.test_framework/) + [modules/jac.report/](modules/jac.report/) — matrix runner and summarization
 - [include/beman/ts_store/ts_store_headers/](include/beman/ts_store/ts_store_headers/) — implementation headers (included by module units; prefer `import` in application code)
 - [tests/ts_store_00N/](tests/) — the numbered stress test suites (001–007 TS/XS + flags unit test)
 - [tests/test_params.txt](tests/test_params.txt) — controls `SIZE` (smoke/full), `DISK_TYPE`, selected tests, and `OS_ID`
@@ -291,12 +290,10 @@ Pure binary (no jText) examples and benchmarks are always available even without
 
 ## Limitations & Future Work
 
-- No native direct-to-SQL writer from the ts_store hot path yet (current SQL work is jText-mediated roundtrips via external CLIs).
+- `SqlEventSink` exists and is in the stress matrix, but SQL persistence is optional at configure time and less battle-tested than jText/Binary on every OS leaf.
 - No rotation, compaction, or retention policy on the persisted side.
 - Query/aggregation beyond `select(id)` is not implemented at runtime.
 - The project has been exercised heavily on one OS/compiler family (RHEL + GCC 15 / recent Clang). Validate on your target platforms.
-
-Native direct SQL (via a pluggable `SqlEventSink` that emits INSERTs straight from the writer) is the main planned persistence addition.
 
 ---
 
