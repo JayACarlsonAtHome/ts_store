@@ -171,6 +171,11 @@ All stress tests are driven by `scripts/run_all_tests.sh` + `tests/test_params.t
 
 Important current practices:
 - `DISK_TYPE` (x7k / 10k / ssd — normalized to exactly 3 characters) keeps results for different storage hardware completely separate.
+- The runner **auto-detects** the OS (via `uname` + `/etc/os-release`) and assigns or re-uses a short padded `OS_001` / `OS_002` ... ID. This produces the nested layout `test-results/OS_001/<DISK_TYPE>/<SIZE_LABEL>/` (SIZE_LABEL = "Smoke" or "xFull"). 
+  - A visible central list is kept in `test-results/OS_MAP.txt` (e.g. `OS_001 = RHEL 9.6`).
+  - Full details for the run (including the assigned ID) are written to `OS_INFO.txt` inside the leaf directory.
+  - You can force a specific ID with `OS_ID=OS_001` in params or `--os-id` on the CLI (override kept for debugging, weird containers/WSL/CI, migration, etc.).
+  This design keeps all directory names short for perfect vertical alignment (padded OS_00n + 3-char disks x7k/10k/ssd + 5-char sizes) while automatically tracking which real OS each result set came from across machines. The promotion script mirrors the structure under `test-summary/`. (Padded form chosen so the framework can scale if it is successful across many OS variants.)
 - `SIZE=full` for 005/007 uses 50 runs of ~1M events each. Only the **last** run of 005 and 007 is verbose on console / test-log.txt; earlier runs still do full work and contribute to statistics.
 - Test 005 has a 0-int + 0-float variant (pure payload/flags stress) while 007 retains the full 9/6 metrics.
 - After the runner finishes, `scripts/promote_summaries.sh --all` is called automatically. The three `TS_STORE_*_Summary.md` files are copied from `test-results/<disk>/` into `test-summary/<disk>/` (these are the small files you commit).

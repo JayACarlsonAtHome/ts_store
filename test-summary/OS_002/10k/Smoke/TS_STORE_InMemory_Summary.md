@@ -11,17 +11,17 @@ This gives the "pure" in-memory throughput for comparison against the persisted 
 ## Per-Compiler Compile Times + In-Memory Throughput
 ### Compiler: gcc
 - Compile time: skipped
-- ts_store_005_TS (100 entries × 1 runs): ~92,421 ops/sec (measured 1,082 µs)
-- ts_store_005_XS (100 entries × 1 runs): ~177,305 ops/sec (measured 564 µs)
-- ts_store_007_TS (100 entries × 1 runs): ~246,305 ops/sec (measured 406 µs)
-- ts_store_007_XS (100 entries × 1 runs): ~128,700 ops/sec (measured 777 µs)
+- ts_store_005_TS (100 entries × 1 runs): ~246,305 ops/sec (measured 406 µs)
+- ts_store_005_XS (100 entries × 1 runs): ~296,736 ops/sec (measured 337 µs)
+- ts_store_007_TS (100 entries × 1 runs): ~185,529 ops/sec (measured 539 µs)
+- ts_store_007_XS (100 entries × 1 runs): ~191,939 ops/sec (measured 521 µs)
 
 ### Compiler: clang
 - Compile time: skipped
-- ts_store_005_TS (100 entries × 1 runs): ~225,734 ops/sec (measured 443 µs)
-- ts_store_005_XS (100 entries × 1 runs): ~126,582 ops/sec (measured 790 µs)
-- ts_store_007_TS (100 entries × 1 runs): ~256,410 ops/sec (measured 390 µs)
-- ts_store_007_XS (100 entries × 1 runs): ~259,740 ops/sec (measured 385 µs)
+- ts_store_005_TS (100 entries × 1 runs): ~261,097 ops/sec (measured 383 µs)
+- ts_store_005_XS (100 entries × 1 runs): ~252,525 ops/sec (measured 396 µs)
+- ts_store_007_TS (100 entries × 1 runs): ~241,546 ops/sec (measured 414 µs)
+- ts_store_007_XS (100 entries × 1 runs): ~228,833 ops/sec (measured 437 µs)
 
 
 ## Notes
@@ -33,3 +33,5 @@ This gives the "pure" in-memory throughput for comparison against the persisted 
 - In-memory runs use --persist=none (no DoubleBufferedWriter attached).
 
 See main [TS_STORE_Test_Summary.md](TS_STORE_Test_Summary.md) for the full matrix with persistence (binary/jText, on/off, etc.).
+
+2026-06-07 03:36:10 UTC ---Finished---

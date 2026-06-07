@@ -68,6 +68,7 @@ RUNS=1
 WRITER_THREADS=5
 OPS_PER_THREAD=20
 DISK_TYPE=""
+OS_ID=""
 declare -A SELECTED_TESTS=()
 if [[ -f "$CONFIG_FILE" ]]; then
     echo "Loading test params from $CONFIG_FILE"
@@ -89,6 +90,8 @@ if [[ -f "$CONFIG_FILE" ]]; then
             OPS_PER_THREAD="${BASH_REMATCH[1]}"
         elif [[ "$line" =~ ^DISK_TYPE=(.*)$ ]]; then
             DISK_TYPE="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ ^OS_ID=(.*)$ ]]; then
+            OS_ID="${BASH_REMATCH[1]}"
         elif [[ "$line" =~ ^([0-9]{3})=[xX] ]]; then
             SELECTED_TESTS["${BASH_REMATCH[1]}"]=1
         fi
@@ -102,8 +105,22 @@ elif [[ "$SIZE" == "full" ]]; then
     THREADS=250; EVENTS_PER_THREAD=4000; RUNS=50; WRITER_THREADS=50; OPS_PER_THREAD=400
 fi
 
-# test-results/ layout per disk type (define early after params load, before any use of the vars in garbage/cleanup)
-TEST_RESULTS_BASE="$PROJECT_ROOT/test-results/$DISK_TYPE"
+# SIZE_LABEL chosen for 5-char vertical alignment under the 3-char disk dirs
+if [[ "$SIZE" == "full" ]]; then
+    SIZE_LABEL="xFull"
+else
+    SIZE_LABEL="Smoke"
+fi
+
+# test-results/ layout: supports OS_ID (OS_001/OS_002... padded style) + disk (3-char) + size (5-char)
+# for cross-OS / cross-machine / cross-disk testing while preserving vertical alignment.
+# Full OS details go into OS_INFO.txt inside the leaf dir.
+# A central visible list is kept in test-results/OS_MAP.txt (OS_00n = real OS name)
+if [[ -n "$OS_ID" ]]; then
+    TEST_RESULTS_BASE="$PROJECT_ROOT/test-results/$OS_ID/$DISK_TYPE/$SIZE_LABEL"
+else
+    TEST_RESULTS_BASE="$PROJECT_ROOT/test-results/$DISK_TYPE"
+fi
 BINARY_LOGS="$TEST_RESULTS_BASE/binary_logs"
 JTEXT_LOGS="$TEST_RESULTS_BASE/jText_logs"
 SQL_LOGS="$TEST_RESULTS_BASE/sql_logs"
@@ -240,6 +257,17 @@ format_duration() {
     fi
 }
 
+# Emit a timestamp-prefixed entry to a summary file.
+# This puts the datetime at the *beginning* of "log entry" style lines
+# (the per-result bullets in the InMemory, SQL, and faster sections of summaries)
+# so each recorded observation carries when it was noted.
+summary_entry() {
+    local f="$1"; shift
+    local ts
+    ts=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+    echo "$ts $*" >> "$f"
+}
+
 # Helper to prepare the log dir for a given test + persist type + output mode.
 # Sets globals: logdir_name, sdir, ldir
 prepare_log_dir() {
@@ -260,7 +288,8 @@ prepare_log_dir() {
 }
 
 # Generate the rich markdown summary document.
-# Scans test-results/$DISK_TYPE/... for .meta + .log files (supports multiple compilers).
+# Scans under the computed TEST_RESULTS_BASE (which may be nested as
+# test-results/OS_001/<DISK_TYPE>/<SIZE_LABEL>/ etc. using the OS_00n convention).
 # Includes OS info, compile time, per-compiler times (build + test suite), compiler column, faster log per scenario, total suite duration, etc.
 generate_test_summary() {
     local out_file="$1"
@@ -371,7 +400,7 @@ HDR
                     persist_mbs="instant"
                 fi
 
-                local rel_path="test-results/$DISK_TYPE/$(basename "$logtype_dir")/$SUBDIR/${COMPILER}.log"
+                local rel_path="$RESULTS_REL_PREFIX/$(basename "$logtype_dir")/$SUBDIR/${COMPILER}.log"
                 local log_link="[log*]($rel_path)"
 
                 local display_ltype=${LOGTYPE}
@@ -452,7 +481,7 @@ HDR
                     if [[ "$dur" != "N/A" && "$pbytes" -gt 0 ]]; then
                         pmbs=$(echo "scale=1; $pbytes / 1024 / 1024 / ${dur%s}" | bc -l 2>/dev/null || echo "N/A")
                     fi
-                    local rlog="test-results/$DISK_TYPE/$pdir/$tname/${COMPILER}_${ltype}_${om}.log"
+                    local rlog="$RESULTS_REL_PREFIX/$pdir/$tname/${COMPILER}_${ltype}_${om}.log"
                     rows+=("| ${COMPILER} | ${tname} | ${ltype} | ${om} | ${rec} | ${dur} | ${phuman} | ${pmbs} | ? | [log*]($rlog) |")
 
                     # populate scenario_data for the faster section too
@@ -562,7 +591,7 @@ FASTER
         fi
     done
     if (( any_comp == 0 )); then
-        echo "(No comparative data yet — run for both gcc and clang.)" >> "$out_file"
+        summary_entry "$out_file" "(No comparative data yet — run for both gcc and clang.)"
     else
         # Gather + sort so that for each (test, output), the clang and gcc lines are adjacent.
         # "on" before "off". Matches the main table ordering.
@@ -580,7 +609,9 @@ FASTER
             fi
             keyed_faster+=("${tname}|${omode}|${cname}|${line}")
         done
-        printf "%s\n" "${keyed_faster[@]}" | sort -t'|' -k1,1 -k2,2 -k3,3 | cut -d'|' -f4- >> "$out_file"
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            summary_entry "$out_file" "$line"
+        done < <(printf "%s\n" "${keyed_faster[@]}" | sort -t'|' -k1,1 -k2,2 -k3,3 | cut -d'|' -f4-)
     fi
 
     # Notes + Configs
@@ -634,13 +665,16 @@ COMPILER="all"
 OUTPUT_MODE="yes"  # yes = live console (with ANSI colors for test output), no = silent (logs only)
 
 usage() {
-    echo "Usage: $0 [--compiler gcc|clang|all] [--output yes|no] [--disk x7k|10k|ssd]"
+    echo "Usage: $0 [--compiler gcc|clang|all] [--output yes|no] [--disk x7k|10k|ssd] [--os-id OS_001]"
     echo "  Default: all (runs gcc then clang internally, one summary at end)"
     echo "  --output yes : live console output with ANSI colors (pretty)"
     echo "  --output no  : silent (logs only)"
-    echo "  --disk x7k|10k|ssd : selects storage type → test-results/<disk>/...  (accepts 7k/7200/x7k/10k etc.; normalized to x7k/10k/ssd (all exactly 3 chars) so dirs line up vertically when listed)"
+    echo "  --disk x7k|10k|ssd : selects storage type (3-char for alignment)"
+    echo "  --os-id OS_001     : use OS_001/OS_002... (see test_params.txt). Padded form (OS_%03d) recommended for scale."
+    echo "  Creates: test-results/OS_001/<disk>/<size>/  (real OS name in OS_INFO.txt + central OS_MAP.txt)"
+    echo "  This supports cross-OS / cross-disk testing while keeping the 3-char disk (x7k/10k/ssd) and 5-char size dirs vertically aligned."
     echo "  Additionally runs pure in-memory (no logs) for 005/007 and produces separate TS_STORE_InMemory_Summary.md with compile times."
-    echo "  Runs selected persist types (binary, jtext, sql direct with debug INSERT file, none/inmem) + post roundtrips. Controlled by tests/test_params.txt (SIZE=smoke|full, [x] tests, DISK_TYPE). Produces per-disk summaries under test-results/<disk>/."
+    echo "  Runs selected persist types (binary, jtext, sql direct with debug INSERT file, none/inmem) + post roundtrips. Controlled by tests/test_params.txt (SIZE=smoke|full, [x] tests, DISK_TYPE, optional OS_ID for override). Uses padded OS_00n form by default for long-term scale."
     exit 1
 }
 
@@ -656,6 +690,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --disk)
             DISK_TYPE="$2"
+            shift 2
+            ;;
+        --os-id)
+            OS_ID="$2"
             shift 2
             ;;
         -h|--help)
@@ -700,8 +738,81 @@ else
     usage
 fi
 
+# --------------------------------------------------------------------
+# Auto OS_ID resolution using uname/os-release (the user does NOT pick it).
+# We parse the OS, look up in test-results/OS_MAP.txt for a matching entry
+# (OS_001, OS_002, ... padded), or assign the next free one (using OS_%03d)
+# and append to the map.
+# This keeps the short OS_00n dirs for alignment (and scales to hundreds of
+# distinct OSes if the framework is successful across many machines/distros).
+# While the map + per-run OS_INFO.txt record the real OS.
+# If OS_ID was already set (via params or --os-id), we respect the override
+# and still ensure the map has an entry.
+# --------------------------------------------------------------------
+if [[ -z "$OS_ID" ]]; then
+  # Detect a pretty human name
+  os_pretty=""
+  if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release 2>/dev/null || true
+    os_pretty="${PRETTY_NAME:-${NAME:-} ${VERSION_ID:-}}"
+  fi
+  if [[ -z "$os_pretty" ]]; then
+    os_pretty=$(uname -s -r 2>/dev/null || echo "unknown-os")
+  fi
+
+  # Normalized key for fuzzy matching
+  os_key=$(echo "$os_pretty" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:space:]]+/ /g; s/^ +| +$//g')
+
+  MAP_FILE="$PROJECT_ROOT/test-results/OS_MAP.txt"
+  mkdir -p "$(dirname "$MAP_FILE")"
+
+  if [[ -f "$MAP_FILE" ]]; then
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      # Expect lines like "OS_001 = RHEL 9.6" or "OS_002 = RHEL 10.2"
+      if [[ "$line" =~ ^(OS[0-9]+)[[:space:]]*=[[:space:]]*(.+)$ ]]; then
+        map_id="${BASH_REMATCH[1]}"
+        map_val="${BASH_REMATCH[2]}"
+        map_key=$(echo "$map_val" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:space:]]+/ /g; s/^ +| +$//g')
+        if [[ "$os_key" == *"$map_key"* || "$map_key" == *"$os_key"* ]]; then
+          OS_ID="$map_id"
+          break
+        fi
+      fi
+    done < "$MAP_FILE"
+  fi
+
+  if [[ -z "$OS_ID" ]]; then
+    # Find the highest existing OS number (OS_001, OS_002, ... style)
+    max=0
+    if [[ -f "$MAP_FILE" ]]; then
+      while IFS= read -r line || [[ -n "$line" ]]; do
+        if [[ "$line" =~ ^OS_([0-9]+)[[:space:]]*=[[:space:]] ]]; then
+          num=${BASH_REMATCH[1]}
+          # treat as decimal (strip leading zeros)
+          num=$((10#$num))
+          (( num > max )) && max=$num
+        fi
+      done < "$MAP_FILE"
+    fi
+    next=$((max + 1))
+    OS_ID=$(printf 'OS_%03d' "$next")
+    echo "$OS_ID = $os_pretty" >> "$MAP_FILE"
+    echo "Auto-assigned $OS_ID for new OS '$os_pretty' → $MAP_FILE"
+  else
+    echo "Matched existing $OS_ID for OS '$os_pretty'"
+  fi
+else
+  echo "Using user-provided/override OS_ID=$OS_ID"
+fi
+
 # test-results/ layout per disk type (define after params load + CLI overrides)
-TEST_RESULTS_BASE="$PROJECT_ROOT/test-results/$DISK_TYPE"
+# Supports OS_ID (OS_001, OS_002 ... padded) + 3-char DISK_TYPE + 5-char SIZE_LABEL
+if [[ -n "$OS_ID" ]]; then
+    TEST_RESULTS_BASE="$PROJECT_ROOT/test-results/$OS_ID/$DISK_TYPE/$SIZE_LABEL"
+else
+    TEST_RESULTS_BASE="$PROJECT_ROOT/test-results/$DISK_TYPE"
+fi
 BINARY_LOGS="$TEST_RESULTS_BASE/binary_logs"
 JTEXT_LOGS="$TEST_RESULTS_BASE/jText_logs"
 SQL_LOGS="$TEST_RESULTS_BASE/sql_logs"
@@ -713,10 +824,66 @@ mkdir -p "$SQL_LOGS"
 mkdir -p "$INMEM_LOGS"
 mkdir -p "$INMEM_DIR"
 
+# Write OS / run metadata into the leaf directory.
+# The visible cross-machine list is in test-results/OS_MAP.txt at the top.
+# This OS_INFO.txt has the full details for *this* run (including the OS_ID assignment).
+{
+    echo "OS_ID: ${OS_ID:-<none>}"
+    echo "DISK_TYPE: $DISK_TYPE"
+    echo "SIZE: $SIZE"
+    echo "SIZE_LABEL: $SIZE_LABEL"
+    echo "Run started: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+    echo ""
+    # Re-detect clean pretty name
+    os_pretty=""
+    if [[ -r /etc/os-release ]]; then
+      . /etc/os-release 2>/dev/null || true
+      os_pretty="${PRETTY_NAME:-${NAME:-} ${VERSION_ID:-}}"
+    fi
+    if [[ -z "$os_pretty" ]]; then
+      os_pretty=$(uname -s -r 2>/dev/null || echo "unknown")
+    fi
+    echo "OS_NAME: $os_pretty"
+    echo ""
+    echo "=== uname -a ==="
+    uname -a 2>/dev/null || true
+    echo ""
+    if [[ -r /etc/os-release ]]; then
+        echo "=== /etc/os-release ==="
+        cat /etc/os-release
+    fi
+    echo ""
+    echo "=== hostname ==="
+    hostname 2>/dev/null || true
+    echo ""
+    echo "See ../../OS_MAP.txt for the global OS_001=... list across machines."
+} > "$TEST_RESULTS_BASE/OS_INFO.txt"
+echo "OS metadata written to $TEST_RESULTS_BASE/OS_INFO.txt"
+
+# Ensure the central visible OS_MAP.txt has this OS_ID (the auto-detection
+# logic above already created the entry if it was a new OS).
+if [[ -n "$OS_ID" ]]; then
+    MAP_FILE="$PROJECT_ROOT/test-results/OS_MAP.txt"
+    mkdir -p "$(dirname "$MAP_FILE")"
+    if [[ ! -f "$MAP_FILE" ]] || ! grep -q "^$OS_ID =" "$MAP_FILE" 2>/dev/null; then
+        echo "$OS_ID = $os_pretty" >> "$MAP_FILE"
+        echo "Updated central OS map: $MAP_FILE  ($OS_ID = $os_pretty)"
+    fi
+fi
+
+# Repo-root relative prefix for links inside the Markdown summaries
+# (so they remain correct even with OS_ID / SIZE_LABEL nesting)
+if [[ -n "$OS_ID" ]]; then
+    RESULTS_REL_PREFIX="test-results/$OS_ID/$DISK_TYPE/$SIZE_LABEL"
+else
+    RESULTS_REL_PREFIX="test-results/$DISK_TYPE"
+fi
+
 echo "=== ts_store All Stress Tests Runner (double-buffered persist for ALL tests) [DISK_TYPE=$DISK_TYPE] ==="
 echo "Compilers: ${COMPILER_LIST[*]}"
 echo "Output mode: $OUTPUT_MODE (live console + ANSI colors when 'yes')"
-echo "Primary output: test-results/$DISK_TYPE/ (binary_logs + jText_logs + ...) + per-disk TS_STORE_*_Summary.md"
+echo "Primary output: $TEST_RESULTS_BASE/ (binary_logs + jText_logs + ...) + promoted summaries under test-summary/"
+echo "  (OS_ID=$OS_ID DISK_TYPE=$DISK_TYPE SIZE_LABEL=$SIZE_LABEL -- see OS_INFO.txt in the leaf + OS_MAP.txt at top level)"
 echo "Each test subdir will contain separate logs for output=on vs output=off."
 echo "Each (test, logtype) is run twice per compiler: once with output=on (live console + ANSI colors), once with output=off (silent, no color)."
 
@@ -864,7 +1031,7 @@ TEST_START_EP=$(date +%s)
 #     placed in the TS_STORE_TEST_... subdir via --base-name
 #
 # Subdirectory layout (one per test dimension value):
-#   test-results/$DISK_TYPE/binary_logs/TS_STORE_TEST_00N_XX/   (and same under jText_logs/)
+#   test-results/OS_001/$DISK_TYPE/<SIZE_LABEL>/binary_logs/TS_STORE_TEST_00N_XX/
 # (TESTS array is built above from test_params.txt or defaults to all)
 
 echo
@@ -1186,7 +1353,7 @@ for c in "${COMPILER_LIST[@]}"; do
   bdur=${COMPILER_BUILD_DURATIONS[$c]:-skipped}
   bhuman=$(format_duration "$bdur")
   echo "### Compiler: $c" >> "$INMEM_SUMMARY"
-  echo "- Compile time: $bhuman" >> "$INMEM_SUMMARY"
+  summary_entry "$INMEM_SUMMARY" "- Compile time: $bhuman"
   for h in ts_store_005_TS ts_store_005_XS ts_store_007_TS ts_store_007_XS; do
     m="$INMEM_DIR/${c}_${h}.meta"
     if [[ -f "$m" ]]; then
@@ -1204,7 +1371,7 @@ for c in "${COMPILER_LIST[@]}"; do
       else
         dur_display="${idur}s"
       fi
-      echo "- ${h} (${ev} entries × ${rn} runs): ~${aops} ops/sec (measured ${dur_display})" >> "$INMEM_SUMMARY"
+      summary_entry "$INMEM_SUMMARY" "- ${h} (${ev} entries × ${rn} runs): ~${aops} ops/sec (measured ${dur_display})"
     fi
   done
   echo "" >> "$INMEM_SUMMARY"
@@ -1309,7 +1476,7 @@ for c in "${COMPILER_LIST[@]}"; do
             else
               sql_h="${sql_sz}B"; ft_h="${ft_sz}B"
             fi
-            echo "- ${testn} / jtext / ${om} : post-dur ${sql_dur}s | .sql ${sql_h} | fulltrip ${ft_h} | rows ${rows}" >> "$SQL_SUMMARY"
+            summary_entry "$SQL_SUMMARY" "- ${testn} / jtext / ${om} : post-dur ${sql_dur}s | .sql ${sql_h} | fulltrip ${ft_h} | rows ${rows}"
           fi
         fi
       fi
@@ -1350,6 +1517,32 @@ with open(sys.argv[1], "w") as f: f.write(content)
     sed -i "s/\$sql_now/$sql_now/g; s/\$sql_os/$sql_os/g" "$SQL_SUMMARY"
 
 echo "SQL roundtrip summary written to: $SQL_SUMMARY"
+
+# Log a clear "finished" marker (with timestamp) in all three summary files.
+# This lets us easily tell (even if the runner log is truncated or we are
+# looking at the .md files later) that the full run completed successfully.
+finish_time=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+for f in "$SUMMARY_FILE" "$INMEM_SUMMARY" "$SQL_SUMMARY"; do
+    if [[ -f "$f" ]]; then
+        echo "" >> "$f"
+        echo "$finish_time ---Finished---" >> "$f"
+    fi
+done
+
+# Also ensure the marker is present in any pre-existing summary files
+# that might have been left from a previous interrupted run in this tree
+# (so the next promote will carry the "finished" state).
+# For old files we just stamp with the current time (we don't know the
+# original completion time).
+stamp_time=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+for base in test-results test-summary; do
+    for f in $(find "$base" -name "TS_STORE_*_Summary.md" 2>/dev/null); do
+        if [[ -f "$f" ]] && ! grep -q " ---Finished---$" "$f" 2>/dev/null; then
+            echo "" >> "$f"
+            echo "$stamp_time ---Finished---" >> "$f"
+        fi
+    done
+done
 
 # Promote the lightweight summaries out to the sibling test-summary/ tree.
 # These small .md files are safe (and intended) to commit for proof/archival.

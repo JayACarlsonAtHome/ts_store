@@ -3,11 +3,15 @@
 # promote_summaries.sh
 #
 # After a test run finishes, copy the lightweight TS_STORE_*_Summary.md files
-# out of the (git-ignored) test-results/<disk>/ tree into the sibling
-# test-summary/<disk>/ tree so they can be committed and tracked.
+# out of the (git-ignored) test-results/ tree (which may be nested as
+# test-results/OS_001/<DISK_TYPE>/<SIZE_LABEL>/ using the padded OS_00n convention)
+# into the sibling test-summary/ tree (mirroring the nesting) so they can be committed and tracked.
 #
 # This keeps huge log/persist artifacts out of the repo while preserving the
-# human-readable proof summaries per disk type (x7k/10k/ssd).
+# human-readable proof summaries per disk type (x7k/10k/ssd) and per OS/size.
+#
+# The central visible list lives in test-results/OS_MAP.txt (OS_001 = ..., OS_002 = ...).
+# Full OS details for each run are in OS_INFO.txt inside the leaf directory.
 #
 # Usage:
 #   ./scripts/promote_summaries.sh                 # uses DISK_TYPE from env or tests/test_params.txt
@@ -67,47 +71,63 @@ normalize_disk() {
     esac
 }
 
-declare -a DISKS=()
+declare -a LEAVES=()
 
 if [[ $PROMOTE_ALL -eq 1 ]]; then
-    # Discover any 3-char-looking subdirs under test-results/ that contain a summary
-    for d in test-results/*/; do
-        [[ -d "$d" ]] || continue
-        base="$(basename "$d")"
-        if [[ -f "$d/TS_STORE_Test_Summary.md" ]]; then
-            DISKS+=("$base")
-        fi
-    done
+    # Discover *any* leaf directories (any depth) under test-results/ that contain a summary.
+    # This supports both the old flat layout and the new nested layout:
+    #   test-results/OS_001/<DISK>/<SIZE_LABEL>/   (using the padded OS_00n convention)
+    # Full OS name lives in OS_INFO.txt inside the leaf; directory names stay short for alignment.
+    while IFS= read -r -d '' f; do
+        leaf_dir=$(dirname "$f")
+        # Compute the relative path under test-results (works for 1 or 3 levels)
+        rel=${leaf_dir#test-results/}
+        LEAVES+=("$rel")
+    done < <(find test-results -type f -name TS_STORE_Test_Summary.md -print0 2>/dev/null | sort -z)
 elif [[ -n "$DISK" ]]; then
     nd="$(normalize_disk "$DISK")"
-    DISKS+=("$nd")
+    # For explicit --disk we still support the simple case; user can pass full relative if needed
+    for cand in "$nd" "x7k" "10k" "ssd"; do
+        for f in $(find "test-results" -path "*$cand*/TS_STORE_Test_Summary.md" 2>/dev/null | head -5); do
+            leaf_dir=$(dirname "$f")
+            rel=${leaf_dir#test-results/}
+            LEAVES+=("$rel")
+        done
+    done
 else
-    # Fallback: if a current TEST_RESULTS_BASE style dir exists with summaries, use its basename
-    # or just try the common ones
+    # Fallback: common simple disks (flat or under any OS)
     for cand in x7k 10k ssd; do
-        if [[ -f "test-results/$cand/TS_STORE_Test_Summary.md" ]]; then
-            DISKS+=("$cand")
-        fi
+        for f in $(find "test-results" -path "*$cand*/TS_STORE_Test_Summary.md" 2>/dev/null | head -3); do
+            leaf_dir=$(dirname "$f")
+            rel=${leaf_dir#test-results/}
+            LEAVES+=("$rel")
+        done
     done
 fi
 
-if [[ ${#DISKS[@]} -eq 0 ]]; then
-    echo "No disk summaries found to promote (test-results/<disk>/TS_STORE_*_Summary.md)."
+# Dedup
+if [[ ${#LEAVES[@]} -gt 0 ]]; then
+    mapfile -t LEAVES < <(printf "%s\n" "${LEAVES[@]}" | sort -u)
+fi
+
+if [[ ${#LEAVES[@]} -eq 0 ]]; then
+    echo "No summaries found to promote under test-results/ (any depth)."
     exit 0
 fi
 
-echo "Promoting summaries for disk(s): ${DISKS[*]}"
+echo "Promoting summaries for: ${LEAVES[*]}"
 
-for d in "${DISKS[@]}"; do
-    src="test-results/$d"
-    dst="test-summary/$d"
+for rel in "${LEAVES[@]}"; do
+    src="test-results/$rel"
+    dst="test-summary/$rel"
     if [[ ! -f "$src/TS_STORE_Test_Summary.md" ]]; then
-        echo "  skip $d (no TS_STORE_Test_Summary.md in $src)"
+        echo "  skip $rel (no TS_STORE_Test_Summary.md)"
         continue
     fi
     mkdir -p "$dst"
     cp -f "$src"/TS_STORE_*_Summary.md "$dst/" 2>/dev/null || true
-    echo "  -> $dst/  (copied $(ls "$dst"/ | wc -l | tr -d ' ') files)"
+    count=$(ls "$dst"/ 2>/dev/null | wc -l | tr -d ' ')
+    echo "  -> $dst/  (copied $count files)"
     ls -1 "$dst/" | sed 's/^/     /'
 done
 
