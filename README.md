@@ -18,7 +18,7 @@ The automated matrix (`ts_test_cli`, tests 001–007 TS/XS, flags unit test, dua
 
 **C++23 modules** are used throughout tests and examples. The goal is **not** to ship a reusable SDK for other repos (though the module boundaries could be reused on a similar toolchain). Modules exist so that when you touch one part of ts_store — flags, a sink, the core buffer — **only the affected module units recompile**, keeping iteration time down on a large tree.
 
-**New machine or toolchain?** Always do a **clean configure and full build from source** first (`./scripts/build_dual_compilers.sh` or equivalent). Prebuilt module artifacts are not portable across OS, compiler, or CPU. After a good full build, day-to-day work benefits from module granularity on that same system.
+**New machine or toolchain?** Always do a **clean configure and full build from source** first (`./scripts/build_dual_compilers.sh` or equivalent). Only `modules/**/*.cppm` and companion `.cpp` sources are in git; BMIs and other module build objects (`.gcm`, `.pcm`, `.ddi`, etc.) are gitignored and must be produced locally. Prebuilt module artifacts are not portable across OS, compiler, or CPU. After a good full build, day-to-day work benefits from module granularity on that same system.
 
 ---
 

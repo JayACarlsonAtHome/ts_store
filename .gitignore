@@ -18,6 +18,14 @@ Makefile
 *.dylib
 *.dll
 
+# C++23 module BMIs and scanner metadata (never commit — rebuild after clone)
+*.gcm
+*.pcm
+*.ifc
+*.ddi
+*.modmap
+**/CXX.dd
+
 # Test / benchmark artifacts (runtime logs under test-results/)
 *.jtext
 # C++23 module shim (directory name matches *.jtext)

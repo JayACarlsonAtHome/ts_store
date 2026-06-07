@@ -127,7 +127,7 @@ test-summary/README.md
 test-summary/OS_003/ssd/Smoke/README.md
 test-summary/OS_003/x7k/Smoke/README.md
 ```
-- `.gitignore`: `test-results/` ignored; `!test-summary/**/run_manifest.jtext` whitelisted; `!modules/jac.jtext/**` (dir name matches `*.jtext`)
+- `.gitignore`: `test-results/` ignored; `!test-summary/**/run_manifest.jtext` whitelisted; `!modules/jac.jtext/**` (dir name matches `*.jtext`); C++23 module objects (`*.gcm`, `*.pcm`, `*.ifc`, `*.ddi`, `*.modmap`, `**/CXX.dd`, plus `*.o`/`*.a`) — sources under `modules/` only, never BMIs
 
 ### `ts_test_cli` commands
 ```bash
