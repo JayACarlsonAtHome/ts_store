@@ -2,7 +2,7 @@
 
 | Compiler | Persist | Output | Records | Duration | Status | Log |
 |----------|---------|--------|---------|----------|--------|-----|
-| clang | binary | off | 1000 | 0.03s | PASS | [log](../binary_logs/TS_STORE_TEST_007_TS/clang_binary_off.log) *(local)* |
+| clang | binary | off | 1000 | 0.01s | PASS | [log](../binary_logs/TS_STORE_TEST_007_TS/clang_binary_off.log) *(local)* |
 | clang | binary | on | 1000 | 0.04s | PASS | [log](../binary_logs/TS_STORE_TEST_007_TS/clang_binary_on.log) *(local)* |
 | clang | jtext | off | 1000 | 0.01s | PASS | [log](../jText_logs/TS_STORE_TEST_007_TS/clang_jtext_off.log) *(local)* |
 | clang | jtext | on | 1000 | 0.01s | PASS | [log](../jText_logs/TS_STORE_TEST_007_TS/clang_jtext_on.log) *(local)* |

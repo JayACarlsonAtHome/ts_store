@@ -53,3 +53,4 @@ OS_ID=OS_003   # smoke for fake OS3 (ssd)
 005=x
 006=x
 007=x
+flags=x   # ts_store_flags unit test (1 scenario per compiler; unit_logs/)

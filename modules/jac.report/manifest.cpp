@@ -190,6 +190,7 @@ bool scenario_in_manifest_pilot(const Scenario& scen) {
 }
 
 int scenario_record_count(const Scenario& scen) {
+    if (scen.test == "ts_store_flags") return 1;
     return scen.threads * scen.events_per_thread;
 }
 

@@ -48,6 +48,12 @@ TestParams load_test_params(const fs::path& config_file) {
             params.disk_type = value;
         } else if (key == "OS_ID") {
             params.os_id = value;
+        } else if (key == "flags") {
+            std::string lower_val = value;
+            std::transform(lower_val.begin(), lower_val.end(), lower_val.begin(), ::tolower);
+            if (lower_val == "x" || lower_val == "1" || lower_val == "true") {
+                params.selected_tests["flags"] = true;
+            }
         } else if (key.size() == 3 && std::all_of(key.begin(), key.end(), ::isdigit)) {
             std::string lower_val = value;
             std::transform(lower_val.begin(), lower_val.end(), lower_val.begin(), ::tolower);
@@ -130,6 +136,7 @@ std::string persist_log_dir_name(const std::string& persist) {
     if (persist == "jtext") return "jText_logs";
     if (persist == "sql")   return "sql_logs";
     if (persist == "none")  return "inmem_logs";
+    if (persist == "unit")  return "unit_logs";
     return "binary_logs";
 }
 
@@ -175,6 +182,21 @@ std::vector<Scenario> build_scenario_list(const std::vector<std::string>& select
     std::vector<std::string> output_modes  = {"on", "off"};
 
     for (const auto& test_base : selected) {
+        if (test_base == "flags") {
+            for (const auto& compiler : compilers) {
+                Scenario s;
+                s.test              = "ts_store_flags";
+                s.persist           = "unit";
+                s.output_mode       = "off";
+                s.compiler          = compiler;
+                s.threads           = 1;
+                s.events_per_thread = 1;
+                s.runs              = 1;
+                scenarios.push_back(s);
+            }
+            continue;
+        }
+
         for (const auto& tsxs : std::vector<std::string>{"TS", "XS"}) {
             std::string test = "ts_store_" + test_base + "_" + tsxs;
             TestScaling scaling = get_test_params(test_base, size);
@@ -290,8 +312,12 @@ std::vector<std::string> get_selected_tests(const TestParams& params) {
             sel.push_back(key);
         }
     }
+    if (params.selected_tests.count("flags") && params.selected_tests.at("flags")) {
+        sel.push_back("flags");
+    }
     if (sel.empty()) {
         for (int i = 1; i <= 7; ++i) sel.push_back(std::format("{:03d}", i));
+        sel.push_back("flags");
     }
     return sel;
 }

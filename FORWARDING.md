@@ -116,7 +116,7 @@ test-results/OS_00n/<disk>/<Smoke|xFull>/
   run_manifest.db         # SQLite views (gitignored)
   README.md               # leaf hub → by_test/
   by_test/<TEST>.md       # per-binary detail
-  binary_logs|jText_logs|sql_logs|inmem_logs/TS_STORE_TEST_*_{compiler}_{persist}_{on|off}.log
+  binary_logs|jText_logs|sql_logs|inmem_logs|unit_logs/TS_STORE_TEST_*_{compiler}_{persist}_{on|off}.log
 ```
 
 ### Promoted / committed proof (`test-summary/`)
@@ -145,11 +145,11 @@ test-summary/OS_003/x7k/Smoke/README.md
 - `jac.jtext` phase 2: split into `core` / `reader` / `writer` + umbrella
 - `jac.report` uses `import jac.jtext.reader` (not raw `#include <jText.h>`)
 
-### Verified smoke (2026-06-07, post-common module)
+### Verified smoke (2026-06-07, post-flags matrix)
 | Leaf | Scenarios | Status |
 |------|-----------|--------|
-| `OS_003/ssd/Smoke` | 224/224 (112 gcc + 112 clang) | PASS |
-| `OS_003/x7k/Smoke` | 224/224 | PASS (prior run) |
+| `OS_003/ssd/Smoke` | 226/226 (113 gcc + 113 clang) | PASS |
+| `OS_003/x7k/Smoke` | 224/224 | PASS (prior run; re-run to pick up flags) |
 
 Hub: [test-summary/README.md](test-summary/README.md)
 
@@ -188,12 +188,10 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 1. **`jac.ts_store.impl.testing`**
 2. **`jac.ts_store.core`** — `ts_store<Config>` + impl_details
 3. **Migrate stress tests** to `import` (still mostly `#include`)
-4. **Add `ts_store_flags` to `ts_test_cli` matrix**
 
 ### Near-term
 1. **Continue ts_store modularization** — one section per commit (see above)
 2. **Re-run on other OS slots** — `OS_001` / `OS_002` leaves empty since legacy retirement
-3. **Flags test** — `ts_store_flags` not in matrix; optional add
 
 ### Nice-to-have
 - Metric table CREATE formatting in `SqlEventSink` debug `.sql`
@@ -230,12 +228,12 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
 1. **Agent console freezes** — avoid blocking on `build_dual_compilers.sh` or full matrix in-agent; use incremental builds and single-compiler smoke, or tell user to run in external terminal
 2. **Parallel gcc+clang** on same leaf → SQLite `disk I/O error` during summarize; run sequentially
-3. **`[13/112]` in logs** — scenario progress index, not a compiler version
+3. **`[13/113]` in logs** — scenario progress index, not a compiler version
 4. **Ninja required** for C++ modules; plain Make generator fails
 5. **Minimal cmake** (jtext/sqlite OFF) breaks `ts_test_cli` — dual build always enables both
 6. **Compiler-specific binaries** — run gcc from `build-dual/gcc`, clang from `build-dual/clang`
 7. **Build uses `../jText`** unless `TS_STORE_JTEXT_MODE=vendored`
-8. **Manifest merge** — gcc then clang on same leaf → `compilers_csv: gcc,clang`, 224 scenarios
+8. **Manifest merge** — gcc then clang on same leaf → `compilers_csv: gcc,clang`, 226 scenarios (113 per compiler incl. `ts_store_flags`)
 9. **Do not resurrect** `tools/test_cli/manifest.cpp` / `summarize.cpp` — in `modules/jac.report/`
 10. **Do not regenerate** old `TS_STORE_*_Summary.md`
 
@@ -243,4 +241,4 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
 Testing framework + module reporting stack: **functionally complete** for smoke. Module migration: **4 of 5 roadmap steps done** (`ts_store` core modules remain).
 
-— session handoff 2026-06-07 (updated after jac.ts_store.persistence.common)
+— session handoff 2026-06-07 (updated after ts_store_flags matrix integration)
