@@ -216,6 +216,23 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         add_subdirectory(${JTEXT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/jText_build)
     endif()
 
+    # ts_store jText persistence module (JTextSplitEventLog + JTextEventSink).
+    add_library(jac_ts_store_persistence_jtext)
+    target_sources(jac_ts_store_persistence_jtext
+        PUBLIC
+            FILE_SET cxx_modules TYPE CXX_MODULES
+            BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+            FILES modules/jac.ts_store/jac.ts_store.persistence.jtext.cppm
+        PRIVATE
+            include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
+    )
+    target_compile_features(jac_ts_store_persistence_jtext PUBLIC cxx_std_23)
+    target_include_directories(jac_ts_store_persistence_jtext
+        PUBLIC ${TS_STORE_INCLUDE_DIR}
+        PRIVATE ${JTEXT_SOURCE_DIR}
+    )
+    target_link_libraries(jac_ts_store_persistence_jtext PUBLIC jac_jtext PRIVATE jtext_core)
+
     # Tell the jText subdir not to define the CLI tool executables (we define our own copies below)
     set(TS_STORE_BUILDING_JTEXT_TOOLS ON)
 
@@ -429,19 +446,11 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     foreach(num IN LISTS TEST_NUMBERS)
         target_include_directories(ts_store_${num}_TS PRIVATE ${JTEXT_SOURCE_DIR})
         target_compile_definitions(ts_store_${num}_TS PRIVATE TS_STORE_ENABLE_JTEXT_PERSIST)
-        target_link_libraries(ts_store_${num}_TS PRIVATE jtext_core)
+        target_link_libraries(ts_store_${num}_TS PRIVATE jtext_core jac_ts_store_persistence_jtext)
 
         target_include_directories(ts_store_${num}_XS PRIVATE ${JTEXT_SOURCE_DIR})
         target_compile_definitions(ts_store_${num}_XS PRIVATE TS_STORE_ENABLE_JTEXT_PERSIST)
-        target_link_libraries(ts_store_${num}_XS PRIVATE jtext_core)
-
-        # Compile the split log impl into these targets so JTextEventSink works.
-        target_sources(ts_store_${num}_TS PRIVATE
-            include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
-        )
-        target_sources(ts_store_${num}_XS PRIVATE
-            include/beman/ts_store/ts_store_headers/persistence/JTextSplitEventLog.cpp
-        )
+        target_link_libraries(ts_store_${num}_XS PRIVATE jtext_core jac_ts_store_persistence_jtext)
     endforeach()
 endif()
 

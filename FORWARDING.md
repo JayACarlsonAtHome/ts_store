@@ -78,6 +78,8 @@ ts_test_cli
 | `jac.ts_store.config` | `bounded_string`, `ts_store_config` | `jac_ts_store_config` |
 | `jac.ts_store.ansi` | `ansi::colors_enabled`, color helpers | `jac_ts_store_ansi` |
 | `jac.ts_store.flags` | `TsStoreFlags`, `set_user_flag`, etc. | `jac_ts_store_flags` |
+| `jac.ts_store.test_options` | `parse_test_options`, `TestOptions` | `jac_ts_store_test_options` |
+| `jac.ts_store.persistence.jtext` | `JTextSplitEventLog`, `JTextEventSink`, `IEventSink` | `jac_ts_store_persistence_jtext` |
 
 Linked into all stress tests + `ts_store_flags` (builds module; tests still use headers today).
 
@@ -180,7 +182,10 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
 ### ts_store module sections (remaining)
 1. **`jac.ts_store.core`** — `ts_store<Config>` + impl_details
-2. **`jac.ts_store.persistence.*`** — sinks, double-buffer writer
+2. **`jac.ts_store.persistence.common`** — extract shared sink types (optional cleanup)
+3. **`jac.ts_store.persistence.binary`** — `BinaryEventSink`, `BinaryEventLog`
+4. **`jac.ts_store.persistence.sql`** — `SqlEventSink`
+5. **`jac.ts_store.persistence.writer`** — `DoubleBufferedWriter`
 
 ### Near-term
 1. **Continue ts_store modularization** — one section per commit (see above)
