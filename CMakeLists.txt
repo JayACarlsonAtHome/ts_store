@@ -132,6 +132,17 @@ target_sources(jac_ts_store_test_options
 target_compile_features(jac_ts_store_test_options PUBLIC cxx_std_23)
 target_include_directories(jac_ts_store_test_options PUBLIC ${TS_STORE_INCLUDE_DIR})
 
+# ts_store shared persistence types (PersistMode, PersistedEvent, IEventSink).
+add_library(jac_ts_store_persistence_common)
+target_sources(jac_ts_store_persistence_common
+    PUBLIC
+        FILE_SET cxx_modules TYPE CXX_MODULES
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES modules/jac.ts_store/jac.ts_store.persistence.common.cppm
+)
+target_compile_features(jac_ts_store_persistence_common PUBLIC cxx_std_23)
+target_include_directories(jac_ts_store_persistence_common PUBLIC ${TS_STORE_INCLUDE_DIR})
+
 # ts_store binary persistence module (BinaryEventLog + BinaryEventSink; header-only impl).
 add_library(jac_ts_store_persistence_binary)
 target_sources(jac_ts_store_persistence_binary
@@ -142,6 +153,7 @@ target_sources(jac_ts_store_persistence_binary
 )
 target_compile_features(jac_ts_store_persistence_binary PUBLIC cxx_std_23)
 target_include_directories(jac_ts_store_persistence_binary PUBLIC ${TS_STORE_INCLUDE_DIR})
+target_link_libraries(jac_ts_store_persistence_binary PUBLIC jac_ts_store_persistence_common)
 
 # ts_store double-buffered writer module (header-only DoubleBufferedWriter).
 add_library(jac_ts_store_persistence_writer)
@@ -153,6 +165,7 @@ target_sources(jac_ts_store_persistence_writer
 )
 target_compile_features(jac_ts_store_persistence_writer PUBLIC cxx_std_23)
 target_include_directories(jac_ts_store_persistence_writer PUBLIC ${TS_STORE_INCLUDE_DIR})
+target_link_libraries(jac_ts_store_persistence_writer PUBLIC jac_ts_store_persistence_common)
 
 # Test matrix runner module (params, scenarios, execution). Re-exports jac.report.
 add_library(jac_test_framework)
@@ -182,12 +195,12 @@ foreach(num IN LISTS TEST_NUMBERS)
     # TS version
     add_executable(ts_store_${num}_TS tests/ts_store_${num}/test_${num}_TS.cpp)
     target_include_directories(ts_store_${num}_TS PRIVATE ${TS_STORE_INCLUDE_DIR})
-    target_link_libraries(ts_store_${num}_TS PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags jac_ts_store_persistence_binary jac_ts_store_persistence_writer)
+    target_link_libraries(ts_store_${num}_TS PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags jac_ts_store_persistence_common jac_ts_store_persistence_binary jac_ts_store_persistence_writer)
 
     # XS version
     add_executable(ts_store_${num}_XS tests/ts_store_${num}/test_${num}_XS.cpp)
     target_include_directories(ts_store_${num}_XS PRIVATE ${TS_STORE_INCLUDE_DIR})
-    target_link_libraries(ts_store_${num}_XS PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags jac_ts_store_persistence_binary jac_ts_store_persistence_writer)
+    target_link_libraries(ts_store_${num}_XS PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags jac_ts_store_persistence_common jac_ts_store_persistence_binary jac_ts_store_persistence_writer)
 endforeach()
 
 # =============================================================================
@@ -253,7 +266,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
         PUBLIC ${TS_STORE_INCLUDE_DIR}
         PRIVATE ${JTEXT_SOURCE_DIR}
     )
-    target_link_libraries(jac_ts_store_persistence_jtext PUBLIC jac_jtext PRIVATE jtext_core)
+    target_link_libraries(jac_ts_store_persistence_jtext PUBLIC jac_jtext jac_ts_store_persistence_common PRIVATE jtext_core)
 
     # Tell the jText subdir not to define the CLI tool executables (we define our own copies below)
     set(TS_STORE_BUILDING_JTEXT_TOOLS ON)
@@ -514,7 +527,7 @@ if(TS_STORE_ENABLE_SQLITE_PERSIST)
     )
     target_compile_features(jac_ts_store_persistence_sql PUBLIC cxx_std_23)
     target_include_directories(jac_ts_store_persistence_sql PUBLIC ${TS_STORE_INCLUDE_DIR})
-    target_link_libraries(jac_ts_store_persistence_sql PUBLIC jac_qlite PRIVATE jacQLite::jacQLite)
+    target_link_libraries(jac_ts_store_persistence_sql PUBLIC jac_qlite jac_ts_store_persistence_common PRIVATE jacQLite::jacQLite)
 
     foreach(num IN LISTS TEST_NUMBERS)
         target_compile_definitions(ts_store_${num}_TS PRIVATE TS_STORE_ENABLE_SQLITE_PERSIST)

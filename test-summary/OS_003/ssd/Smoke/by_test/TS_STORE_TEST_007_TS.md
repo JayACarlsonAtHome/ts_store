@@ -11,7 +11,7 @@
 | clang | sql | off | 1000 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_007_TS/clang_sql_off.log) *(local)* |
 | clang | sql | on | 1000 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_007_TS/clang_sql_on.log) *(local)* |
 | gcc | binary | off | 1000 | 0.02s | PASS | [log](../binary_logs/TS_STORE_TEST_007_TS/gcc_binary_off.log) *(local)* |
-| gcc | binary | on | 1000 | 0.07s | PASS | [log](../binary_logs/TS_STORE_TEST_007_TS/gcc_binary_on.log) *(local)* |
+| gcc | binary | on | 1000 | 0.04s | PASS | [log](../binary_logs/TS_STORE_TEST_007_TS/gcc_binary_on.log) *(local)* |
 | gcc | jtext | off | 1000 | 0.01s | PASS | [log](../jText_logs/TS_STORE_TEST_007_TS/gcc_jtext_off.log) *(local)* |
 | gcc | jtext | on | 1000 | 0.01s | PASS | [log](../jText_logs/TS_STORE_TEST_007_TS/gcc_jtext_on.log) *(local)* |
 | gcc | none | off | 1000 | 0.01s | PASS | [log](../inmem_logs/TS_STORE_TEST_007_TS/gcc_none_off.log) *(local)* |
