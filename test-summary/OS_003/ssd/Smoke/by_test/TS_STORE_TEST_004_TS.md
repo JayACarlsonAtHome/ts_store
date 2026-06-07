@@ -16,6 +16,6 @@
 | gcc | jtext | on | 100 | 0.02s | PASS | [log](../jText_logs/TS_STORE_TEST_004_TS/gcc_jtext_on.log) *(local)* |
 | gcc | none | off | 100 | 0.01s | PASS | [log](../inmem_logs/TS_STORE_TEST_004_TS/gcc_none_off.log) *(local)* |
 | gcc | none | on | 100 | 0.01s | PASS | [log](../inmem_logs/TS_STORE_TEST_004_TS/gcc_none_on.log) *(local)* |
-| gcc | sql | off | 100 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_004_TS/gcc_sql_off.log) *(local)* |
-| gcc | sql | on | 100 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_004_TS/gcc_sql_on.log) *(local)* |
+| gcc | sql | off | 100 | 0.02s | PASS | [log](../sql_logs/TS_STORE_TEST_004_TS/gcc_sql_off.log) *(local)* |
+| gcc | sql | on | 100 | 0.02s | PASS | [log](../sql_logs/TS_STORE_TEST_004_TS/gcc_sql_on.log) *(local)* |
 
