@@ -14,7 +14,7 @@ module;
 
 module jac.report;
 
-import jac.jtext;
+import jac.jtext.reader;
 import jac.qlite;
 
 namespace fs = std::filesystem;

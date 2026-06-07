@@ -69,7 +69,11 @@ target_sources(jac_jtext
     PUBLIC
         FILE_SET cxx_modules TYPE CXX_MODULES
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
-        FILES modules/jac.jtext/jac.jtext.cppm
+        FILES
+            modules/jac.jtext/jac.jtext.core.cppm
+            modules/jac.jtext/jac.jtext.reader.cppm
+            modules/jac.jtext/jac.jtext.writer.cppm
+            modules/jac.jtext/jac.jtext.cppm
 )
 target_compile_features(jac_jtext PUBLIC cxx_std_23)
 
