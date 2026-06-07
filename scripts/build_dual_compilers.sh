@@ -19,6 +19,17 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 BUILD_BASE="$PROJECT_ROOT/build-dual"
 
+# CXX modules require Ninja (not in PATH on all hosts — fall back to CLion-bundled binary).
+if command -v ninja >/dev/null 2>&1; then
+    NINJA="$(command -v ninja)"
+elif [ -x "$HOME/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja" ]; then
+    NINJA="$HOME/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja"
+else
+    echo "ERROR: ninja not found. Install ninja-build or set NINJA to a ninja binary." >&2
+    exit 1
+fi
+CMAKE_NINJA_ARGS=(-G Ninja -DCMAKE_MAKE_PROGRAM="$NINJA")
+
 echo "=== ts_store Dual Compiler Build ==="
 echo "Project root: $PROJECT_ROOT"
 echo
@@ -40,16 +51,16 @@ build_with_compiler() {
 
     if [[ "$compiler" == gcc-toolset-15 ]]; then
         # Use devtoolset to get GCC 15
-        scl enable gcc-toolset-15 -- bash -c "
-            cmake -DCMAKE_BUILD_TYPE=Debug \
+        scl enable gcc-toolset-15 -- \
+            cmake "${CMAKE_NINJA_ARGS[@]}" -DCMAKE_BUILD_TYPE=Debug \
                   -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
                   -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
-                  '$PROJECT_ROOT'
-            cmake --build . --target ts_test_cli ts_store_001_TS ts_store_001_XS ts_store_002_TS ts_store_002_XS ts_store_003_TS ts_store_003_XS ts_store_004_TS ts_store_004_XS ts_store_005_TS ts_store_005_XS ts_store_006_TS ts_store_006_XS ts_store_007_TS ts_store_007_XS ts_store_flags ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j \$(nproc)
-        "
+                  "$PROJECT_ROOT"
+        scl enable gcc-toolset-15 -- \
+            cmake --build . --target ts_test_cli ts_store_001_TS ts_store_001_XS ts_store_002_TS ts_store_002_XS ts_store_003_TS ts_store_003_XS ts_store_004_TS ts_store_004_XS ts_store_005_TS ts_store_005_XS ts_store_006_TS ts_store_006_XS ts_store_007_TS ts_store_007_XS ts_store_flags ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j "$(nproc)"
     else
         # Assume it's a direct path to clang++ or just "clang++"
-        cmake -DCMAKE_BUILD_TYPE=Debug \
+        cmake "${CMAKE_NINJA_ARGS[@]}" -DCMAKE_BUILD_TYPE=Debug \
               -DCMAKE_CXX_COMPILER="$compiler" \
               -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
               -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \

@@ -13,9 +13,6 @@
 //
 // The tool uses the same tests/test_params.txt format for compatibility.
 
-#include "run_manifest.hpp"
-#include "types.hpp"
-
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -30,6 +27,8 @@
 #include <vector>
 #include <chrono>
 #include <format>
+
+import jac.report;
 
 namespace fs = std::filesystem;
 

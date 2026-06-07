@@ -3,6 +3,7 @@ project(ts_store LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 add_library(project_warnings INTERFACE)
 target_compile_options(project_warnings INTERFACE
@@ -48,17 +49,28 @@ add_executable(ts_store_flags tests/ts_store_flags/Test_Flags.cpp)
 target_include_directories(ts_store_flags PRIVATE ${TS_STORE_INCLUDE_DIR})
 target_link_libraries(ts_store_flags PRIVATE project_warnings project_options)
 
+# Reporting module: manifest + summarize + hub (incremental rebuild isolated from stress tests).
+add_library(jac_report)
+target_sources(jac_report
+    PUBLIC
+        FILE_SET cxx_modules TYPE CXX_MODULES
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES modules/jac.report/jac.report.cppm
+    PRIVATE
+        modules/jac.report/manifest.cpp
+        modules/jac.report/summarize.cpp
+)
+target_compile_features(jac_report PUBLIC cxx_std_23)
+target_include_directories(jac_report PUBLIC ${TS_STORE_INCLUDE_DIR})
+
 # C++ Test CLI Tool - the proper CLI for running the full matrix.
 # Replaces the old shell and Python runners. Built as a first-class tool.
 # Run it from a directory that contains the built ts_store_* test binaries,
 # or extend it with --bin-dir support in the future.
-add_executable(ts_test_cli
-    tools/test_cli/main.cpp
-    tools/test_cli/manifest.cpp
-    tools/test_cli/summarize.cpp
-)
+add_executable(ts_test_cli tools/test_cli/main.cpp)
 target_compile_features(ts_test_cli PRIVATE cxx_std_23)
 target_include_directories(ts_test_cli PRIVATE ${TS_STORE_INCLUDE_DIR})
+target_link_libraries(ts_test_cli PRIVATE jac_report)
 
 set(TEST_NUMBERS 001 002 003 004 005 006 007)
 
@@ -452,16 +464,17 @@ target_link_libraries(ts_store_binary_payload_benchmark
         project_options
 )
 
-# ts_test_cli manifest + summarize (jText write, SQLite views)
+# jac.report + ts_test_cli (jText write, SQLite views)
 if(TS_STORE_ENABLE_JTEXT_PERSIST)
-    target_include_directories(ts_test_cli PRIVATE ${JTEXT_SOURCE_DIR} ${JTEXT_SOURCE_DIR}/src)
-    target_link_libraries(ts_test_cli PRIVATE jtext_core project_warnings project_options)
+    target_include_directories(jac_report PUBLIC ${JTEXT_SOURCE_DIR} ${JTEXT_SOURCE_DIR}/src)
+    target_link_libraries(jac_report PUBLIC jtext_core)
+    target_link_libraries(ts_test_cli PRIVATE project_warnings project_options)
 else()
-    message(WARNING "ts_test_cli run_manifest requires TS_STORE_ENABLE_JTEXT_PERSIST=ON")
+    message(WARNING "jac.report run_manifest requires TS_STORE_ENABLE_JTEXT_PERSIST=ON")
 endif()
 
 if(TS_STORE_ENABLE_SQLITE_PERSIST)
-    target_link_libraries(ts_test_cli PRIVATE SQLite::SQLite3)
+    target_link_libraries(jac_report PUBLIC SQLite::SQLite3)
 else()
-    message(WARNING "ts_test_cli summarize requires TS_STORE_ENABLE_SQLITE_PERSIST=ON")
+    message(WARNING "jac.report summarize requires TS_STORE_ENABLE_SQLITE_PERSIST=ON")
 endif()

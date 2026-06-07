@@ -1,16 +1,25 @@
-#include "run_manifest.hpp"
-#include "types.hpp"
+module;
 
 #include <jText.h>
+
+#include <filesystem>
 
 #include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <ctime>
+#include <format>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <sstream>
-#include <format>
+#include <string>
+#include <string_view>
+#include <vector>
+
+module jac.report;
+
+namespace fs = std::filesystem;
 
 namespace {
 
@@ -41,7 +50,7 @@ JTextEntry make_entry(size_t num, const std::vector<std::string>& fields, std::s
     JTextEntry e;
     e.number = num;
     e.delimiter = '#';
-    e.level_sep = '|';  // jText writes inter-field separator via level_sep
+    e.level_sep = '|';
     e.fields.reserve(fields.size());
     for (const auto& f : fields) {
         e.fields.push_back(f);
@@ -59,12 +68,10 @@ std::optional<RunResult> parse_scenario_entry(const JTextEntry& e, const fs::pat
     r.scenario.compiler = fields[1];
     r.scenario.persist = fields[2];
     r.scenario.output_mode = fields[3];
-    // fields[4] stores total records, not events_per_thread
     const int records = static_cast<int>(std::stoll(fields[4]));
     r.scenario.threads = 1;
     r.scenario.events_per_thread = records;
     r.scenario.runs = 1;
-    // recover binary name from subdir
     if (subdir.starts_with("TS_STORE_TEST_")) {
         r.scenario.test = "ts_store_" + subdir.substr(std::string("TS_STORE_TEST_").size());
     } else {
