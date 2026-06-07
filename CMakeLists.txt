@@ -47,7 +47,7 @@ set(TS_STORE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Flags test
 add_executable(ts_store_flags tests/ts_store_flags/Test_Flags.cpp)
 target_include_directories(ts_store_flags PRIVATE ${TS_STORE_INCLUDE_DIR})
-target_link_libraries(ts_store_flags PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi)
+target_link_libraries(ts_store_flags PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags)
 
 # Reporting module: manifest + summarize + hub (incremental rebuild isolated from stress tests).
 add_library(jac_report)
@@ -109,6 +109,17 @@ target_sources(jac_ts_store_ansi
 target_compile_features(jac_ts_store_ansi PUBLIC cxx_std_23)
 target_include_directories(jac_ts_store_ansi PUBLIC ${TS_STORE_INCLUDE_DIR})
 
+# ts_store flags module (TsStoreFlags + free-standing helpers).
+add_library(jac_ts_store_flags)
+target_sources(jac_ts_store_flags
+    PUBLIC
+        FILE_SET cxx_modules TYPE CXX_MODULES
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES modules/jac.ts_store/jac.ts_store.flags.cppm
+)
+target_compile_features(jac_ts_store_flags PUBLIC cxx_std_23)
+target_include_directories(jac_ts_store_flags PUBLIC ${TS_STORE_INCLUDE_DIR})
+
 # Test matrix runner module (params, scenarios, execution). Re-exports jac.report.
 add_library(jac_test_framework)
 target_sources(jac_test_framework
@@ -137,12 +148,12 @@ foreach(num IN LISTS TEST_NUMBERS)
     # TS version
     add_executable(ts_store_${num}_TS tests/ts_store_${num}/test_${num}_TS.cpp)
     target_include_directories(ts_store_${num}_TS PRIVATE ${TS_STORE_INCLUDE_DIR})
-    target_link_libraries(ts_store_${num}_TS PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi)
+    target_link_libraries(ts_store_${num}_TS PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags)
 
     # XS version
     add_executable(ts_store_${num}_XS tests/ts_store_${num}/test_${num}_XS.cpp)
     target_include_directories(ts_store_${num}_XS PRIVATE ${TS_STORE_INCLUDE_DIR})
-    target_link_libraries(ts_store_${num}_XS PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi)
+    target_link_libraries(ts_store_${num}_XS PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags)
 endforeach()
 
 # =============================================================================

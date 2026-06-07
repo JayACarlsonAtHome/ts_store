@@ -77,6 +77,7 @@ ts_test_cli
 |--------|---------|--------------|
 | `jac.ts_store.config` | `bounded_string`, `ts_store_config` | `jac_ts_store_config` |
 | `jac.ts_store.ansi` | `ansi::colors_enabled`, color helpers | `jac_ts_store_ansi` |
+| `jac.ts_store.flags` | `TsStoreFlags`, `set_user_flag`, etc. | `jac_ts_store_flags` |
 
 Linked into all stress tests + `ts_store_flags` (builds module; tests still use headers today).
 
@@ -90,7 +91,7 @@ Linked into all stress tests + `ts_store_flags` (builds module; tests still use 
 | 2 | `jac.qlite` module | **Done** |
 | 3 | jText module(s) | **Done** — partitioned `core` / `reader` / `writer` + umbrella |
 | 4 | Reporting extracted from CLI | **Done** — `jac.report` |
-| 5 | `ts_store` core/persistence modules | **In progress** — `config`, `ansi` done |
+| 5 | `ts_store` core/persistence modules | **In progress** — `config`, `ansi`, `flags` done |
 
 ### Build
 ```bash
@@ -178,9 +179,8 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 ## Open / next (prioritized)
 
 ### ts_store module sections (remaining)
-1. **`jac.ts_store.flags`** — `TsStoreFlags` + helpers
-2. **`jac.ts_store.core`** — `ts_store<Config>` + impl_details
-3. **`jac.ts_store.persistence.*`** — sinks, double-buffer writer
+1. **`jac.ts_store.core`** — `ts_store<Config>` + impl_details
+2. **`jac.ts_store.persistence.*`** — sinks, double-buffer writer
 
 ### Near-term
 1. **Continue ts_store modularization** — one section per commit (see above)
@@ -205,6 +205,7 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 | jText modules | `modules/jac.jtext/jac.jtext.{core,reader,writer}.cppm` |
 | ts_store config module | `modules/jac.ts_store/jac.ts_store.config.cppm` |
 | ts_store ansi module | `modules/jac.ts_store/jac.ts_store.ansi.cppm` |
+| ts_store flags module | `modules/jac.ts_store/jac.ts_store.flags.cppm` |
 | jacQLite module shim | `modules/jac.qlite/jac.qlite.cppm` |
 | Sqlite forwarder | `include/.../persistence/Sqlite.hpp` → `../jacQlite` |
 | Promote script | `scripts/promote_summaries.sh` |

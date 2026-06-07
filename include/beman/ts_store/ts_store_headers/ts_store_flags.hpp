@@ -1,5 +1,14 @@
 #pragma once
-#include "includes.hpp"
+
+#include <algorithm>
+#include <array>
+#include <bitset>
+#include <cstdint>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <vector>
 
 class TsStoreFlags {
 public:
