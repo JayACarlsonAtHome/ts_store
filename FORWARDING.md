@@ -26,7 +26,7 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 cd build-dual/gcc && scl enable gcc-toolset-15 -- cmake --build . --target ts_test_cli -j
 ```
 
-**Build dirs on disk:** `build-dual/gcc`, `build-dual/clang` (Debug, jtext+sqlite ON). Modules need **Ninja** (`scripts/build_dual_compilers.sh` finds CLion-bundled ninja if not in PATH).
+**Build dirs on disk:** `build-dual/gcc`, `build-dual/clang` (Debug, jtext+sqlite ON). Modules need **Ninja** (`scripts/build_dual_compilers.sh`: `$NINJA`, PATH, or CLion-bundled fallback).
 
 **After a good run:** `./scripts/promote_summaries.sh --all` to refresh committed `test-summary/`.
 
@@ -45,7 +45,7 @@ cd build-dual/gcc && scl enable gcc-toolset-15 -- cmake --build . --target ts_te
 | `scripts/ts-test` | Finds `build-dual/{gcc,clang}/ts_test_cli` and delegates |
 | `scripts/run_all_tests.sh` | Thin wrapper: gcc + clang `ts_test_cli run`, then promote |
 | `scripts/run_all_tests.py` | **Deleted** — do not resurrect |
-| `tests/test_params.txt` | `SIZE`, `DISK_TYPE`, `OS_ID`, `001..007=x` |
+| `tests/test_params.txt` | `SIZE`, `DISK_TYPE`, `OS_ID`, `001..007=x`, `flags=x` |
 
 ### Modules (C++23)
 
@@ -89,7 +89,7 @@ ts_test_cli
 
 `jac.ts_store.core` `export import`s `config`, `flags`, `ansi`, `writer`. Stress tests link `jac_ts_store_impl_testing` and consume modules via `import` (001–007 TS/XS). Persistence sink modules (`binary`, `jtext`, `sql`, `writer`) `export import jac.ts_store.persistence.common`. `ts_store_flags` uses `import` (flags + test_options).
 
-**Not modularized yet:** jText internals (`jtext_core` still a static lib). Tests, examples, and `ts_store_flags` use `import`.
+**Not modularized yet:** jText internals (`jtext_core` still a static lib; `jac.jtext.*` are shims). `tools/jtext_cli/` still uses headers. Implementation bodies for ts_store remain under `include/beman/ts_store/ts_store_headers/` — module `.cppm` files are thin re-export shims over those headers.
 
 **Module roadmap status:**
 
@@ -97,9 +97,10 @@ ts_test_cli
 |------|------|--------|
 | 1 | Unified `test_framework` (dedupe includes) | **Done** |
 | 2 | `jac.qlite` module | **Done** |
-| 3 | jText module(s) | **Done** — partitioned `core` / `reader` / `writer` + umbrella |
+| 3 | jText module(s) | **Done** — partitioned `core` / `reader` / `writer` + umbrella (shims) |
 | 4 | Reporting extracted from CLI | **Done** — `jac.report` |
-| 5 | `ts_store` core/persistence modules | **Done** — config, flags, ansi, persistence, core |
+| 5 | ts_store module boundaries + consumer `import` | **Done** — config, flags, ansi, persistence, core; tests/examples/cli |
+| 6 | Move implementation bodies into module TUs | **Not started** — break up `ts_store.hpp`, modularize `impl_details/` |
 
 ### Build
 ```bash
@@ -108,7 +109,7 @@ ts_test_cli
 - GCC 15 via `scl enable gcc-toolset-15`
 - Clang: system `clang++`
 - jText: **reference** (`../jText`) in dev; **vendored** via `./scripts/Sync_dependencies.sh --sync jText`
-- jacQLite: **reference** (`../jacQlite`); `TS_STORE_JACQLITE_MODE=vendored` for vendor copy
+- jacQLite: **reference** (`../jacQlite`) — required for `ts_test_cli`; `TS_STORE_JACQLITE_MODE=vendored` is wired in CMake but `vendor/jacQlite/` + sync script do not exist yet
 - `ts_test_cli` / modules require **both** `TS_STORE_ENABLE_JTEXT_PERSIST=ON` and `TS_STORE_ENABLE_SQLITE_PERSIST=ON`
 
 ### Results layout
@@ -180,20 +181,24 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 ./scripts/Sync_dependencies.sh --sync jText
 ```
 
-**Params** (`tests/test_params.txt`): `SIZE=smoke`, `DISK_TYPE=ssd`, `OS_ID=OS_003`, all `001..007=x`.
+**Params** (`tests/test_params.txt`): `SIZE=smoke`, `DISK_TYPE=ssd`, `OS_ID=OS_003`, all `001..007=x`, `flags=x`.
 
 ---
 
 ## Open / next (prioritized)
 
 ### Near-term (optional)
-1. **Continue ts_store modularization** — one section per commit (see above)
-2. **Re-run on other OS slots** — `OS_001` / `OS_002` leaves empty since legacy retirement
+1. **Re-run `OS_003/x7k/Smoke`** — current leaf is 224/224 (predates `flags=x`); expect 226/226 after re-run + promote
+2. **Move ts_store implementation into module TUs** — bodies still in `include/beman/...`; modules are shims (step 6 above)
+3. **Re-run on other OS slots** — `OS_001` / `OS_002` leaves empty since legacy retirement
+4. **jacQlite vendoring** — mirror jText (`vendor/jacQlite`, tracked list, sync script)
 
 ### Nice-to-have
+- CI workflow (build + ssd smoke gate)
 - Metric table CREATE formatting in `SqlEventSink` debug `.sql`
 - `xFull` matrix run + promote when ready for stress evidence
 - Upstream jText partition in `../jText` (ts_store shims can stay as thin re-exports)
+- Manifest file locking (parallel gcc+clang on same leaf races SQLite today)
 
 ---
 
@@ -238,6 +243,8 @@ cd build-dual/clang && ./ts_test_cli run --compiler clang --disk ssd
 
 ---
 
-Testing framework + module reporting stack: **functionally complete** for smoke. **ts_store module migration: complete** (stress tests 001–007 TS/XS use `import`).
+Testing framework + module reporting stack: **functionally complete** for smoke.
 
-— session handoff 2026-06-07 (updated after stress-test import migration)
+**Module status:** consumer migration **complete** (stress tests 001–007 TS/XS, flags, examples, `ts_test_cli` use `import`). Implementation migration **not started** (canonical code still in `include/beman/ts_store/ts_store_headers/`).
+
+— session handoff 2026-06-07 (doc sync: consumer vs implementation migration)

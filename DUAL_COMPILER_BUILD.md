@@ -1,61 +1,98 @@
-//File:    /home/jay/git/ts_store/DUAL_COMPILER_BUILD.md
-//Date:    2026-06-05
-//Purpose: Build Documentation for ts_store
-//
+//File:    DUAL_COMPILER_BUILD.md
+//Date:    2026-06-07
+//Purpose: Build documentation for ts_store dual-compiler workflow
+
 # Dual Compiler Builds (GCC + Clang)
 
-This project aims to build cleanly with **both** supported compilers when `TS_STORE_ENABLE_JTEXT_PERSIST=ON`:
+This project builds with **both** supported compilers when persistence and the test matrix are enabled (`TS_STORE_ENABLE_JTEXT_PERSIST=ON` and `TS_STORE_ENABLE_SQLITE_PERSIST=ON`).
 
-- **gcc-toolset-15** (GCC 15)
-- **Recent Clang** (Clang 16+ recommended, 21+ tested)
+**Toolchain (tested):**
+
+- **gcc-toolset-15** (GCC 15) on RHEL-like hosts via `scl enable gcc-toolset-15`
+- **Clang 16+** (21+ tested on this project)
+
+**CMake minimum:** GCC **13+** or Clang **16+** (enforced when jText persist is ON). GCC 15 via toolset is the documented dev default; system GCC 11 will not work for C++23 modules.
+
+**Generator:** **Ninja** is required for C++23 `FILE_SET cxx_modules`. Plain Unix Makefiles will fail at module compile time.
+
+**Siblings (reference mode, default):** `../jText` and `../jacQlite` must exist next to the repo for the canonical `ts_test_cli` build.
+
+---
 
 ## Recommended Way to Build Both
-
-After making changes, run:
 
 ```bash
 ./scripts/build_dual_compilers.sh
 ```
 
-This script will:
-1. Clean-build with gcc-toolset-15
-2. Clean-build with system clang++ (if available and new enough)
-3. Build **all** the numbered stress tests (001–007 TS/XS + flags) plus the main jText + double-buffer demo/benchmark targets in both configurations.
+This script:
 
-This is important because all stress tests now exercise double-buffered persistence (Binary + jText sinks).
+1. Clean-configures `build-dual/gcc` with gcc-toolset-15 and `build-dual/clang` with system `clang++` (if ≥ 16)
+2. Uses **Ninja** (PATH, `$NINJA`, or CLion-bundled fallback)
+3. Enables jText + SQLite persist
+4. Builds these targets in **each** tree:
+
+| Target | Role |
+|--------|------|
+| `ts_test_cli` | Matrix runner (required for smoke) |
+| `ts_store_001_TS` … `ts_store_007_XS` | Stress tests |
+| `ts_store_flags` | Flags unit test |
+| `ts_store_jtext_high_throughput_test` | jText throughput example |
+| `ts_store_jtext_split_demo` | jText split persistence demo |
+
+**Not built by the script** (build manually if needed): `ts_store_binary_payload_benchmark`, `ts_store_double_buffer_demo`, `ts_store_integrated_double_buffer_demo`, and other standalone examples.
+
+---
 
 ## Manual Dual Build
 
-### With GCC 15
+Use the same layout as the script: `build-dual/gcc` and `build-dual/clang`. Always pass `-G Ninja` and enable both persist options.
+
+### With GCC (toolset 15)
+
 ```bash
+# from repo root
 scl enable gcc-toolset-15 -- bash -c '
-  rm -rf build-gcc && mkdir build-gcc && cd build-gcc
-  cmake -DCMAKE_BUILD_TYPE=Debug -DTS_STORE_ENABLE_JTEXT_PERSIST=ON ..
-  cmake --build . --target ts_store_001_TS ts_store_001_XS ... ts_store_007_XS ts_store_flags \
-        ts_store_jtext_high_throughput_test ts_store_jtext_split_demo \
-        ts_store_binary_payload_benchmark ts_store_double_buffer_demo -j$(nproc)
+  rm -rf build-dual/gcc && mkdir -p build-dual/gcc && cd build-dual/gcc
+  cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+        -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
+        -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+        ../..
+  cmake --build . --target ts_test_cli ts_store_flags -j$(nproc)
 '
 ```
 
 ### With Clang
+
 ```bash
-rm -rf build-clang && mkdir build-clang && cd build-clang
-cmake -DCMAKE_BUILD_TYPE=Debug \
+# from repo root
+rm -rf build-dual/clang && mkdir -p build-dual/clang && cd build-dual/clang
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_CXX_COMPILER=clang++ \
       -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
-      ..
-cmake --build . --target ts_store_001_TS ... ts_store_007_XS ts_store_flags \
-      ts_store_jtext_high_throughput_test ts_store_jtext_split_demo \
-      ts_store_binary_payload_benchmark ts_store_double_buffer_demo -j$(nproc)
+      -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+      ../..
+cmake --build . --target ts_test_cli ts_store_flags -j$(nproc)
 ```
 
-(The full list of stress test + demo targets is in `scripts/build_dual_compilers.sh`.)
+For the full stress-test set, add the same `--target` list as in `scripts/build_dual_compilers.sh`.
+
+### Ninja not in PATH
+
+```bash
+export NINJA=/path/to/ninja   # honored by build_dual_compilers.sh
+./scripts/build_dual_compilers.sh
+```
+
+Or pass `-DCMAKE_MAKE_PROGRAM=/path/to/ninja` on manual `cmake` invocations.
+
+---
 
 ## Why Dual Compiler Support?
 
-- Catches compiler-specific warnings and errors early.
+- Catches compiler-specific warnings and errors early (`-Werror` is on).
 - Makes the code more portable.
-- `clang` tends to be stricter about certain things (unused private fields, dangling references, etc.).
+- Clang tends to be stricter about certain diagnostics.
 - Gives confidence that the jText improvements and ts_store persistence layer are solid.
 
-The CMake logic no longer forces a specific compiler — it only does basic version checks. You are free to choose either toolchain.
+CMake does not force a specific compiler — only basic version checks. Choose either toolchain per build directory.

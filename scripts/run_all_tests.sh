@@ -4,7 +4,7 @@
 #
 # Formerly a ~1600-line shell matrix runner. Orchestration now lives in
 # tools/test_cli (ts_test_cli). This script preserves the old entry point
-# and flag names for existing docs/CI/habits.
+# and flag names for existing habits/docs. (No CI workflow yet — run locally.)
 #
 # Usage:
 #   ./scripts/run_all_tests.sh

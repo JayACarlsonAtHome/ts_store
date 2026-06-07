@@ -16,7 +16,7 @@ ts_store began as a **learning experiment**: C++23, bounded hot-path storage, fl
 
 The automated matrix (`ts_test_cli`, tests 001–007 TS/XS, flags unit test, dual-compiler smoke) is the proof layer: millions of events, multiple persist modes, per-OS and per-disk result leaves, and promoted summaries under [test-summary/](test-summary/).
 
-**C++23 modules** are used throughout tests and examples. The goal is **not** to ship a reusable SDK for other repos (though the module boundaries could be reused on a similar toolchain). Modules exist so that when you touch one part of ts_store — flags, a sink, the core buffer — **only the affected module units recompile**, keeping iteration time down on a large tree.
+**C++23 modules** are used throughout tests and examples. The goal is **not** to ship a reusable SDK for other repos (though the module boundaries could be reused on a similar toolchain). Modules exist so that when you touch one part of ts_store — flags, a sink, the core buffer — **only the affected module units recompile**, keeping iteration time down on a large tree. Tests and examples use `import`; implementation still lives under `include/beman/ts_store/ts_store_headers/` (module `.cppm` files are thin shims — moving bodies into modules is future work).
 
 **New machine or toolchain?** Always do a **clean configure and full build from source** first (`./scripts/build_dual_compilers.sh` or equivalent). Only `modules/**/*.cppm` and companion `.cpp` sources are in git; BMIs and other module build objects (`.gcm`, `.pcm`, `.ddi`, etc.) are gitignored and must be produced locally. Prebuilt module artifacts are not portable across OS, compiler, or CPU. After a good full build, day-to-day work benefits from module granularity on that same system.
 
@@ -169,6 +169,8 @@ C++23 modules require **Ninja** (or another generator with `FILE_SET` support). 
 cmake -G Ninja -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON -DCMAKE_BUILD_TYPE=Debug ..
 ```
 
+Reference mode (default) expects sibling checkouts **`../jText`** and **`../jacQlite`** next to this repo. Both are required for `ts_test_cli` and the full smoke matrix. jText can be vendored (`-DTS_STORE_JTEXT_MODE=vendored`); jacQlite vendoring is not wired yet (`vendor/jacQlite/` does not exist).
+
 The project is routinely built in several configurations (see the various `build-*` directories in the tree):
 
 - **Local jText** (`build-local-*`): uses a sibling `../jText` checkout (fast iteration during development).
@@ -294,6 +296,7 @@ Pure binary (no jText) examples and benchmarks are always available even without
 - No rotation, compaction, or retention policy on the persisted side.
 - Query/aggregation beyond `select(id)` is not implemented at runtime.
 - The project has been exercised heavily on one OS/compiler family (RHEL + GCC 15 / recent Clang). Validate on your target platforms.
+- No automated CI yet — regression proof is manual smoke + promoted `test-summary/` commits.
 
 ---
 

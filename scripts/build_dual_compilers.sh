@@ -9,8 +9,9 @@
 # Usage:
 #   ./scripts/build_dual_compilers.sh
 #
-# This script is intended for local development to verify that changes
-# compile cleanly under both toolchains after modifications.
+# Builds: ts_test_cli, stress tests 001-007 TS/XS, ts_store_flags,
+# ts_store_jtext_high_throughput_test, ts_store_jtext_split_demo (each compiler).
+# See DUAL_COMPILER_BUILD.md for the full target list and manual cmake notes.
 
 set -euo pipefail
 
@@ -19,13 +20,15 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 BUILD_BASE="$PROJECT_ROOT/build-dual"
 
-# CXX modules require Ninja (not in PATH on all hosts — fall back to CLion-bundled binary).
-if command -v ninja >/dev/null 2>&1; then
+# CXX modules require Ninja (not in PATH on all hosts — $NINJA, then PATH, then CLion fallback).
+if [ -n "${NINJA:-}" ] && [ -x "$NINJA" ]; then
+    :
+elif command -v ninja >/dev/null 2>&1; then
     NINJA="$(command -v ninja)"
 elif [ -x "$HOME/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja" ]; then
     NINJA="$HOME/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja"
 else
-    echo "ERROR: ninja not found. Install ninja-build or set NINJA to a ninja binary." >&2
+    echo "ERROR: ninja not found. Install ninja-build or export NINJA=/path/to/ninja." >&2
     exit 1
 fi
 CMAKE_NINJA_ARGS=(-G Ninja -DCMAKE_MAKE_PROGRAM="$NINJA")
