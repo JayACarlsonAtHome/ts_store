@@ -1,8 +1,8 @@
 # Test Results — OS_003 / x7k / Smoke
 
-**Run (UTC):** 2026-06-07T13:38:41Z  
+**Run (UTC):** 2026-06-07T15:04:17Z  
 **Compilers:** gcc,clang  
-**Scenarios:** 224/224 passed  
+**Scenarios:** 226/226 passed  
 **Manifest:** [run_manifest.jtext](run_manifest.jtext)  
 
 ## Tests
@@ -23,5 +23,6 @@
 | TS_STORE_TEST_006_XS | 16 | 16 | 0 | [by_test/TS_STORE_TEST_006_XS.md](by_test/TS_STORE_TEST_006_XS.md) |
 | TS_STORE_TEST_007_TS | 16 | 16 | 0 | [by_test/TS_STORE_TEST_007_TS.md](by_test/TS_STORE_TEST_007_TS.md) |
 | TS_STORE_TEST_007_XS | 16 | 16 | 0 | [by_test/TS_STORE_TEST_007_XS.md](by_test/TS_STORE_TEST_007_XS.md) |
+| TS_STORE_TEST_flags | 2 | 2 | 0 | [by_test/TS_STORE_TEST_flags.md](by_test/TS_STORE_TEST_flags.md) |
 
 Raw logs live under `test-results/OS_003/x7k/Smoke/` (gitignored).
