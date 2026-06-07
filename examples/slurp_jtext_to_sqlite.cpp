@@ -1,4 +1,4 @@
-#include <beman/ts_store/ts_store_headers/persistence/Sqlite.hpp>
+#include <jacQLite/Sqlite.hpp>
 #include <jText.h>   // for reading the jText data files
 
 #include <iostream>
@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 // Assumes the .sql files have already been used to create the tables, or we exec them here.
 
 void slurp_jtext_to_sqlite(const std::string& base_name, const std::string& db_path) {
-    jac::ts_store::Sqlite db(db_path);
+    jac::qlite::Sqlite db(db_path);
     db.exec("PRAGMA synchronous = OFF;");
     db.exec("PRAGMA journal_mode = MEMORY;");
 

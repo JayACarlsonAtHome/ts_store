@@ -1,6 +1,5 @@
 module;
 
-#include <beman/ts_store/ts_store_headers/persistence/Sqlite.hpp>
 #include <jText.h>
 
 #include <filesystem>
@@ -17,11 +16,11 @@ module;
 
 module jac.report;
 
+import jac.qlite;
+
 namespace fs = std::filesystem;
 
 namespace {
-
-using jac::ts_store::Sqlite;
 
 struct LeafMeta {
     std::string os_id;

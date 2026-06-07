@@ -63,6 +63,16 @@ target_sources(jac_report
 target_compile_features(jac_report PUBLIC cxx_std_23)
 target_include_directories(jac_report PUBLIC ${TS_STORE_INCLUDE_DIR})
 
+# jacQLite module shim (header-only wrapper re-exported as jac.qlite).
+add_library(jac_qlite)
+target_sources(jac_qlite
+    PUBLIC
+        FILE_SET cxx_modules TYPE CXX_MODULES
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES modules/jac.qlite/jac.qlite.cppm
+)
+target_compile_features(jac_qlite PUBLIC cxx_std_23)
+
 # Test matrix runner module (params, scenarios, execution). Re-exports jac.report.
 add_library(jac_test_framework)
 target_sources(jac_test_framework
@@ -107,6 +117,9 @@ option(TS_STORE_ENABLE_JTEXT_PERSIST
 
 option(TS_STORE_ENABLE_SQLITE_PERSIST
        "Enable direct SQLite persistence (requires libsqlite3)" OFF)
+
+set(TS_STORE_JACQLITE_MODE "reference" CACHE STRING
+    "jacQLite source mode: 'reference' (sibling ../jacQlite) or 'vendored' (vendor/jacQlite)")
 
 set(TS_STORE_JTEXT_MODE "reference" CACHE STRING
     "jText source mode: 'reference' (use sibling ../jText) or 'vendored' (use local vendor/jText)")
@@ -390,21 +403,33 @@ endif()
 # =============================================================================
 if(TS_STORE_ENABLE_SQLITE_PERSIST)
     message(STATUS "ts_store: SQLite persistence ENABLED")
-    find_package(SQLite3 REQUIRED)
-    if(NOT SQLite3_FOUND)
-        message(FATAL_ERROR "TS_STORE_ENABLE_SQLITE_PERSIST=ON but SQLite3 not found")
+
+    if(TS_STORE_JACQLITE_MODE STREQUAL "vendored")
+        set(JACQLITE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/jacQlite")
+        if(NOT EXISTS "${JACQLITE_SOURCE_DIR}/CMakeLists.txt")
+            message(FATAL_ERROR
+                "TS_STORE_JACQLITE_MODE=vendored but ${JACQLITE_SOURCE_DIR} not found.")
+        endif()
+    else()
+        set(JACQLITE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../jacQlite")
+        if(NOT EXISTS "${JACQLITE_SOURCE_DIR}/CMakeLists.txt")
+            message(FATAL_ERROR "TS_STORE_ENABLE_SQLITE_PERSIST=ON but ../jacQlite not found")
+        endif()
     endif()
 
-    # Add the sqlite wrapper to relevant targets
-    # For now we expose it to all tests when enabled (similar to jText)
-    foreach(num IN LISTS TEST_NUMBERS)
-        target_include_directories(ts_store_${num}_TS PRIVATE ${TS_STORE_INCLUDE_DIR})
-        target_compile_definitions(ts_store_${num}_TS PRIVATE TS_STORE_ENABLE_SQLITE_PERSIST)
-        target_link_libraries(ts_store_${num}_TS PRIVATE SQLite::SQLite3)
+    set(JACQLITE_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(JACQLITE_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(JACQLITE_WITH_JTEXT OFF CACHE BOOL "" FORCE)
+    add_subdirectory(${JACQLITE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/jacQlite_build)
 
-        target_include_directories(ts_store_${num}_XS PRIVATE ${TS_STORE_INCLUDE_DIR})
+    target_link_libraries(jac_qlite PUBLIC jacQLite::jacQLite)
+
+    foreach(num IN LISTS TEST_NUMBERS)
+        target_compile_definitions(ts_store_${num}_TS PRIVATE TS_STORE_ENABLE_SQLITE_PERSIST)
+        target_link_libraries(ts_store_${num}_TS PRIVATE jacQLite::jacQLite)
+
         target_compile_definitions(ts_store_${num}_XS PRIVATE TS_STORE_ENABLE_SQLITE_PERSIST)
-        target_link_libraries(ts_store_${num}_XS PRIVATE SQLite::SQLite3)
+        target_link_libraries(ts_store_${num}_XS PRIVATE jacQLite::jacQLite)
     endforeach()
 endif()
 
@@ -461,7 +486,7 @@ if(TS_STORE_ENABLE_SQLITE_PERSIST)
     target_link_libraries(ts_store_slurp_jtext_to_sqlite PRIVATE
         project_warnings
         project_options
-        SQLite::SQLite3
+        jacQLite::jacQLite
         jtext_core
     )
 endif()
@@ -487,7 +512,7 @@ else()
 endif()
 
 if(TS_STORE_ENABLE_SQLITE_PERSIST)
-    target_link_libraries(jac_report PUBLIC SQLite::SQLite3)
+    target_link_libraries(jac_report PUBLIC jac_qlite)
 else()
     message(WARNING "jac.report summarize requires TS_STORE_ENABLE_SQLITE_PERSIST=ON")
 endif()
