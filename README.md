@@ -154,6 +154,52 @@ Raw logs, .jtext/.bin artifacts, and per-run `.meta` files live under the (git-i
 
 ---
 
+## Dependencies
+
+Tested on **RHEL 9** (AppStream). Other Linux distros need equivalent packages; compiler and Ninja version floors still apply.
+
+### RHEL 9 / Fedora (`dnf`)
+
+```bash
+# Compilers, build tools, SQLite headers (full test matrix)
+sudo dnf install -y \
+  gcc-toolset-15* \
+  clang \
+  cmake \
+  sqlite-devel
+
+# Optional: system ninja-build (often 1.10.x on RHEL — too old for C++23 modules)
+sudo dnf install -y ninja-build
+```
+
+| Package | Purpose | Minimum |
+|---------|---------|---------|
+| `gcc-toolset-15*` | GCC for modules + matrix (`scl enable gcc-toolset-15`) | GCC **15** (smoke-tested: 15.2.1) |
+| `clang` | Second compiler in dual build | Clang **21** (smoke-tested: 21.1.8) |
+| `cmake` | Configure / generate | **3.26** |
+| `sqlite-devel` | SQL persist + `ts_test_cli` summarize | libsqlite3 dev headers |
+| **Ninja** | C++23 `FILE_SET cxx_modules` generator | **1.11+** (see below) |
+
+**GCC usage:** RHEL’s default `/usr/bin/g++` is GCC 11 — not sufficient. Always build with the toolset:
+
+```bash
+scl enable gcc-toolset-15 -- bash          # interactive shell
+scl enable gcc-toolset-15 -- cmake ...     # one-shot configure/build
+```
+
+**Ninja:** RHEL’s `ninja-build` package is often **1.10.x**, which CMake rejects for modules. `./scripts/build_dual_compilers.sh` auto-selects a newer Ninja when available (e.g. `~/.local/bin/ninja` from `pip install --user ninja`, or CLion’s bundled binary). Override manually if needed:
+
+```bash
+export NINJA=/path/to/ninja   # must be >= 1.11
+./scripts/build_dual_compilers.sh
+```
+
+**Repo dependencies (no extra `dnf`):** `vendor/jText` and `vendor/jacQlite` are committed — a plain clone builds in **vendored** mode. For live cross-project work, place `../jText` and `../jacQlite` next to this repo; the dual build script uses **reference** mode when siblings exist.
+
+See [BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md](BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md) for common new-machine pitfalls.
+
+---
+
 ## Building
 
 ### Basic (in-memory only)
@@ -162,9 +208,9 @@ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . -j
 ```
 
-C++23 modules require **Ninja** (or another generator with `FILE_SET` support). The dual-compiler helper wires this up.
+C++23 modules require **Ninja ≥ 1.11** (see [Dependencies](#dependencies)). The dual-compiler helper resolves Ninja and wires GCC + Clang builds.
 
-**Compiler requirements:** **GCC 15+** (via `gcc-toolset-15` on RHEL) and **Clang 21+**. Smoke matrix is verified with GCC 15.2.1 and Clang 21.1.8. Older compilers are rejected at configure time when persistence is enabled.
+**Compiler requirements:** **GCC 15+** (`gcc-toolset-15` on RHEL) and **Clang 21+**. Older compilers are rejected at configure time when persistence is enabled.
 
 ### With jText + SQLite persistence (typical dev / test matrix)
 ```bash

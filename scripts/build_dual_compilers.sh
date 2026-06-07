@@ -20,17 +20,10 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 BUILD_BASE="$PROJECT_ROOT/build-dual"
 
-# CXX modules require Ninja (not in PATH on all hosts — $NINJA, then PATH, then CLion fallback).
-if [ -n "${NINJA:-}" ] && [ -x "$NINJA" ]; then
-    :
-elif command -v ninja >/dev/null 2>&1; then
-    NINJA="$(command -v ninja)"
-elif [ -x "$HOME/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja" ]; then
-    NINJA="$HOME/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja"
-else
-    echo "ERROR: ninja not found. Install ninja-build or export NINJA=/path/to/ninja." >&2
-    exit 1
-fi
+# CXX modules require Ninja >= 1.11 (RHEL ninja-build is often 1.10.x — see build_common.sh).
+# shellcheck source=build_common.sh
+source "$SCRIPT_DIR/build_common.sh"
+ts_store_resolve_ninja
 CMAKE_NINJA_ARGS=(-G Ninja -DCMAKE_MAKE_PROGRAM="$NINJA")
 
 # Compile from siblings when present; otherwise vendor/ (self-contained clone).

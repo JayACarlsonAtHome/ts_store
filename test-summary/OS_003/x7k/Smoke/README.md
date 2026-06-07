@@ -1,6 +1,6 @@
-# Test Results — OS_003 / ssd / Smoke
+# Test Results — OS_003 / x7k / Smoke
 
-**Run (UTC):** 2026-06-07T14:18:21Z  
+**Run (UTC):** 2026-06-07T17:48:15Z  
 **Compilers:** gcc,clang  
 **Scenarios:** 226/226 passed  
 **Manifest:** [run_manifest.jtext](run_manifest.jtext)  
@@ -25,4 +25,4 @@
 | TS_STORE_TEST_007_XS | 16 | 16 | 0 | [by_test/TS_STORE_TEST_007_XS.md](by_test/TS_STORE_TEST_007_XS.md) |
 | TS_STORE_TEST_flags | 2 | 2 | 0 | [by_test/TS_STORE_TEST_flags.md](by_test/TS_STORE_TEST_flags.md) |
 
-Raw logs live under `test-results/OS_003/ssd/Smoke/` (gitignored).
+Raw logs live under `test-results/OS_003/x7k/Smoke/` (gitignored).

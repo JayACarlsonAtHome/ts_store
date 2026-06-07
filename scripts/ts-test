@@ -1,28 +1,31 @@
 #!/usr/bin/env bash
 # Thin wrapper for the C++ ts_test_cli tool.
-# Prefers a built binary next to this script or in the current build dir.
+# Runs from the compiler build directory so test binaries are discoverable.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Try common locations for the built CLI (built with scl enable gcc-toolset-15).
 # After ./scripts/build_dual_compilers.sh the outputs are in build-dual/{gcc,clang}.
-# We check the dual locations early so a fresh `build_dual...sh` run is preferred.
+# build-local/ is used for explicit reference-mode trees (see BUILD_ISSUES doc).
 for candidate in \
     "${PROJECT_ROOT}/build-dual/gcc/ts_test_cli" \
     "${PROJECT_ROOT}/build-dual/clang/ts_test_cli" \
-    "./ts_test_cli" \
+    "${PROJECT_ROOT}/build-local/gcc/ts_test_cli" \
+    "${PROJECT_ROOT}/build-local/clang/ts_test_cli" \
+    "${PWD}/ts_test_cli" \
     "$(command -v ts_test_cli 2>/dev/null || true)"
 do
     if [[ -x "$candidate" ]]; then
-        exec "$candidate" "$@"
+        build_dir="$(cd "$(dirname "$candidate")" && pwd)"
+        cd "$build_dir"
+        exec ./ts_test_cli "$@"
     fi
 done
 
 echo "ts_test_cli not found in common build locations."
 echo "To build it (using the required modern compiler):"
-echo "  scl enable gcc-toolset-15 -- bash -c 'cmake --build . --target ts_test_cli -j'"
-echo "Or use the dual-compiler script (recommended for matrix verification):"
 echo "  ./scripts/build_dual_compilers.sh"
-echo "Then re-run this wrapper, or run the binary directly from your build dir (e.g. cd build-dual/gcc && ./ts_test_cli run --compiler gcc --disk ssd)."
+echo "Then re-run this wrapper, or run from a build dir:"
+echo "  cd build-dual/gcc && ./ts_test_cli run --compiler gcc --disk ssd"
 exit 1
