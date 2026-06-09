@@ -141,9 +141,11 @@ done
 remove_legacy_summary_files
 prune_stale_summary_tree
 
-# Hub index: canonical build trees only (build-dual/{gcc,clang}).
+# Hub index: prefer sequential build tree, then dual-compiler trees.
 HUB_CLI=""
 for candidate in \
+    "$PROJECT_ROOT"/build-seq/*/ts_test_cli \
+    "$PROJECT_ROOT"/build-mint/*/ts_test_cli \
     "$PROJECT_ROOT/build-dual/gcc/ts_test_cli" \
     "$PROJECT_ROOT/build-dual/clang/ts_test_cli"; do
     if [[ -x "$candidate" ]]; then
@@ -155,7 +157,7 @@ done
 if [[ -n "$HUB_CLI" ]]; then
     (cd "$PROJECT_ROOT" && "$HUB_CLI" summarize-hub) || echo "Warning: summarize-hub failed (rebuild ts_test_cli?)" >&2
 else
-    echo "Warning: ts_test_cli not found; skipped summarize-hub (run ./scripts/build_dual_compilers.sh)" >&2
+    echo "Warning: ts_test_cli not found; skipped summarize-hub (run ./scripts/Build or build manually)" >&2
 fi
 
 echo "Done. test-summary/ contents are small and safe to git add/commit (test-results/ stays ignored)."

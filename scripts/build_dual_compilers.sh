@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# build_dual_compilers.sh
+# build_dual_compilers.sh — LEGACY BRIDGE (primary workflow: ./scripts/Build)
 #
 # Builds ts_store (with jText persistence enabled) using both supported compilers:
 #   1. gcc-toolset-15 (GCC 15)
@@ -89,15 +89,23 @@ build_with_compiler() {
     echo
 }
 
-# 1. Build with gcc-toolset-15
-build_with_compiler "gcc-toolset-15" "$BUILD_BASE/gcc" "gcc-toolset-15 (GCC 15)"
+# 1. Build with modern GCC (prefers g++-14 on Debian-family, falls back to toolset on RHEL)
+if command -v g++-14 >/dev/null 2>&1; then
+    build_with_compiler "g++-14" "$BUILD_BASE/gcc14" "g++-14 (GCC 14)"
+elif command -v g++ >/dev/null 2>&1; then
+    GCC_VER=$(g++ --version | head -1 | awk '{print $4}')
+    echo "Using system g++ ($GCC_VER) — may need >=14 for full modules support"
+    build_with_compiler "g++" "$BUILD_BASE/gcc" "system g++"
+else
+    echo "No g++ found"
+fi
 
 # 2. Build with clang (if available)
 if command -v clang++ >/dev/null 2>&1; then
     CLANG_VERSION=$(clang++ --version | head -1)
     echo "Found clang++: $CLANG_VERSION"
 
-    # Only try if Clang meets project minimum (21+, same as CMake)
+    # Only try if Clang meets project minimum (18+, 21+ preferred)
     MAJOR_VERSION=$(clang++ -dumpversion | cut -d. -f1)
     if [ "$MAJOR_VERSION" -ge 21 ]; then
         build_with_compiler "clang++" "$BUILD_BASE/clang" "clang++ $CLANG_VERSION"

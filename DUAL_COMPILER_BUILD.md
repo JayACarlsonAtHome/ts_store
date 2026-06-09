@@ -2,18 +2,21 @@
 //Date:    2026-06-07
 //Purpose: Build documentation for ts_store dual-compiler workflow
 
-# Dual Compiler Builds (GCC + Clang)
+# Dual Compiler Builds (GCC + Clang) — Legacy Bridge
+
+> **Primary workflow:** [FORWARDING.md](FORWARDING.md) · `./scripts/Build FileCheckList.txt ...`  
+> Use this dual script on RHEL when you want both compilers in one shot (`build-dual/gcc` + `build-dual/clang`). On Mint, use the checklist script (proven for GCC 15 + Clang 20 smoke on ssd).
 
 This project builds with **both** supported compilers when persistence and the test matrix are enabled (`TS_STORE_ENABLE_JTEXT_PERSIST=ON` and `TS_STORE_ENABLE_SQLITE_PERSIST=ON`).
 
 **Supported compilers (required and smoke-tested):**
 
-| Compiler | Minimum | Tested on this project |
-|----------|---------|------------------------|
-| **GCC** | **15** (`gcc-toolset-15` on RHEL 9) | GCC 15.2.1 |
-| **Clang** | **21** (system `clang++`) | Clang 21.1.8 |
+| Compiler | Minimum | Notes |
+|----------|---------|-------|
+| **GCC** | **15** (gcc-toolset-15 on RHEL; **g++-15 PPA on Mint 22** — [Doc/linux_mint_gcc15.md](Doc/linux_mint_gcc15.md)) | GCC 14 on Noble is not full-parity for modules |
+| **Clang** | **18** (`clang++-20` on Mint; 21+ on RHEL) | 21+ preferred on RHEL |
 
-CMake enforces these floors when jText persist is ON. System GCC 11 (default on RHEL 9) is **not** sufficient — use `scl enable gcc-toolset-15`.
+The version floors are enforced (with helpful messages) only when jText persistence is enabled. On Linux Mint 22 / Ubuntu 24.04 the default GCC 13 is too old for C++23 module scanning — install g++-14 or clang-18.
 
 **Generator:** **Ninja** is required for C++23 `FILE_SET cxx_modules`. Plain Unix Makefiles will fail at module compile time.
 
@@ -52,7 +55,22 @@ This script:
 
 Use the same layout as the script: `build-dual/gcc` and `build-dual/clang`. Always pass `-G Ninja` and enable both persist options.
 
-### With GCC (toolset 15)
+### With GCC 15 (Mint / Ubuntu 24.04 — PPA)
+
+See [Doc/linux_mint_gcc15.md](Doc/linux_mint_gcc15.md) for PPA install. Summary:
+
+```bash
+# from repo root (after g++-15 installed)
+rm -rf build-mint/gcc15 && mkdir -p build-mint/gcc15 && cd build-mint/gcc15
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_C_COMPILER=gcc-15 \
+      -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
+      -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+      ../..
+cmake --build . --target ts_test_cli ts_store_flags -j$(nproc)
+```
+
+### With GCC (RHEL toolset 15)
 
 ```bash
 # from repo root
@@ -66,13 +84,14 @@ scl enable gcc-toolset-15 -- bash -c '
 '
 ```
 
-### With Clang
+### With Clang (Mint/Ubuntu or RHEL)
 
 ```bash
 # from repo root
-rm -rf build-dual/clang && mkdir -p build-dual/clang && cd build-dual/clang
+sudo apt install clang-18   # or clang on RHEL
+rm -rf build-mint/clang && mkdir -p build-mint/clang && cd build-mint/clang
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_CXX_COMPILER=clang++ \
+      -DCMAKE_CXX_COMPILER=clang++-18 \
       -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
       -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
       ../..

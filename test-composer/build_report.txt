@@ -1,0 +1,85 @@
+ts_store module build probe — g++-14 (Ubuntu 14.2.0) on Linux Mint 22
+Date: 2026-06-08
+Build dir: /home/jay/git/ts_store/test-composer/
+
+Method: Each target built in a fresh isolated CMake+Ninja tree (CMAKE_CXX_SCAN_FOR_MODULES=ON,
+full persist options ON, vendored jText/jacQlite).
+
+================================================================================
+PASS — module libraries compile as .cppm → static lib
+================================================================================
+  jtext_core
+  jac_qlite
+  jac_ts_store_config
+  jac_ts_store_ansi
+  jac_ts_store_flags
+  jac_ts_store_test_options
+  jac_ts_store_persistence_common
+  jac_ts_store_persistence_binary
+  jac_ts_store_persistence_writer
+  jac_jtext
+  jac_ts_store_persistence_jtext
+  jac_ts_store_persistence_sql
+
+================================================================================
+PASS — executables that only import "simple" modules (no core/report)
+================================================================================
+  ts_store_flags          (imports jac.ts_store.flags + jac.ts_store.test_options)
+
+================================================================================
+FAIL — cannot build on g++-14 (reproducible in clean isolated builds)
+================================================================================
+  jac_ts_store_core
+    → GCC ICE when compiling jac.ts_store.core.cppm importing jac.ts_store.ansi
+    → "internal compiler error: error reporting routines re-entered"
+    → Blocks everything that needs the core ts_store type.
+
+  jac_ts_store_impl_testing
+    → Depends on jac_ts_store_core (same ICE).
+
+  jac_report
+    → manifest.cpp / summarize.cpp fail importing jac.jtext.reader
+    → "Bad file data" reading jac.jtext.reader.gcm BMI clusters
+    → std::format / std::formatter cascade failures
+    → summarize.cpp also: 'Sqlite' was not declared (module visibility issue)
+
+  jac_test_framework
+    → Depends on jac_report.
+
+  ts_test_cli
+    → Depends on jac_test_framework + jac_report.
+
+  ts_store_001_TS (and all stress tests 001-007)
+    → Blocked by jac_ts_store_core ICE.
+
+  ts_store_binary_throughput_test
+    → Module lib builds, but consumer .cpp importing jac.ts_store.persistence.binary
+      fails with "Bad file data" on BMI clusters + std library module load failures.
+    → Same class of g++-14 module-consumer bug; ts_store_flags works because its
+      source never `import`s persistence.binary (only links the .a).
+
+================================================================================
+BOTTOM LINE
+================================================================================
+  ~13 of 20 targets build. All individual .cppm shim libraries compile.
+  The project is NOT close to a full compile on g++-14:
+    - Core module (ts_store itself) hits a compiler ICE.
+    - Any .cpp file that imports a "heavy" module BMI gets Bad file data.
+    - Test matrix (ts_test_cli, 001-007) is entirely blocked.
+    - Only ts_store_flags is a real working module-consumer executable.
+
+  This matches FORWARDING.md / build_status.txt: RHEL GCC 15+ is the tested path;
+  g++-14 module support is too immature for this module graph.
+
+  Workarounds mentioned in repo (header fallback, TS_STORE_BUILD_TEST_MATRIX=OFF,
+  SCAN=OFF bypass) are required for any usable Mint build — not optional polish.
+
+================================================================================
+Artifacts
+================================================================================
+  test-composer/build_modules.sh       — shared-tree sequential probe
+  test-composer/build_one.sh           — single-target isolated probe
+  test-composer/run_all_isolated.sh    — run all isolated probes
+  test-composer/isolated/*.result      — per-target full logs
+  test-composer/isolated_summary.txt   — PASS/FAIL summary
+  test-composer/logs/*.log             — shared-tree failure tails

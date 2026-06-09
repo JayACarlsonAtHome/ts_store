@@ -5,10 +5,11 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Try common locations for the built CLI (built with scl enable gcc-toolset-15).
-# After ./scripts/build_dual_compilers.sh the outputs are in build-dual/{gcc,clang}.
-# build-local/ is used for explicit reference-mode trees (see BUILD_ISSUES doc).
+# Try common locations for the built CLI.
+# Prefer build-seq/ (sequential Build), then build-dual/, build-mint/, build-local/.
 for candidate in \
+    "${PROJECT_ROOT}"/build-seq/*/ts_test_cli \
+    "${PROJECT_ROOT}"/build-mint/*/ts_test_cli \
     "${PROJECT_ROOT}/build-dual/gcc/ts_test_cli" \
     "${PROJECT_ROOT}/build-dual/clang/ts_test_cli" \
     "${PROJECT_ROOT}/build-local/gcc/ts_test_cli" \
@@ -24,8 +25,10 @@ do
 done
 
 echo "ts_test_cli not found in common build locations."
-echo "To build it (using the required modern compiler):"
+echo "To build and smoke-test (recommended):"
+echo "  ./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off"
+echo "Or legacy dual build:"
 echo "  ./scripts/build_dual_compilers.sh"
 echo "Then re-run this wrapper, or run from a build dir:"
-echo "  cd build-dual/gcc && ./ts_test_cli run --compiler gcc --disk ssd"
+echo "  cd build-seq/<platform>-<compiler> && ./ts_test_cli run --disk ssd"
 exit 1

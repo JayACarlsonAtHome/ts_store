@@ -1,0 +1,260 @@
+#!/bin/bash
+# scripts/Build — sequential checklist-driven builder for ts_store
+#
+# Usage:
+#   ./scripts/Build FileCheckList.txt [--FullRebuild=On/Off] [--SmokeTest=On/Off] [--FullTest=On/Off]
+#
+# Processes the first pending [ ] row: configure + build one platform/compiler combo,
+# optionally run the test matrix, promote summaries, mark the row done, remove the
+# transient build tree.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
+
+CHECKLIST="${1:-FileCheckList.txt}"
+shift || true
+if [[ "$CHECKLIST" != /* ]]; then
+  CHECKLIST="$PROJECT_ROOT/$CHECKLIST"
+fi
+
+FULL_REBUILD="Off"
+SMOKE_TEST="Off"
+FULL_TEST="Off"
+
+for arg in "$@"; do
+  case "$arg" in
+    --FullRebuild=On)  FULL_REBUILD="On" ;;
+    --FullRebuild=Off) FULL_REBUILD="Off" ;;
+    --SmokeTest=On)    SMOKE_TEST="On" ;;
+    --SmokeTest=Off)   SMOKE_TEST="Off" ;;
+    --FullTest=On)     FULL_TEST="On" ;;
+    --FullTest=Off)    FULL_TEST="Off" ;;
+    *) echo "Unknown arg: $arg" >&2; exit 1 ;;
+  esac
+done
+
+if [[ ! -f "$CHECKLIST" ]]; then
+  echo "Checklist not found: $CHECKLIST" >&2
+  exit 1
+fi
+
+PENDING_LINE=$(grep -m1 '^\[ \]' "$CHECKLIST" || true)
+if [[ -z "$PENDING_LINE" ]]; then
+  echo "No pending items in $CHECKLIST"
+  exit 0
+fi
+
+# Parse: [ ] GCC    / Linux Mint 22.0 / ssd
+DETAILS=$(echo "$PENDING_LINE" | sed 's/^\[ \] *//')
+IFS='/' read -r COMPILER_FIELD PLATFORM_FIELD DISK_FIELD <<< "$DETAILS"
+COMPILER_FIELD=$(echo "$COMPILER_FIELD" | xargs)
+PLATFORM_FIELD=$(echo "$PLATFORM_FIELD" | xargs)
+DISK_FIELD=$(echo "$DISK_FIELD" | xargs)
+
+normalize_disk() {
+  local d="${1,,}"
+  d="${d// /}"; d="${d//-/}"; d="${d//_/}"
+  case "$d" in
+    7k|7200|x7k|seven|seventyk) echo "x7k" ;;
+    10k|10|x10k|tenk|ten)       echo "10k" ;;
+    ssd|solid|flash)             echo "ssd" ;;
+    *) echo "$d" ;;
+  esac
+}
+
+slugify() {
+  echo "$1" | sed 's/[^A-Za-z0-9._-]/_/g' | sed 's/__*/_/g' | sed 's/^_\|_$//g'
+}
+
+DISK_NORM="$(normalize_disk "$DISK_FIELD")"
+PLATFORM_SLUG="$(slugify "$PLATFORM_FIELD")"
+COMPILER_SLUG="$(slugify "$COMPILER_FIELD")"
+BUILD_DIR="$PROJECT_ROOT/build-seq/${PLATFORM_SLUG}-${COMPILER_SLUG}"
+
+echo "=== ts_store Sequential Build ==="
+echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "Checklist: $CHECKLIST"
+echo "Pending:   $PENDING_LINE"
+echo "Parsed:    compiler=$COMPILER_FIELD platform=$PLATFORM_FIELD disk=$DISK_NORM"
+echo "Flags:     FullRebuild=$FULL_REBUILD SmokeTest=$SMOKE_TEST FullTest=$FULL_TEST"
+echo "Build dir: $BUILD_DIR (transient — removed after success)"
+echo
+
+# shellcheck source=build_common.sh
+source "$SCRIPT_DIR/build_common.sh"
+ts_store_resolve_ninja
+CMAKE_NINJA_ARGS=(-G Ninja -DCMAKE_MAKE_PROGRAM="$NINJA")
+
+# Deps: siblings when present, otherwise vendor/
+DEPS_CMAKE_ARGS=(-DTS_STORE_JTEXT_MODE=vendored -DTS_STORE_JACQLITE_MODE=vendored)
+if [[ -d "$PROJECT_ROOT/../jText" && -d "$PROJECT_ROOT/../jacQlite" ]]; then
+  DEPS_CMAKE_ARGS=(-DTS_STORE_JTEXT_MODE=reference -DTS_STORE_JACQLITE_MODE=reference)
+  echo "Deps: reference (../jText + ../jacQlite)"
+else
+  echo "Deps: vendored"
+fi
+
+# Compiler + optional RHEL toolset wrapper
+CMAKE_WRAPPER=()
+CXX_COMPILER=""
+C_COMPILER=""
+TEST_CLI_COMPILER=""
+
+if [[ "$COMPILER_FIELD" == "GCC" ]]; then
+  TEST_CLI_COMPILER="gcc"
+  if [[ "$PLATFORM_FIELD" == *"Mint"* ]]; then
+    CXX_COMPILER="g++-15"
+    C_COMPILER="gcc-15"
+  elif [[ "$PLATFORM_FIELD" == RHEL* ]]; then
+    if command -v scl >/dev/null 2>&1 && [[ -x /opt/rh/gcc-toolset-15/root/usr/bin/g++ ]]; then
+      CMAKE_WRAPPER=(scl enable gcc-toolset-15 --)
+      CXX_COMPILER="/opt/rh/gcc-toolset-15/root/usr/bin/g++"
+      C_COMPILER="/opt/rh/gcc-toolset-15/root/usr/bin/gcc"
+    elif command -v g++-15 >/dev/null 2>&1; then
+      CXX_COMPILER="g++-15"
+      C_COMPILER="gcc-15"
+    else
+      echo "ERROR: RHEL GCC row requires gcc-toolset-15 (scl) or g++-15 on PATH." >&2
+      exit 1
+    fi
+  elif command -v g++-15 >/dev/null 2>&1; then
+    CXX_COMPILER="g++-15"
+    C_COMPILER="gcc-15"
+  elif command -v g++-14 >/dev/null 2>&1; then
+    CXX_COMPILER="g++-14"
+    C_COMPILER="gcc-14"
+    echo "WARNING: falling back to g++-14 — full module matrix may fail on this platform." >&2
+  else
+    echo "ERROR: no suitable g++ found for GCC row." >&2
+    exit 1
+  fi
+elif [[ "$COMPILER_FIELD" == "Clang" ]]; then
+  TEST_CLI_COMPILER="clang"
+  for cand in clang++-21 clang++-20 clang++-19 clang++-18 clang++; do
+    if command -v "$cand" >/dev/null 2>&1; then
+      CXX_COMPILER="$cand"
+      C_COMPILER="${cand/clang++/clang}"
+      break
+    fi
+  done
+  if [[ -z "$CXX_COMPILER" ]]; then
+    echo "ERROR: no clang++ found (tried clang++-21..18 and clang++)." >&2
+    echo "On Mint: sudo apt install clang-20  (or clang-18)" >&2
+    exit 1
+  fi
+  MAJOR_VERSION=$("$CXX_COMPILER" -dumpversion | cut -d. -f1)
+  if (( MAJOR_VERSION < 18 )); then
+    echo "ERROR: $CXX_COMPILER version $MAJOR_VERSION is too old (need 18+, 21+ preferred)." >&2
+    exit 1
+  fi
+  if (( MAJOR_VERSION < 21 )); then
+    echo "NOTE: $CXX_COMPILER is < 21 — build may work; RHEL parity uses Clang 21+." >&2
+  fi
+else
+  echo "ERROR: unknown compiler field '$COMPILER_FIELD' (expected GCC or Clang)." >&2
+  exit 1
+fi
+
+if [[ -n "$CXX_COMPILER" ]] && ! command -v "$CXX_COMPILER" >/dev/null 2>&1 && [[ ! -x "$CXX_COMPILER" ]]; then
+  echo "ERROR: compiler not found: $CXX_COMPILER" >&2
+  exit 1
+fi
+
+echo "Compiler:  $CXX_COMPILER (cli --compiler $TEST_CLI_COMPILER)"
+if ((${#CMAKE_WRAPPER[@]} > 0)); then
+  echo "Wrapper:   ${CMAKE_WRAPPER[*]}"
+fi
+echo
+
+MATRIX_TARGETS=(
+  ts_test_cli
+  ts_store_001_TS ts_store_001_XS
+  ts_store_002_TS ts_store_002_XS
+  ts_store_003_TS ts_store_003_XS
+  ts_store_004_TS ts_store_004_XS
+  ts_store_005_TS ts_store_005_XS
+  ts_store_006_TS ts_store_006_XS
+  ts_store_007_TS ts_store_007_XS
+  ts_store_flags
+  ts_store_jtext_high_throughput_test
+  ts_store_jtext_split_demo
+)
+
+if [[ "$FULL_REBUILD" == "On" ]]; then
+  echo "FullRebuild=On: removing $BUILD_DIR"
+  rm -rf "$BUILD_DIR"
+fi
+
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
+
+echo "=== CMake configure ==="
+if ((${#CMAKE_WRAPPER[@]} > 0)); then
+  "${CMAKE_WRAPPER[@]}" cmake "${CMAKE_NINJA_ARGS[@]}" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_COMPILER="$CXX_COMPILER" \
+    -DCMAKE_C_COMPILER="$C_COMPILER" \
+    -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
+    -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+    "${DEPS_CMAKE_ARGS[@]}" \
+    "$PROJECT_ROOT"
+else
+  cmake "${CMAKE_NINJA_ARGS[@]}" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_COMPILER="$CXX_COMPILER" \
+    -DCMAKE_C_COMPILER="$C_COMPILER" \
+    -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
+    -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+    "${DEPS_CMAKE_ARGS[@]}" \
+    "$PROJECT_ROOT"
+fi
+
+echo
+echo "=== Ninja build (${#MATRIX_TARGETS[@]} targets) ==="
+if ((${#CMAKE_WRAPPER[@]} > 0)); then
+  "${CMAKE_WRAPPER[@]}" cmake --build . --target "${MATRIX_TARGETS[@]}" -j "$(nproc)"
+else
+  cmake --build . --target "${MATRIX_TARGETS[@]}" -j "$(nproc)"
+fi
+
+RUN_TESTS=0
+TEST_SIZE=""
+if [[ "$FULL_TEST" == "On" ]]; then
+  RUN_TESTS=1
+  TEST_SIZE="full"
+elif [[ "$SMOKE_TEST" == "On" ]]; then
+  RUN_TESTS=1
+  TEST_SIZE="smoke"
+fi
+
+if [[ "$RUN_TESTS" -eq 1 ]]; then
+  PARAMS_REL="build-seq/${PLATFORM_SLUG}-${COMPILER_SLUG}/run_params.txt"
+  PARAMS_ABS="$BUILD_DIR/run_params.txt"
+  cp "$PROJECT_ROOT/tests/test_params.txt" "$PARAMS_ABS"
+  sed -i "s/^SIZE=.*/SIZE=${TEST_SIZE}/" "$PARAMS_ABS"
+  sed -i "s/^DISK_TYPE=.*/DISK_TYPE=${DISK_NORM}/" "$PARAMS_ABS"
+
+  echo
+  echo "=== Test matrix (SIZE=$TEST_SIZE DISK=$DISK_NORM) ==="
+  ./ts_test_cli run --compiler "$TEST_CLI_COMPILER" --disk "$DISK_NORM" --params "$PARAMS_REL"
+else
+  echo
+  echo "Skipping test matrix (SmokeTest=Off and FullTest=Off)."
+fi
+
+echo
+echo "=== Promote summaries ==="
+"$SCRIPT_DIR/promote_summaries.sh" --disk "$DISK_NORM"
+
+echo
+echo "=== Mark checklist done ==="
+sed -i '0,/^\[ \]/{s/^\[ \]/[x]/}' "$CHECKLIST"
+
+echo "=== Remove transient build tree ==="
+rm -rf "$BUILD_DIR"
+
+echo
+echo "=== Build complete for: $PENDING_LINE ==="

@@ -16,11 +16,35 @@ target_compile_options(project_warnings INTERFACE
 )
 
 add_library(project_options INTERFACE)
+# GCC 15 + FILE_SET cxx_modules: -O3 on module producers/consumers ICEs (ealias/nonnull_arg_p) on
+# Ubuntu gcc-15 PPA; Debug works because CMAKE_BUILD_TYPE=Debug omits -O3 here. RHEL may use
+# -DTS_STORE_GNU_RELEASE_O3=ON when the toolchain build tolerates it.
+option(TS_STORE_GNU_RELEASE_O3 "GCC Release: add -O3 via project_options (unsafe with GCC 15 modules on some builds)" OFF)
+# CMake's default CMAKE_CXX_FLAGS_RELEASE includes -O3; strip it for GCC unless opted in
+# (GCC 15 + modules ICE at -O3 on Ubuntu PPA builds).
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT TS_STORE_GNU_RELEASE_O3)
+    string(REGEX REPLACE "-O[0-9gs]+" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" CACHE STRING "Flags used by the CXX compiler during RELEASE builds." FORCE)
+endif()
+option(TS_STORE_CLANG_LTO
+       "Clang Release: -flto=thin on compile+link (off by default; compile-only LTO breaks non-LTO links with modules)" OFF)
 target_compile_options(project_options INTERFACE
-          $<$<CONFIG:Release>:-O3>
-          $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-march=native -mtune=native -fno-semantic-interposition>
-          $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-march=native -mtune=native -flto=thin>
+          $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-O3>
+          $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>,$<BOOL:${TS_STORE_GNU_RELEASE_O3}>>:-O3>
+          $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-march=native -mtune=native>
+          $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>,$<BOOL:${TS_STORE_CLANG_LTO}>>:-flto=thin>
 )
+target_link_options(project_options INTERFACE
+          $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>,$<BOOL:${TS_STORE_CLANG_LTO}>>:-flto=thin>
+)
+option(TS_STORE_NATIVE_TUNING
+       "GCC Release: -march=native -mtune=native -fno-semantic-interposition (can ICE GCC 15 + modules)" OFF)
+if(TS_STORE_NATIVE_TUNING)
+    target_compile_options(project_options INTERFACE
+        $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-march=native -mtune=native -fno-semantic-interposition>
+    )
+endif()
+
 option(ENABLE_CUSTOM_LLVM "Use custom LLVM/libc++ paths" OFF)
 
 if(ENABLE_CUSTOM_LLVM)
@@ -50,6 +74,9 @@ target_compile_features(ts_store_flags PRIVATE cxx_std_23)
 target_include_directories(ts_store_flags PRIVATE ${TS_STORE_INCLUDE_DIR})
 target_link_libraries(ts_store_flags PRIVATE project_warnings project_options jac_ts_store_config jac_ts_store_ansi jac_ts_store_flags jac_ts_store_test_options jac_ts_store_persistence_binary)
 
+option(TS_STORE_BUILD_TEST_MATRIX "Build the test runner (ts_test_cli), jac_report and jac.test_framework (these pull heavy modules and may not be stable on GCC <15)" ON)
+
+if(TS_STORE_BUILD_TEST_MATRIX)
 # Reporting module: manifest + summarize + hub (incremental rebuild isolated from stress tests).
 add_library(jac_report)
 target_sources(jac_report
@@ -63,8 +90,11 @@ target_sources(jac_report
 )
 target_compile_features(jac_report PUBLIC cxx_std_23)
 target_include_directories(jac_report PUBLIC ${TS_STORE_INCLUDE_DIR})
+endif() # TS_STORE_BUILD_TEST_MATRIX
 
 # jText module shim (re-exports public jText API as jac.jtext).
+# Only needed when jText persistence is enabled (to avoid include path and build order issues on some compilers).
+if(TS_STORE_ENABLE_JTEXT_PERSIST)
 add_library(jac_jtext)
 target_sources(jac_jtext
     PUBLIC
@@ -77,6 +107,8 @@ target_sources(jac_jtext
             modules/jac.jtext/jac.jtext.cppm
 )
 target_compile_features(jac_jtext PUBLIC cxx_std_23)
+target_include_directories(jac_jtext PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/vendor/jText ${CMAKE_CURRENT_SOURCE_DIR}/vendor/jText/src )
+endif() # TS_STORE_ENABLE_JTEXT_PERSIST
 
 # jacQLite module shim (header-only wrapper re-exported as jac.qlite).
 add_library(jac_qlite)
@@ -196,6 +228,7 @@ target_compile_features(jac_ts_store_impl_testing PUBLIC cxx_std_23)
 target_include_directories(jac_ts_store_impl_testing PUBLIC ${TS_STORE_INCLUDE_DIR})
 target_link_libraries(jac_ts_store_impl_testing PUBLIC jac_ts_store_core jac_ts_store_test_options)
 
+if(TS_STORE_BUILD_TEST_MATRIX)
 # Test matrix runner module (params, scenarios, execution). Re-exports jac.report.
 add_library(jac_test_framework)
 target_sources(jac_test_framework
@@ -217,6 +250,7 @@ add_executable(ts_test_cli tools/test_cli/main.cpp)
 target_compile_features(ts_test_cli PRIVATE cxx_std_23)
 target_include_directories(ts_test_cli PRIVATE ${TS_STORE_INCLUDE_DIR})
 target_link_libraries(ts_test_cli PRIVATE jac_test_framework)
+endif() # TS_STORE_BUILD_TEST_MATRIX
 
 set(TEST_NUMBERS 001 002 003 004 005 006 007)
 
@@ -255,11 +289,14 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     set(TS_STORE_BUILDING_JTEXT_TOOLS ON)
 
     # Supported / tested toolchains (also enforced below):
-    #   - gcc-toolset-15 (GCC 15+) — smoke-tested with GCC 15.2.1
-    #   - clang++ (Clang 21+) — smoke-tested with Clang 21.1.8
+    #   - GCC 14+ (e.g. g++-14 on Ubuntu/Mint/Debian, or gcc-toolset-15 on RHEL)
+    #   - clang++ 18+ (Clang 21+ preferred for full parity with original testing)
     #
     # No compiler is forced. The user chooses via -DCMAKE_CXX_COMPILER=...
     # We only perform a basic capability check below.
+    #
+    # On Linux Mint / Ubuntu 24.04: install with `sudo apt install g++-14 clang-18`
+    # Then configure with -DCMAKE_CXX_COMPILER=g++-14 (or clang++).
 
     if(TS_STORE_JTEXT_MODE STREQUAL "vendored")
         set(JTEXT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/jText")
@@ -332,16 +369,22 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
 
     # --- Compiler capability check (dual compiler support) ---
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "15")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "14")
             message(FATAL_ERROR
-                "TS_STORE_ENABLE_JTEXT_PERSIST requires GCC >= 15 (gcc-toolset-15) or Clang >= 21.\n"
+                "TS_STORE_ENABLE_JTEXT_PERSIST requires GCC >= 14 or Clang >= 18.\n"
                 "Current: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\n"
-                "Tip: Use 'scl enable gcc-toolset-15 -- cmake ...' or pass -DCMAKE_CXX_COMPILER=clang++")
+                "On Mint/Ubuntu: sudo apt install g++-14\n"
+                "Then: cmake ... -DCMAKE_CXX_COMPILER=g++-14")
+        elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "15")
+            message(WARNING
+                "GCC ${CMAKE_CXX_COMPILER_VERSION} is below the original smoke-tested 15.\n"
+                "Modules + C++23 should work on 14+, but full parity not guaranteed.\n"
+                "Consider g++-14 or gcc-toolset-15 if you hit issues.")
         endif()
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "21")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18")
             message(FATAL_ERROR
-                "TS_STORE_ENABLE_JTEXT_PERSIST requires Clang >= 21 (or GCC >= 15 via gcc-toolset-15).\n"
+                "TS_STORE_ENABLE_JTEXT_PERSIST requires Clang >= 18 (21+ preferred).\n"
                 "Current: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
         endif()
     endif()
@@ -636,6 +679,7 @@ target_link_libraries(ts_store_binary_payload_benchmark
 )
 
 # jac.report + ts_test_cli (jText write, SQLite views)
+if(TS_STORE_BUILD_TEST_MATRIX)
 if(TS_STORE_ENABLE_JTEXT_PERSIST)
     target_include_directories(jac_jtext PUBLIC ${JTEXT_SOURCE_DIR} ${JTEXT_SOURCE_DIR}/src)
     target_link_libraries(jac_jtext PUBLIC jtext_core)
@@ -650,6 +694,7 @@ if(TS_STORE_ENABLE_SQLITE_PERSIST)
 else()
     message(WARNING "jac.report summarize requires TS_STORE_ENABLE_SQLITE_PERSIST=ON")
 endif()
+endif() # TS_STORE_BUILD_TEST_MATRIX
 
 # When siblings exist, refresh vendor/ after matrix binaries link (keeps git push self-contained).
 if(TS_STORE_ENABLE_JTEXT_PERSIST AND TS_STORE_ENABLE_SQLITE_PERSIST)
@@ -666,7 +711,9 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST AND TS_STORE_ENABLE_SQLITE_PERSIST)
                 VERBATIM
             )
         endfunction()
-        ts_store_vendor_sync_postbuild(ts_test_cli)
+        if(TS_STORE_BUILD_TEST_MATRIX)
+            ts_store_vendor_sync_postbuild(ts_test_cli)
+        endif()
         ts_store_vendor_sync_postbuild(ts_store_flags)
         foreach(num IN LISTS TEST_NUMBERS)
             ts_store_vendor_sync_postbuild(ts_store_${num}_TS)

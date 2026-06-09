@@ -205,18 +205,36 @@ We did exactly this for both smoke and full on this machine (with `DISK_TYPE=ssd
 
 ---
 
-## Current State on This Machine (for reference)
+## 6. Sequential Checklist Build (`./scripts/Build`)
 
-- Successful dual builds in both `build-dual/` (official script) and `build-local/` (explicit reference mode).
-- Full smoke and full (`xFull`) matrices run successfully for both gcc and clang on SSD.
-- All scenarios PASS.
-- Summaries promoted.
-- jacQlite sibling was patched for compatibility.
+### Current recommended workflow (2026-06-08+)
 
-This machine is using the **reference** (live sibling) mode for the dependencies, with a modern Ninja supplied via the CLion path.
+The primary path is no longer `build_dual_compilers.sh` for every machine. Use [FileCheckList.txt](FileCheckList.txt) and:
 
-If you have questions about any of the above or want to reconcile changes back into the original jacQlite/jText repos, let me know!
+```bash
+./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
+```
+
+One `[ ]` row per invocation: configure in transient `build-seq/<platform>-<compiler>/`, build full matrix, run `ts_test_cli`, promote, mark `[x]`, delete build tree.
+
+**Mint (OS_003 / ssd):** both rows pass smoke — GCC 15 (`g++-15` PPA) and Clang 20 (`clang++-20`).
+
+**Fixes discovered during Mint Clang bring-up:**
+- `TS_STORE_CLANG_LTO=OFF` (default) — compile-only `-flto=thin` produced LLVM bitcode `.o` files; linker expected ELF.
+- `scripts/Build` resolves `clang++-20` when generic `clang++` is not on PATH.
+
+See [FORWARDING.md](FORWARDING.md) and [Doc/linux_mint_gcc15.md](Doc/linux_mint_gcc15.md).
 
 ---
 
-*Generated after working through the build, API, and test-runner issues on 2026-06-07.*
+## Current State on This Machine (for reference)
+
+- **Checklist build:** `./scripts/Build` proven for Mint GCC + Clang smoke on ssd (`test-summary/OS_003/ssd/Smoke/`).
+- Earlier dual builds in `build-dual/` and `build-local/` still valid as ad-hoc trees.
+- Full smoke and full (`xFull`) matrices run successfully for gcc and clang on SSD.
+- jacQlite sibling was patched for compatibility (`Statement` indexed bind helpers).
+- **Reference** mode when `../jText` + `../jacQlite` exist; Ninja ≥ 1.11 via `scripts/build_common.sh`.
+
+---
+
+*Updated 2026-06-08 after sequential Build workflow and Mint Clang smoke.*

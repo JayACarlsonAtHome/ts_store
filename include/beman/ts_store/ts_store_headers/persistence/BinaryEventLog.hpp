@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cerrno>
+#include <stdexcept>
 
 #include "PersistCommon.hpp"
 
@@ -36,7 +37,10 @@ namespace detail {
         h += std::format("//Date:    {}\n", date_str);
         h += "//Purpose: Binary Data File\n";
         h += "//\n";
-        ::write(fd, h.data(), h.size());
+        const ssize_t written = ::write(fd, h.data(), h.size());
+        if (written < 0 || static_cast<size_t>(written) != h.size()) {
+            throw std::runtime_error("BinaryEventLog: header write failed");
+        }
         return h.size();
     }
 }
@@ -113,7 +117,9 @@ public:
 
         if (write_pos_ + needed > file_size_) {
             size_t new_size = file_size_ * 2;
-            ::ftruncate(fd_, static_cast<off_t>(new_size));
+            if (::ftruncate(fd_, static_cast<off_t>(new_size)) != 0) {
+                throw std::runtime_error("BinaryEventLog: ftruncate failed");
+            }
             ::munmap(mapped_, file_size_);
             mapped_ = static_cast<char*>(::mmap(nullptr, new_size, PROT_READ | PROT_WRITE,
                                                 MAP_SHARED, fd_, 0));
@@ -171,7 +177,9 @@ public:
             mapped_ = nullptr;
         }
         if (fd_ >= 0) {
-            ::ftruncate(fd_, static_cast<off_t>(write_pos_));
+            if (::ftruncate(fd_, static_cast<off_t>(write_pos_)) != 0) {
+                throw std::runtime_error("BinaryEventLog: finalize ftruncate failed");
+            }
             ::close(fd_);
             fd_ = -1;
         }

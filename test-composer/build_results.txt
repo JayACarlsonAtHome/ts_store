@@ -1,0 +1,195 @@
+=== ts_store module build probe ===
+Date: 2026-06-08T18:49:42-07:00
+Compiler: g++-14 (g++-14 (Ubuntu 14.2.0-4ubuntu2~24.04.1) 14.2.0)
+Build dir: /home/jay/git/ts_store/test-composer/build
+
+-- The CXX compiler identification is GNU 14.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/g++-14 - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- ts_store: jText persistence ENABLED
+-- Project:      jText 0.4.0
+-- C++ standard: C++23
+-- Build type:   Release
+CMake Warning at CMakeLists.txt:355 (message):
+  GCC 14.2.0 is below the original smoke-tested 15.
+
+  Modules + C++23 should work on 14+, but full parity not guaranteed.
+
+  Consider g++-14 or gcc-toolset-15 if you hit issues.
+
+
+-- ts_store: SQLite persistence ENABLED
+-- SQLite3 found: 3.45.1
+-- jacQLite configured.
+-- Configuring done (0.2s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/jay/git/ts_store/test-composer/build
+
+=== Per-target builds ===
+
+--- TARGET: jtext_core ---
+PASS: jtext_core
+
+--- TARGET: jacQLite ---
+SKIP: target not in build graph
+
+--- TARGET: jac_ts_store_config ---
+SKIP: target not in build graph
+
+--- TARGET: jac_ts_store_ansi ---
+PASS: jac_ts_store_ansi
+
+--- TARGET: jac_ts_store_flags ---
+PASS: jac_ts_store_flags
+
+--- TARGET: jac_ts_store_test_options ---
+PASS: jac_ts_store_test_options
+
+--- TARGET: jac_qlite ---
+PASS: jac_qlite
+
+--- TARGET: jac_ts_store_persistence_common ---
+PASS: jac_ts_store_persistence_common
+
+--- TARGET: jac_ts_store_persistence_binary ---
+PASS: jac_ts_store_persistence_binary
+
+--- TARGET: jac_ts_store_persistence_writer ---
+PASS: jac_ts_store_persistence_writer
+
+--- TARGET: jac_jtext ---
+PASS: jac_jtext
+
+--- TARGET: jac_ts_store_persistence_jtext ---
+PASS: jac_ts_store_persistence_jtext
+
+--- TARGET: jac_ts_store_persistence_sql ---
+PASS: jac_ts_store_persistence_sql
+
+--- TARGET: jac_ts_store_core ---
+FAIL: jac_ts_store_core (see /home/jay/git/ts_store/test-composer/logs/jac_ts_store_core.log)
+[1/8] Scanning /home/jay/git/ts_store/modules/jac.ts_store/jac.ts_store.config.cppm for CXX dependencies
+[2/8] Generating CXX dyndep file CMakeFiles/jac_ts_store_config.dir/CXX.dd
+[3/8] Scanning /home/jay/git/ts_store/modules/jac.ts_store/jac.ts_store.core.cppm for CXX dependencies
+[4/8] Generating CXX dyndep file CMakeFiles/jac_ts_store_core.dir/CXX.dd
+[5/8] Building CXX object CMakeFiles/jac_ts_store_config.dir/modules/jac.ts_store/jac.ts_store.config.cppm.o
+[6/8] Linking CXX static library libjac_ts_store_config.a
+[7/8] Building CXX object CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o
+FAILED: CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o CMakeFiles/jac_ts_store_core.dir/jac.ts_store.core.gcm 
+/usr/bin/g++-14  -I/home/jay/git/ts_store/include -O3 -DNDEBUG -std=gnu++23 -MD -MT CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o -MF CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o.d -fmodules-ts -fmodule-mapper=CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o -c /home/jay/git/ts_store/modules/jac.ts_store/jac.ts_store.core.cppm
+In module imported at /home/jay/git/ts_store/modules/jac.ts_store/jac.ts_store.core.cppm:32:8:
+jac.ts_store.ansi: note: unable to represent further imported source locations
+‘
+internal compiler error: error reporting routines re-entered.
+0x780b2c82a1c9 __libc_start_call_main
+	../sysdeps/nptl/libc_start_call_main.h:58
+0x780b2c82a28a __libc_start_main_impl
+	../csu/libc-start.c:360
+Please submit a full bug report, with preprocessed source (by using -freport-bug).
+Please include the complete backtrace with any bug report.
+See <file:///usr/share/doc/gcc-14/README.Bugs> for instructions.
+ninja: build stopped: subcommand failed.
+
+--- TARGET: jac_ts_store_impl_testing ---
+FAIL: jac_ts_store_impl_testing (see /home/jay/git/ts_store/test-composer/logs/jac_ts_store_impl_testing.log)
+[1/6] Scanning /home/jay/git/ts_store/modules/jac.ts_store/jac.ts_store.impl.testing.cppm for CXX dependencies
+[2/6] Generating CXX dyndep file CMakeFiles/jac_ts_store_impl_testing.dir/CXX.dd
+[3/6] Building CXX object CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o
+FAILED: CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o CMakeFiles/jac_ts_store_core.dir/jac.ts_store.core.gcm 
+/usr/bin/g++-14  -I/home/jay/git/ts_store/include -O3 -DNDEBUG -std=gnu++23 -MD -MT CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o -MF CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o.d -fmodules-ts -fmodule-mapper=CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles/jac_ts_store_core.dir/modules/jac.ts_store/jac.ts_store.core.cppm.o -c /home/jay/git/ts_store/modules/jac.ts_store/jac.ts_store.core.cppm
+In module imported at /home/jay/git/ts_store/modules/jac.ts_store/jac.ts_store.core.cppm:32:8:
+jac.ts_store.ansi: note: unable to represent further imported source locations
+‘
+internal compiler error: error reporting routines re-entered.
+0x76d80822a1c9 __libc_start_call_main
+	../sysdeps/nptl/libc_start_call_main.h:58
+0x76d80822a28a __libc_start_main_impl
+	../csu/libc-start.c:360
+Please submit a full bug report, with preprocessed source (by using -freport-bug).
+Please include the complete backtrace with any bug report.
+See <file:///usr/share/doc/gcc-14/README.Bugs> for instructions.
+ninja: build stopped: subcommand failed.
+
+--- TARGET: jac_report ---
+FAIL: jac_report (see /home/jay/git/ts_store/test-composer/logs/jac_report.log)
+[7/8] Building CXX object CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o
+FAILED: CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o 
+/usr/bin/g++-14  -I/home/jay/git/ts_store/include -I/home/jay/git/ts_store/vendor/jText -I/home/jay/git/ts_store/vendor/jText/src -I/home/jay/git/ts_store/vendor/jacQlite/include -O3 -DNDEBUG -std=gnu++23 -MD -MT CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o -MF CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o.d -fmodules-ts -fmodule-mapper=CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o -c /home/jay/git/ts_store/modules/jac.report/manifest.cpp
+In module imported at /home/jay/git/ts_store/modules/jac.jtext/jac.jtext.reader.cppm:7:8,
+of module jac.jtext.reader, imported at /home/jay/git/ts_store/modules/jac.report/manifest.cpp:20:
+jac.jtext.core: note: unable to represent further imported source locations
+In module imported at /home/jay/git/ts_store/modules/jac.report/manifest.cpp:20:1:
+/usr/include/c++/14/format: In instantiation of ‘class std::__format::_Checking_scanner<char, double>’:
+/usr/include/c++/14/format:4210:4:   required from ‘consteval std::basic_format_string<_CharT, _Args>::basic_format_string(const _Tp&) [with _Tp = char [7]; _CharT = char; _Args = {const double&}]’
+ 4210 |           __scanner(_M_str);
+      |           ^~~~~~~~~
+/home/jay/git/ts_store/modules/jac.report/manifest.cpp:271:28:   required from here
+  271 |                 std::format("{:.3f}", r.duration_sec),
+      |                 ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+jac.jtext.reader: error: failed to read compiled module cluster 2145: Bad file data
+jac.jtext.reader: note: compiled module file is ‘CMakeFiles/jac_jtext.dir/jac.jtext.reader.gcm’
+jac.jtext.reader: error: failed to read compiled module cluster 2151: Bad file data
+In file included from /usr/include/c++/14/ostream:43,
+                 from /usr/include/c++/14/istream:41,
+                 from /usr/include/c++/14/sstream:40,
+                 from /usr/include/c++/14/bits/quoted_string.h:38,
+                 from /usr/include/c++/14/iomanip:50,
+                 from /usr/include/c++/14/bits/fs_path.h:38,
+                 from /usr/include/c++/14/filesystem:52,
+                 from /home/jay/git/ts_store/modules/jac.report/manifest.cpp:3:
+/usr/include/c++/14/format:4065:10: fatal error: failed to load pendings for ‘std::formatter’
+ 4065 |         (is_default_constructible_v<formatter<_Args, _CharT>> && ...),
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+ninja: build stopped: subcommand failed.
+
+--- TARGET: jac_test_framework ---
+FAIL: jac_test_framework (see /home/jay/git/ts_store/test-composer/logs/jac_test_framework.log)
+FAILED: CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o 
+/usr/bin/g++-14  -I/home/jay/git/ts_store/include -I/home/jay/git/ts_store/vendor/jText -I/home/jay/git/ts_store/vendor/jText/src -I/home/jay/git/ts_store/vendor/jacQlite/include -O3 -DNDEBUG -std=gnu++23 -MD -MT CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o -MF CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o.d -fmodules-ts -fmodule-mapper=CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles/jac_report.dir/modules/jac.report/manifest.cpp.o -c /home/jay/git/ts_store/modules/jac.report/manifest.cpp
+In module imported at /home/jay/git/ts_store/modules/jac.jtext/jac.jtext.reader.cppm:7:8,
+of module jac.jtext.reader, imported at /home/jay/git/ts_store/modules/jac.report/manifest.cpp:20:
+jac.jtext.core: note: unable to represent further imported source locations
+In module imported at /home/jay/git/ts_store/modules/jac.report/manifest.cpp:20:1:
+/usr/include/c++/14/format: In instantiation of ‘class std::__format::_Checking_scanner<char, double>’:
+/usr/include/c++/14/format:4210:4:   required from ‘consteval std::basic_format_string<_CharT, _Args>::basic_format_string(const _Tp&) [with _Tp = char [7]; _CharT = char; _Args = {const double&}]’
+ 4210 |           __scanner(_M_str);
+      |           ^~~~~~~~~
+/home/jay/git/ts_store/modules/jac.report/manifest.cpp:271:28:   required from here
+  271 |                 std::format("{:.3f}", r.duration_sec),
+      |                 ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+jac.jtext.reader: error: failed to read compiled module cluster 2145: Bad file data
+jac.jtext.reader: note: compiled module file is ‘CMakeFiles/jac_jtext.dir/jac.jtext.reader.gcm’
+jac.jtext.reader: error: failed to read compiled module cluster 2151: Bad file data
+In file included from /usr/include/c++/14/ostream:43,
+                 from /usr/include/c++/14/istream:41,
+                 from /usr/include/c++/14/sstream:40,
+                 from /usr/include/c++/14/bits/quoted_string.h:38,
+                 from /usr/include/c++/14/iomanip:50,
+                 from /usr/include/c++/14/bits/fs_path.h:38,
+                 from /usr/include/c++/14/filesystem:52,
+                 from /home/jay/git/ts_store/modules/jac.report/manifest.cpp:3:
+/usr/include/c++/14/format:4065:10: fatal error: failed to load pendings for ‘std::formatter’
+ 4065 |         (is_default_constructible_v<formatter<_Args, _CharT>> && ...),
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+[6/9] Building CXX object CMakeFiles/jac_test_framework.dir/modules/jac.test_framework/jac.test_framework.cppm.o
+ninja: build stopped: subcommand failed.
+
+--- TARGET: ts_test_cli ---
+SKIP: target not in build graph
+
+--- TARGET: ts_store_flags ---
+SKIP: target not in build graph
+
+--- TARGET: ts_store_001_TS ---
+SKIP: target not in build graph
+
+--- TARGET: ts_store_001_XS ---
+SKIP: target not in build graph
+
+=== Summary ===
+PASS=11 FAIL=4 SKIP=6

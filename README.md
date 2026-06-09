@@ -8,6 +8,8 @@
 
 The hot path (`save_event`) is designed to stay as close to pure in-memory speed as possible while a background thread drains to disk via pluggable sinks (Binary or jText split files today).
 
+**Structure & architecture:** [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md) — system layers, module graph, repo layout, test matrix, and build workflow.
+
 ---
 
 ## What this project is (and is becoming)
@@ -16,9 +18,9 @@ ts_store began as a **learning experiment**: C++23, bounded hot-path storage, fl
 
 The automated matrix (`ts_test_cli`, tests 001–007 TS/XS, flags unit test, dual-compiler smoke) is the proof layer: millions of events, multiple persist modes, per-OS and per-disk result leaves, and promoted summaries under [test-summary/](test-summary/).
 
-**C++23 modules** are used throughout tests and examples. The goal is **not** to ship a reusable SDK for other repos (though the module boundaries could be reused on a similar toolchain). Modules exist so that when you touch one part of ts_store — flags, a sink, the core buffer — **only the affected module units recompile**, keeping iteration time down on a large tree. Tests and examples use `import`; implementation still lives under `include/beman/ts_store/ts_store_headers/` (module `.cppm` files are thin shims — moving bodies into modules is future work).
+**C++23 modules** are used throughout tests and examples. They are **not for portability** — they speed up incremental compiles on a **single** machine + compiler combo. The goal is **not** to ship a reusable SDK for other repos. On one fixed toolchain, when you touch flags, a sink, or the core buffer, **only the affected module units recompile**. Tests and examples use `import`; implementation still lives under `include/beman/ts_store/ts_store_headers/` (module `.cppm` files are thin shims — moving bodies into modules is future work).
 
-**New machine or toolchain?** Always do a **clean configure and full build from source** first (`./scripts/build_dual_compilers.sh` or equivalent). Only `modules/**/*.cppm` and companion `.cpp` sources are in git; BMIs and other module build objects (`.gcm`, `.pcm`, `.ddi`, etc.) are gitignored and must be produced locally. Prebuilt module artifacts are not portable across OS, compiler, or CPU. After a good full build, day-to-day work benefits from module granularity on that same system.
+**New machine, CPU, OS, or compiler?** Rebuild **all** modules once from source (`./scripts/Build --FullRebuild=On`, or clean cmake — see [Building](#building) and [Doc/ARCHITECTURE.md § Modules are not for portability](Doc/ARCHITECTURE.md#modules-are-not-for-portability)). Only `modules/**/*.cppm` and companion `.cpp` sources are in git; BMIs (`.gcm`, `.pcm`, `.ddi`, etc.) are gitignored and must never be copied between environments. After that one full build on the new host, module artifacts can be **reused for testing and incremental dev on that same system** until the toolchain changes again.
 
 ---
 
@@ -60,9 +62,11 @@ Link the matching CMake targets (e.g. `jac_ts_store_impl_testing`) — see [CMak
 ## Current Status (mid-2026)
 
 - **Extensively tested** — All stress tests (001–007 TS/XS + flags) exercise the full double-buffered persistence matrix (binary + jText + SQL + pure in-memory) via **module imports**. See [tests/](tests/) and [scripts/ts-test](scripts/ts-test).
+- **Linux Mint 22.0 (OS_003 / ssd):** smoke matrix passes for **GCC 15** and **Clang 20** (113 scenarios each; 226 combined in manifest). Proof in [test-summary/OS_003/ssd/Smoke/](test-summary/OS_003/ssd/Smoke/).
+- **RHEL rows** in [FileCheckList.txt](FileCheckList.txt) are pending — run `./scripts/Build` on each target host.
 - Heavy tests (005/006/007) scale up in `SIZE=full` (50 threads × 2k events; 005/007 × 3 runs) — tuned for ~30 min dual-compiler matrix on x7k. Only the last run performs persistence on 005/007 (see the test sources).
 - Per-OS + per-disk separation: results live under `test-results/OS_00n/<disk>/Smoke|xFull/` and lightweight summaries are promoted to the equivalent path under `test-summary/`. This keeps metrics from different machines and storage types (x7k = 7200 rpm HDD, 10k, ssd) cleanly separated while using short aligned directory names.
-- The lightweight summaries are automatically promoted to the tracked `test-summary/` tree so they can be committed as proof without pulling in gigabytes of logs.
+- `./scripts/Build` promotes summaries automatically after each checklist row; manual runs use [scripts/promote_summaries.sh](scripts/promote_summaries.sh).
 
 The core in-memory path + `DoubleBufferedWriter` + pluggable sinks (JText, Binary, and SQL via `SqlEventSink`) is the primary delivered capability. Advanced query/aggregation beyond `select(id)` remains future work.
 
@@ -172,10 +176,29 @@ sudo dnf install -y \
 sudo dnf install -y ninja-build
 ```
 
+### Linux Mint / Ubuntu 24.04+
+
+Noble (Mint 22.x) ships **gcc-14** in official repos only. Full **C++23 module** builds need **GCC 15** — install via PPA, then point CMake at `g++-15`.
+
+**→ Step-by-step:** [Doc/linux_mint_gcc15.md](Doc/linux_mint_gcc15.md)
+
+```bash
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt install gcc-15 g++-15 libstdc++-15-dev cmake ninja-build sqlite3 libsqlite3-dev clang-20
+
+cmake -G Ninja -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_C_COMPILER=gcc-15 \
+      -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
+      -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+      ..
+```
+
+Stock **g++-14** alone is not sufficient for the full module matrix on Mint (see [test-composer/build_report.txt](test-composer/build_report.txt)).
+
 | Package | Purpose | Minimum |
 |---------|---------|---------|
 | `gcc-toolset-15*` | GCC for modules + matrix (`scl enable gcc-toolset-15`) | GCC **15** (smoke-tested: 15.2.1) |
-| `clang` | Second compiler in dual build | Clang **21** (smoke-tested: 21.1.8) |
+| `clang-20` (Mint) / `clang` (RHEL) | Second compiler in matrix | Clang **18+** minimum; **21+** on RHEL for parity |
 | `cmake` | Configure / generate | **3.26** |
 | `sqlite-devel` | SQL persist + `ts_test_cli` summarize | libsqlite3 dev headers |
 | **Ninja** | C++23 `FILE_SET cxx_modules` generator | **1.11+** (see below) |
@@ -187,11 +210,11 @@ scl enable gcc-toolset-15 -- bash          # interactive shell
 scl enable gcc-toolset-15 -- cmake ...     # one-shot configure/build
 ```
 
-**Ninja:** RHEL’s `ninja-build` package is often **1.10.x**, which CMake rejects for modules. `./scripts/build_dual_compilers.sh` auto-selects a newer Ninja when available (e.g. `~/.local/bin/ninja` from `pip install --user ninja`, or CLion’s bundled binary). Override manually if needed:
+**Ninja:** RHEL’s `ninja-build` package is often **1.10.x**, which CMake rejects for modules. `./scripts/Build` and `./scripts/build_dual_compilers.sh` both source [scripts/build_common.sh](scripts/build_common.sh) to auto-select Ninja ≥ 1.11 (e.g. `~/.local/bin/ninja`, CLion-bundled). Override manually if needed:
 
 ```bash
 export NINJA=/path/to/ninja   # must be >= 1.11
-./scripts/build_dual_compilers.sh
+./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
 ```
 
 **Repo dependencies (no extra `dnf`):** `vendor/jText` and `vendor/jacQlite` are committed — a plain clone builds in **vendored** mode. For live cross-project work, place `../jText` and `../jacQlite` next to this repo; the dual build script uses **reference** mode when siblings exist.
@@ -202,37 +225,55 @@ See [BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md](BUILD_ISSUES_AND_FIXES_FOR_OTH
 
 ## Building
 
-### Basic (in-memory only)
+### Recommended: checklist-driven (`./scripts/Build`)
+
+One platform/compiler/disk per run. Edit [FileCheckList.txt](FileCheckList.txt), then:
+
 ```bash
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
-cmake --build . -j
+# Smoke test for the first pending [ ] row
+./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
+
+# Full matrix (xFull leaf, ~30 min on x7k for heavy tests)
+./scripts/Build FileCheckList.txt --FullRebuild=Off --SmokeTest=Off --FullTest=On
 ```
 
-C++23 modules require **Ninja ≥ 1.11** (see [Dependencies](#dependencies)). The dual-compiler helper resolves Ninja and wires GCC + Clang builds.
+The script resolves Ninja (via [scripts/build_common.sh](scripts/build_common.sh)), picks the compiler for the row (Mint GCC → `g++-15`, Mint Clang → `clang++-20`, RHEL GCC → `gcc-toolset-15`), builds the full stress-test matrix in transient `build-seq/`, runs `ts_test_cli`, promotes summaries, marks the row `[x]`, and removes the build tree.
 
-**Compiler requirements:** **GCC 15+** (`gcc-toolset-15` on RHEL) and **Clang 21+**. Older compilers are rejected at configure time when persistence is enabled.
+Details: [FORWARDING.md](FORWARDING.md) · Mint toolchain: [Doc/linux_mint_gcc15.md](Doc/linux_mint_gcc15.md)
 
-### With jText + SQLite persistence (typical dev / test matrix)
+### Manual cmake (ad-hoc / debugging)
+
+C++23 modules require **Ninja ≥ 1.11** (see [Dependencies](#dependencies)).
+
+**Compiler requirements:** **GCC 15+** for full module parity (gcc-toolset-15 on RHEL, **g++-15 via PPA on Mint 22**). **Clang 18+** (`clang++-20` on Mint; 21+ preferred on RHEL). GCC 14 on Mint is below smoke-tested parity for the module graph.
+
 ```bash
-cmake -G Ninja -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON -DCMAKE_BUILD_TYPE=Debug ..
+mkdir -p build-manual && cd build-manual
+cmake -G Ninja \
+  -DCMAKE_CXX_COMPILER=g++-15 \
+  -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
+  -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+  -DCMAKE_BUILD_TYPE=Release \
+  ..
+cmake --build . --target ts_test_cli ts_store_flags -j"$(nproc)"
+cd build-manual && ./ts_test_cli run --compiler gcc --disk ssd
 ```
 
-**Vendored mode is the default** — `vendor/jText` and `vendor/jacQlite` are committed so a plain clone builds without siblings. For live cross-project dev, place **`../jText`** and **`../jacQlite`** next to this repo and run `./scripts/build_dual_compilers.sh` (uses reference mode and auto-syncs siblings → `vendor/` after each matrix binary build).
+**CMake options (Mint defaults):** `TS_STORE_GNU_RELEASE_O3=OFF` (avoids GCC 15 module ICE at `-O3`); `TS_STORE_CLANG_LTO=OFF` (avoids broken compile-only LTO links).
 
-Canonical build trees: `build-dual/gcc` and `build-dual/clang` (jtext+sqlite ON, vendored deps by default). Use the dual-compiler helper for a clean rebuild:
+### Legacy dual-compiler script (RHEL bridge)
+
 ```bash
-./scripts/build_dual_compilers.sh
+./scripts/build_dual_compilers.sh   # → build-dual/gcc, build-dual/clang
 ```
 
-**Build options and jText mode selection** are defined in:
-- [CMakeLists.txt](CMakeLists.txt) (see `TS_STORE_ENABLE_JTEXT_PERSIST` and `TS_STORE_JTEXT_MODE`)
-- [DUAL_COMPILER_BUILD.md](DUAL_COMPILER_BUILD.md) for manual instructions
+Still useful on RHEL for a one-shot gcc+clang pair. Primary workflow is `./scripts/Build`. See [DUAL_COMPILER_BUILD.md](DUAL_COMPILER_BUILD.md).
 
-Dependency mode at configure time (`TS_STORE_JTEXT_MODE`, `TS_STORE_JACQLITE_MODE`):
+**Dependency modes** (`TS_STORE_JTEXT_MODE`, `TS_STORE_JACQLITE_MODE`):
 - **`vendored`** (default) — `vendor/jText`, `vendor/jacQlite`
-- **`reference`** — live siblings `../jText`, `../jacQlite` (used automatically by `build_dual_compilers.sh` when siblings exist)
+- **`reference`** — live siblings `../jText`, `../jacQlite` (auto-selected by `scripts/Build` when siblings exist)
 
-[scripts/Sync_dependencies.sh](scripts/Sync_dependencies.sh) copies siblings → `vendor/` (`--sync-all`). Runs automatically after matrix binary builds when siblings are present.
+[scripts/Sync_dependencies.sh](scripts/Sync_dependencies.sh) copies siblings → `vendor/` (`--sync-all`).
 
 ---
 
@@ -274,7 +315,7 @@ See `get_test_params()` / `build_scenario_list()` in [modules/jac.test_framework
   - Full details for the run (including the assigned ID) are written to `OS_INFO.txt` inside the leaf directory.
   - You can force a specific ID with `OS_ID=OS_001` in params or `--os-id` on the CLI (override kept for debugging, weird containers/WSL/CI, migration, etc.).
   This design keeps all directory names short for perfect vertical alignment (padded OS_00n + 3-char disks x7k/10k/ssd + 5-char sizes) while automatically tracking which real OS each result set came from across machines. The promotion script mirrors the structure under `test-summary/`. (Padded form chosen so the framework can scale if it is successful across many OS variants.)
-- `./scripts/run_all_tests.sh` (wrapper) runs gcc+clang sequentially and then `promote_summaries.sh --all`. Direct `ts_test_cli run` does **not** promote — run `./scripts/promote_summaries.sh --all` yourself after a good matrix.
+- `./scripts/Build` promotes after each checklist row. `./scripts/run_all_tests.sh` (legacy) runs gcc+clang from `build-dual/` and promotes. Direct `ts_test_cli run` does **not** promote — run `./scripts/promote_summaries.sh --all` yourself after a manual matrix run.
 
 View raw logs (example — current nested layout):
 ```bash
@@ -314,15 +355,20 @@ Pure binary (no jText) examples and benchmarks are always available even without
 
 ## Project Layout (key parts)
 
+See [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md) for diagrams and the full structural map. Key directories:
+
 - [modules/jac.ts_store/](modules/jac.ts_store/) — C++23 modules (`config`, `flags`, `ansi`, `core`, `impl.testing`, `test_options`, `persistence.{common,binary,jtext,sql,writer}`)
 - [modules/jac.test_framework/](modules/jac.test_framework/) + [modules/jac.report/](modules/jac.report/) — matrix runner and summarization
 - [include/beman/ts_store/ts_store_headers/](include/beman/ts_store/ts_store_headers/) — implementation headers (included by module units; prefer `import` in application code)
 - [tests/ts_store_00N/](tests/) — the numbered stress test suites (001–007 TS/XS + flags unit test)
 - [tests/test_params.txt](tests/test_params.txt) — controls `SIZE` (smoke/full), `DISK_TYPE`, selected tests, and `OS_ID`
-- [scripts/ts-test](scripts/ts-test) — thin wrapper around the C++ `ts_test_cli` tool
-- Legacy: [scripts/run_all_tests.sh](scripts/run_all_tests.sh) (still works)
-- [scripts/promote_summaries.sh](scripts/promote_summaries.sh) — copies lightweight summaries out of `test-results/` into trackable `test-summary/`
-- [scripts/build_dual_compilers.sh](scripts/build_dual_compilers.sh) + [scripts/Sync_dependencies.sh](scripts/Sync_dependencies.sh) — build & vendoring helpers
+- [scripts/Build](scripts/Build) + [FileCheckList.txt](FileCheckList.txt) — **primary** checklist-driven build + test + promote
+- [scripts/ts-test](scripts/ts-test) — thin wrapper around `ts_test_cli` (searches common build dirs)
+- [scripts/promote_summaries.sh](scripts/promote_summaries.sh) — `test-results/` → `test-summary/`
+- [scripts/build_common.sh](scripts/build_common.sh) — Ninja ≥ 1.11 resolution
+- Legacy: [scripts/build_dual_compilers.sh](scripts/build_dual_compilers.sh), [scripts/run_all_tests.sh](scripts/run_all_tests.sh)
+- [scripts/Sync_dependencies.sh](scripts/Sync_dependencies.sh) — siblings → `vendor/`
+- [FORWARDING.md](FORWARDING.md) — sequential build design and current checklist status
 - [examples/](examples/) — demos, throughput benchmarks, and persistence examples
 - [tools/jtext_cli/](tools/jtext_cli/) — jText CLI tools (process / retrieve)
 - [tools/test_cli/](tools/test_cli/) — C++ test matrix CLI tool (`ts_test_cli` - the recommended way to drive the full test suite)
@@ -337,7 +383,7 @@ Pure binary (no jText) examples and benchmarks are always available even without
 - `SqlEventSink` exists and is in the stress matrix, but SQL persistence is optional at configure time and less battle-tested than jText/Binary on every OS leaf.
 - No rotation, compaction, or retention policy on the persisted side.
 - Query/aggregation beyond `select(id)` is not implemented at runtime.
-- Smoke matrix evidence is from **RHEL 9.8 + GCC 15.2.1 + Clang 21.1.8** only. Other platforms need their own run + promote.
+- Smoke matrix on **Linux Mint 22.0 / ssd** is proven for **GCC 15** and **Clang 20**. RHEL checklist rows still need runs on target hardware.
 - No automated CI yet — regression proof is manual smoke + promoted `test-summary/` commits.
 
 ---

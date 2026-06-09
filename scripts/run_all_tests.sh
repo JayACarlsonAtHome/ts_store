@@ -11,7 +11,8 @@
 #   ./scripts/run_all_tests.sh --compiler gcc --disk x7k
 #   ./scripts/run_all_tests.sh --compiler all --disk ssd --os-id OS_003
 #
-# Requires: ./scripts/build_dual_compilers.sh (build-dual/{gcc,clang}/ts_test_cli)
+# Requires ts_test_cli in a build tree. Primary path: ./scripts/Build (build-seq/).
+# Legacy: ./scripts/build_dual_compilers.sh (build-dual/{gcc,clang}/ts_test_cli)
 #
 set -euo pipefail
 

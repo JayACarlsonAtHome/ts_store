@@ -44,8 +44,8 @@
 #
 # If no OS_ID (auto or override), the older flat layout test-results/<DISK_TYPE>/ is used.
 DISK_TYPE=x7k
-SIZE=full
-OS_ID=OS_003   # smoke for fake OS3 (ssd)
+SIZE=smoke
+OS_ID=OS_003  
 001=x
 002=x
 003=x

@@ -25,7 +25,7 @@ void print_usage() {
               << "  clean      Clean results\n\n"
               << "Examples:\n"
               << "  ./ts_test_cli run --compiler gcc --disk ssd\n"
-              << "  (After ./scripts/build_dual_compilers.sh: cd build-dual/gcc && ./ts_test_cli run --disk ssd)\n"
+              << "  (After ./scripts/Build: run from build-seq/<platform>-<compiler>/)\n"
               << "  ./ts_test_cli run --help\n";
 }
 
