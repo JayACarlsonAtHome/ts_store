@@ -1,0 +1,134 @@
+//File:    /home/jay/git/ts_store/test-results/OS_003/clang/ssd/Smoke/run_manifest.jtext
+//Date:    2026-06-09
+//Purpose: ts_store test matrix run manifest
+//Related: type=ts_store table=ts_run_manifest
+//
+# JText File - created 2026-06-09T23:18:00Z
+# Purpose - ts_store test matrix run manifest
+# Case: Sensitive
+# Table Name: ts_run_manifest
+
+-- RunMeta --
+
+# Fields: ../../../../../tests/jtext_includes/run_manifest_runmeta_fields.jtFlds
+
+1. #|# OS_003|ssd|Smoke|2026-06-09T23:18:00Z|clang|113|113|0
+
+-- Scenarios --
+
+# Fields: ../../../../../tests/jtext_includes/run_manifest_scenarios_fields.jtFlds
+
+  1. #|# TS_STORE_TEST_001_TS|clang|binary|off|100|0.014|PASS|binary_logs/TS_STORE_TEST_001_TS/clang_binary_off.log
+  2. #|# TS_STORE_TEST_001_TS|clang|binary|on|100|0.016|PASS|binary_logs/TS_STORE_TEST_001_TS/clang_binary_on.log
+  3. #|# TS_STORE_TEST_001_TS|clang|jtext|off|100|0.014|PASS|jText_logs/TS_STORE_TEST_001_TS/clang_jtext_off.log
+  4. #|# TS_STORE_TEST_001_TS|clang|jtext|on|100|0.013|PASS|jText_logs/TS_STORE_TEST_001_TS/clang_jtext_on.log
+  5. #|# TS_STORE_TEST_001_TS|clang|none|off|100|0.012|PASS|inmem_logs/TS_STORE_TEST_001_TS/clang_none_off.log
+  6. #|# TS_STORE_TEST_001_TS|clang|none|on|100|0.011|PASS|inmem_logs/TS_STORE_TEST_001_TS/clang_none_on.log
+  7. #|# TS_STORE_TEST_001_TS|clang|sql|off|100|0.013|PASS|sql_logs/TS_STORE_TEST_001_TS/clang_sql_off.log
+  8. #|# TS_STORE_TEST_001_TS|clang|sql|on|100|0.030|PASS|sql_logs/TS_STORE_TEST_001_TS/clang_sql_on.log
+  9. #|# TS_STORE_TEST_001_XS|clang|binary|off|100|0.014|PASS|binary_logs/TS_STORE_TEST_001_XS/clang_binary_off.log
+ 10. #|# TS_STORE_TEST_001_XS|clang|binary|on|100|0.016|PASS|binary_logs/TS_STORE_TEST_001_XS/clang_binary_on.log
+ 11. #|# TS_STORE_TEST_001_XS|clang|jtext|off|100|0.013|PASS|jText_logs/TS_STORE_TEST_001_XS/clang_jtext_off.log
+ 12. #|# TS_STORE_TEST_001_XS|clang|jtext|on|100|0.012|PASS|jText_logs/TS_STORE_TEST_001_XS/clang_jtext_on.log
+ 13. #|# TS_STORE_TEST_001_XS|clang|none|off|100|0.011|PASS|inmem_logs/TS_STORE_TEST_001_XS/clang_none_off.log
+ 14. #|# TS_STORE_TEST_001_XS|clang|none|on|100|0.012|PASS|inmem_logs/TS_STORE_TEST_001_XS/clang_none_on.log
+ 15. #|# TS_STORE_TEST_001_XS|clang|sql|off|100|0.013|PASS|sql_logs/TS_STORE_TEST_001_XS/clang_sql_off.log
+ 16. #|# TS_STORE_TEST_001_XS|clang|sql|on|100|0.029|PASS|sql_logs/TS_STORE_TEST_001_XS/clang_sql_on.log
+ 17. #|# TS_STORE_TEST_002_TS|clang|binary|off|100|0.012|PASS|binary_logs/TS_STORE_TEST_002_TS/clang_binary_off.log
+ 18. #|# TS_STORE_TEST_002_TS|clang|binary|on|100|0.014|PASS|binary_logs/TS_STORE_TEST_002_TS/clang_binary_on.log
+ 19. #|# TS_STORE_TEST_002_TS|clang|jtext|off|100|0.010|PASS|jText_logs/TS_STORE_TEST_002_TS/clang_jtext_off.log
+ 20. #|# TS_STORE_TEST_002_TS|clang|jtext|on|100|0.011|PASS|jText_logs/TS_STORE_TEST_002_TS/clang_jtext_on.log
+ 21. #|# TS_STORE_TEST_002_TS|clang|none|off|100|0.009|PASS|inmem_logs/TS_STORE_TEST_002_TS/clang_none_off.log
+ 22. #|# TS_STORE_TEST_002_TS|clang|none|on|100|0.008|PASS|inmem_logs/TS_STORE_TEST_002_TS/clang_none_on.log
+ 23. #|# TS_STORE_TEST_002_TS|clang|sql|off|100|0.010|PASS|sql_logs/TS_STORE_TEST_002_TS/clang_sql_off.log
+ 24. #|# TS_STORE_TEST_002_TS|clang|sql|on|100|0.025|PASS|sql_logs/TS_STORE_TEST_002_TS/clang_sql_on.log
+ 25. #|# TS_STORE_TEST_002_XS|clang|binary|off|100|0.011|PASS|binary_logs/TS_STORE_TEST_002_XS/clang_binary_off.log
+ 26. #|# TS_STORE_TEST_002_XS|clang|binary|on|100|0.012|PASS|binary_logs/TS_STORE_TEST_002_XS/clang_binary_on.log
+ 27. #|# TS_STORE_TEST_002_XS|clang|jtext|off|100|0.009|PASS|jText_logs/TS_STORE_TEST_002_XS/clang_jtext_off.log
+ 28. #|# TS_STORE_TEST_002_XS|clang|jtext|on|100|0.010|PASS|jText_logs/TS_STORE_TEST_002_XS/clang_jtext_on.log
+ 29. #|# TS_STORE_TEST_002_XS|clang|none|off|100|0.010|PASS|inmem_logs/TS_STORE_TEST_002_XS/clang_none_off.log
+ 30. #|# TS_STORE_TEST_002_XS|clang|none|on|100|0.008|PASS|inmem_logs/TS_STORE_TEST_002_XS/clang_none_on.log
+ 31. #|# TS_STORE_TEST_002_XS|clang|sql|off|100|0.010|PASS|sql_logs/TS_STORE_TEST_002_XS/clang_sql_off.log
+ 32. #|# TS_STORE_TEST_002_XS|clang|sql|on|100|0.027|PASS|sql_logs/TS_STORE_TEST_002_XS/clang_sql_on.log
+ 33. #|# TS_STORE_TEST_003_TS|clang|binary|off|100|0.012|PASS|binary_logs/TS_STORE_TEST_003_TS/clang_binary_off.log
+ 34. #|# TS_STORE_TEST_003_TS|clang|binary|on|100|0.014|PASS|binary_logs/TS_STORE_TEST_003_TS/clang_binary_on.log
+ 35. #|# TS_STORE_TEST_003_TS|clang|jtext|off|100|0.012|PASS|jText_logs/TS_STORE_TEST_003_TS/clang_jtext_off.log
+ 36. #|# TS_STORE_TEST_003_TS|clang|jtext|on|100|0.011|PASS|jText_logs/TS_STORE_TEST_003_TS/clang_jtext_on.log
+ 37. #|# TS_STORE_TEST_003_TS|clang|none|off|100|0.010|PASS|inmem_logs/TS_STORE_TEST_003_TS/clang_none_off.log
+ 38. #|# TS_STORE_TEST_003_TS|clang|none|on|100|0.011|PASS|inmem_logs/TS_STORE_TEST_003_TS/clang_none_on.log
+ 39. #|# TS_STORE_TEST_003_TS|clang|sql|off|100|0.014|PASS|sql_logs/TS_STORE_TEST_003_TS/clang_sql_off.log
+ 40. #|# TS_STORE_TEST_003_TS|clang|sql|on|100|0.030|PASS|sql_logs/TS_STORE_TEST_003_TS/clang_sql_on.log
+ 41. #|# TS_STORE_TEST_003_XS|clang|binary|off|100|0.012|PASS|binary_logs/TS_STORE_TEST_003_XS/clang_binary_off.log
+ 42. #|# TS_STORE_TEST_003_XS|clang|binary|on|100|0.016|PASS|binary_logs/TS_STORE_TEST_003_XS/clang_binary_on.log
+ 43. #|# TS_STORE_TEST_003_XS|clang|jtext|off|100|0.006|PASS|jText_logs/TS_STORE_TEST_003_XS/clang_jtext_off.log
+ 44. #|# TS_STORE_TEST_003_XS|clang|jtext|on|100|0.008|PASS|jText_logs/TS_STORE_TEST_003_XS/clang_jtext_on.log
+ 45. #|# TS_STORE_TEST_003_XS|clang|none|off|100|0.006|PASS|inmem_logs/TS_STORE_TEST_003_XS/clang_none_off.log
+ 46. #|# TS_STORE_TEST_003_XS|clang|none|on|100|0.006|PASS|inmem_logs/TS_STORE_TEST_003_XS/clang_none_on.log
+ 47. #|# TS_STORE_TEST_003_XS|clang|sql|off|100|0.007|PASS|sql_logs/TS_STORE_TEST_003_XS/clang_sql_off.log
+ 48. #|# TS_STORE_TEST_003_XS|clang|sql|on|100|0.021|PASS|sql_logs/TS_STORE_TEST_003_XS/clang_sql_on.log
+ 49. #|# TS_STORE_TEST_004_TS|clang|binary|off|100|0.011|PASS|binary_logs/TS_STORE_TEST_004_TS/clang_binary_off.log
+ 50. #|# TS_STORE_TEST_004_TS|clang|binary|on|100|0.011|PASS|binary_logs/TS_STORE_TEST_004_TS/clang_binary_on.log
+ 51. #|# TS_STORE_TEST_004_TS|clang|jtext|off|100|0.012|PASS|jText_logs/TS_STORE_TEST_004_TS/clang_jtext_off.log
+ 52. #|# TS_STORE_TEST_004_TS|clang|jtext|on|100|0.011|PASS|jText_logs/TS_STORE_TEST_004_TS/clang_jtext_on.log
+ 53. #|# TS_STORE_TEST_004_TS|clang|none|off|100|0.012|PASS|inmem_logs/TS_STORE_TEST_004_TS/clang_none_off.log
+ 54. #|# TS_STORE_TEST_004_TS|clang|none|on|100|0.010|PASS|inmem_logs/TS_STORE_TEST_004_TS/clang_none_on.log
+ 55. #|# TS_STORE_TEST_004_TS|clang|sql|off|100|0.012|PASS|sql_logs/TS_STORE_TEST_004_TS/clang_sql_off.log
+ 56. #|# TS_STORE_TEST_004_TS|clang|sql|on|100|0.027|PASS|sql_logs/TS_STORE_TEST_004_TS/clang_sql_on.log
+ 57. #|# TS_STORE_TEST_004_XS|clang|binary|off|100|0.013|PASS|binary_logs/TS_STORE_TEST_004_XS/clang_binary_off.log
+ 58. #|# TS_STORE_TEST_004_XS|clang|binary|on|100|0.016|PASS|binary_logs/TS_STORE_TEST_004_XS/clang_binary_on.log
+ 59. #|# TS_STORE_TEST_004_XS|clang|jtext|off|100|0.015|PASS|jText_logs/TS_STORE_TEST_004_XS/clang_jtext_off.log
+ 60. #|# TS_STORE_TEST_004_XS|clang|jtext|on|100|0.011|PASS|jText_logs/TS_STORE_TEST_004_XS/clang_jtext_on.log
+ 61. #|# TS_STORE_TEST_004_XS|clang|none|off|100|0.010|PASS|inmem_logs/TS_STORE_TEST_004_XS/clang_none_off.log
+ 62. #|# TS_STORE_TEST_004_XS|clang|none|on|100|0.010|PASS|inmem_logs/TS_STORE_TEST_004_XS/clang_none_on.log
+ 63. #|# TS_STORE_TEST_004_XS|clang|sql|off|100|0.014|PASS|sql_logs/TS_STORE_TEST_004_XS/clang_sql_off.log
+ 64. #|# TS_STORE_TEST_004_XS|clang|sql|on|100|0.028|PASS|sql_logs/TS_STORE_TEST_004_XS/clang_sql_on.log
+ 65. #|# TS_STORE_TEST_005_TS|clang|binary|off|1000|0.014|PASS|binary_logs/TS_STORE_TEST_005_TS/clang_binary_off.log
+ 66. #|# TS_STORE_TEST_005_TS|clang|binary|on|1000|0.019|PASS|binary_logs/TS_STORE_TEST_005_TS/clang_binary_on.log
+ 67. #|# TS_STORE_TEST_005_TS|clang|jtext|off|1000|0.013|PASS|jText_logs/TS_STORE_TEST_005_TS/clang_jtext_off.log
+ 68. #|# TS_STORE_TEST_005_TS|clang|jtext|on|1000|0.013|PASS|jText_logs/TS_STORE_TEST_005_TS/clang_jtext_on.log
+ 69. #|# TS_STORE_TEST_005_TS|clang|none|off|1000|0.008|PASS|inmem_logs/TS_STORE_TEST_005_TS/clang_none_off.log
+ 70. #|# TS_STORE_TEST_005_TS|clang|none|on|1000|0.009|PASS|inmem_logs/TS_STORE_TEST_005_TS/clang_none_on.log
+ 71. #|# TS_STORE_TEST_005_TS|clang|sql|off|1000|0.014|PASS|sql_logs/TS_STORE_TEST_005_TS/clang_sql_off.log
+ 72. #|# TS_STORE_TEST_005_TS|clang|sql|on|1000|0.017|PASS|sql_logs/TS_STORE_TEST_005_TS/clang_sql_on.log
+ 73. #|# TS_STORE_TEST_005_XS|clang|binary|off|1000|0.013|PASS|binary_logs/TS_STORE_TEST_005_XS/clang_binary_off.log
+ 74. #|# TS_STORE_TEST_005_XS|clang|binary|on|1000|0.016|PASS|binary_logs/TS_STORE_TEST_005_XS/clang_binary_on.log
+ 75. #|# TS_STORE_TEST_005_XS|clang|jtext|off|1000|0.012|PASS|jText_logs/TS_STORE_TEST_005_XS/clang_jtext_off.log
+ 76. #|# TS_STORE_TEST_005_XS|clang|jtext|on|1000|0.011|PASS|jText_logs/TS_STORE_TEST_005_XS/clang_jtext_on.log
+ 77. #|# TS_STORE_TEST_005_XS|clang|none|off|1000|0.010|PASS|inmem_logs/TS_STORE_TEST_005_XS/clang_none_off.log
+ 78. #|# TS_STORE_TEST_005_XS|clang|none|on|1000|0.010|PASS|inmem_logs/TS_STORE_TEST_005_XS/clang_none_on.log
+ 79. #|# TS_STORE_TEST_005_XS|clang|sql|off|1000|0.012|PASS|sql_logs/TS_STORE_TEST_005_XS/clang_sql_off.log
+ 80. #|# TS_STORE_TEST_005_XS|clang|sql|on|1000|0.021|PASS|sql_logs/TS_STORE_TEST_005_XS/clang_sql_on.log
+ 81. #|# TS_STORE_TEST_006_TS|clang|binary|off|1000|0.035|PASS|binary_logs/TS_STORE_TEST_006_TS/clang_binary_off.log
+ 82. #|# TS_STORE_TEST_006_TS|clang|binary|on|1000|0.037|PASS|binary_logs/TS_STORE_TEST_006_TS/clang_binary_on.log
+ 83. #|# TS_STORE_TEST_006_TS|clang|jtext|off|1000|0.029|PASS|jText_logs/TS_STORE_TEST_006_TS/clang_jtext_off.log
+ 84. #|# TS_STORE_TEST_006_TS|clang|jtext|on|1000|0.038|PASS|jText_logs/TS_STORE_TEST_006_TS/clang_jtext_on.log
+ 85. #|# TS_STORE_TEST_006_TS|clang|none|off|1000|0.029|PASS|inmem_logs/TS_STORE_TEST_006_TS/clang_none_off.log
+ 86. #|# TS_STORE_TEST_006_TS|clang|none|on|1000|0.026|PASS|inmem_logs/TS_STORE_TEST_006_TS/clang_none_on.log
+ 87. #|# TS_STORE_TEST_006_TS|clang|sql|off|1000|0.038|PASS|sql_logs/TS_STORE_TEST_006_TS/clang_sql_off.log
+ 88. #|# TS_STORE_TEST_006_TS|clang|sql|on|1000|0.044|PASS|sql_logs/TS_STORE_TEST_006_TS/clang_sql_on.log
+ 89. #|# TS_STORE_TEST_006_XS|clang|binary|off|1000|0.037|PASS|binary_logs/TS_STORE_TEST_006_XS/clang_binary_off.log
+ 90. #|# TS_STORE_TEST_006_XS|clang|binary|on|1000|0.044|PASS|binary_logs/TS_STORE_TEST_006_XS/clang_binary_on.log
+ 91. #|# TS_STORE_TEST_006_XS|clang|jtext|off|1000|0.029|PASS|jText_logs/TS_STORE_TEST_006_XS/clang_jtext_off.log
+ 92. #|# TS_STORE_TEST_006_XS|clang|jtext|on|1000|0.035|PASS|jText_logs/TS_STORE_TEST_006_XS/clang_jtext_on.log
+ 93. #|# TS_STORE_TEST_006_XS|clang|none|off|1000|0.026|PASS|inmem_logs/TS_STORE_TEST_006_XS/clang_none_off.log
+ 94. #|# TS_STORE_TEST_006_XS|clang|none|on|1000|0.024|PASS|inmem_logs/TS_STORE_TEST_006_XS/clang_none_on.log
+ 95. #|# TS_STORE_TEST_006_XS|clang|sql|off|1000|0.030|PASS|sql_logs/TS_STORE_TEST_006_XS/clang_sql_off.log
+ 96. #|# TS_STORE_TEST_006_XS|clang|sql|on|1000|0.043|PASS|sql_logs/TS_STORE_TEST_006_XS/clang_sql_on.log
+ 97. #|# TS_STORE_TEST_007_TS|clang|binary|off|1000|0.013|PASS|binary_logs/TS_STORE_TEST_007_TS/clang_binary_off.log
+ 98. #|# TS_STORE_TEST_007_TS|clang|binary|on|1000|0.014|PASS|binary_logs/TS_STORE_TEST_007_TS/clang_binary_on.log
+ 99. #|# TS_STORE_TEST_007_TS|clang|jtext|off|1000|0.012|PASS|jText_logs/TS_STORE_TEST_007_TS/clang_jtext_off.log
+100. #|# TS_STORE_TEST_007_TS|clang|jtext|on|1000|0.012|PASS|jText_logs/TS_STORE_TEST_007_TS/clang_jtext_on.log
+101. #|# TS_STORE_TEST_007_TS|clang|none|off|1000|0.008|PASS|inmem_logs/TS_STORE_TEST_007_TS/clang_none_off.log
+102. #|# TS_STORE_TEST_007_TS|clang|none|on|1000|0.009|PASS|inmem_logs/TS_STORE_TEST_007_TS/clang_none_on.log
+103. #|# TS_STORE_TEST_007_TS|clang|sql|off|1000|0.013|PASS|sql_logs/TS_STORE_TEST_007_TS/clang_sql_off.log
+104. #|# TS_STORE_TEST_007_TS|clang|sql|on|1000|0.028|PASS|sql_logs/TS_STORE_TEST_007_TS/clang_sql_on.log
+105. #|# TS_STORE_TEST_007_XS|clang|binary|off|1000|0.014|PASS|binary_logs/TS_STORE_TEST_007_XS/clang_binary_off.log
+106. #|# TS_STORE_TEST_007_XS|clang|binary|on|1000|0.014|PASS|binary_logs/TS_STORE_TEST_007_XS/clang_binary_on.log
+107. #|# TS_STORE_TEST_007_XS|clang|jtext|off|1000|0.012|PASS|jText_logs/TS_STORE_TEST_007_XS/clang_jtext_off.log
+108. #|# TS_STORE_TEST_007_XS|clang|jtext|on|1000|0.011|PASS|jText_logs/TS_STORE_TEST_007_XS/clang_jtext_on.log
+109. #|# TS_STORE_TEST_007_XS|clang|none|off|1000|0.009|PASS|inmem_logs/TS_STORE_TEST_007_XS/clang_none_off.log
+110. #|# TS_STORE_TEST_007_XS|clang|none|on|1000|0.009|PASS|inmem_logs/TS_STORE_TEST_007_XS/clang_none_on.log
+111. #|# TS_STORE_TEST_007_XS|clang|sql|off|1000|0.012|PASS|sql_logs/TS_STORE_TEST_007_XS/clang_sql_off.log
+112. #|# TS_STORE_TEST_007_XS|clang|sql|on|1000|0.028|PASS|sql_logs/TS_STORE_TEST_007_XS/clang_sql_on.log
+113. #|# TS_STORE_TEST_flags|clang|unit|off|1|0.005|PASS|unit_logs/TS_STORE_TEST_flags/clang_unit_off.log
+
