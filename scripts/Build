@@ -76,15 +76,10 @@ resolve_compiler() {
       CXX_COMPILER="g++-15"
       C_COMPILER="gcc-15"
     elif [[ "$platform_field" == RHEL* ]]; then
-      if command -v scl >/dev/null 2>&1 && [[ -x /opt/rh/gcc-toolset-15/root/usr/bin/g++ ]]; then
-        CMAKE_WRAPPER=(scl enable gcc-toolset-15 --)
-        CXX_COMPILER="/opt/rh/gcc-toolset-15/root/usr/bin/g++"
-        C_COMPILER="/opt/rh/gcc-toolset-15/root/usr/bin/gcc"
-      elif command -v g++-15 >/dev/null 2>&1; then
-        CXX_COMPILER="g++-15"
-        C_COMPILER="gcc-15"
+      if ts_store_resolve_gcc_toolset_15 CMAKE_WRAPPER CXX_COMPILER C_COMPILER; then
+        :
       else
-        echo "ERROR: RHEL GCC row requires gcc-toolset-15 (scl) or g++-15 on PATH." >&2
+        echo "ERROR: RHEL GCC row requires gcc-toolset-15 (gcc-toolset-15-env on RHEL 10+, scl on RHEL 9) or g++-15 on PATH." >&2
         return 1
       fi
     elif command -v g++-15 >/dev/null 2>&1; then
@@ -127,9 +122,16 @@ resolve_compiler() {
     return 1
   fi
 
-  if [[ -n "$CXX_COMPILER" ]] && ! command -v "$CXX_COMPILER" >/dev/null 2>&1 && [[ ! -x "$CXX_COMPILER" ]]; then
-    echo "ERROR: compiler not found: $CXX_COMPILER" >&2
-    return 1
+  if [[ -n "$CXX_COMPILER" ]]; then
+    if ((${#CMAKE_WRAPPER[@]} > 0)); then
+      if ! "${CMAKE_WRAPPER[@]}" "$CXX_COMPILER" --version >/dev/null 2>&1; then
+        echo "ERROR: compiler not found via ${CMAKE_WRAPPER[*]} $CXX_COMPILER" >&2
+        return 1
+      fi
+    elif ! command -v "$CXX_COMPILER" >/dev/null 2>&1 && [[ ! -x "$CXX_COMPILER" ]]; then
+      echo "ERROR: compiler not found: $CXX_COMPILER" >&2
+      return 1
+    fi
   fi
 }
 

@@ -9,6 +9,63 @@
 ts_store_ninja_minimum_major=1
 ts_store_ninja_minimum_minor=11
 
+# Return RHEL major version (e.g. 9, 10) from /etc/os-release, or 0 if not RHEL-like.
+ts_store_rhel_major_version() {
+    if [[ ! -r /etc/os-release ]]; then
+        echo 0
+        return
+    fi
+
+    local ID VERSION_ID
+    # shellcheck source=/dev/null
+    source /etc/os-release
+    case "${ID:-}" in
+        rhel|centos|rocky|almalinux)
+            echo "${VERSION_ID%%.*}"
+            ;;
+        *)
+            echo 0
+            ;;
+    esac
+}
+
+# Resolve GCC Toolset 15: RHEL 10+ uses gcc-toolset-15-env; RHEL 9 uses scl.
+# Sets nameref outputs: wrapper (array), cxx, cc. Returns 0 on success.
+ts_store_resolve_gcc_toolset_15() {
+    local -n _wrapper=$1
+    local -n _cxx=$2
+    local -n _cc=$3
+
+    _wrapper=()
+    _cxx=""
+    _cc=""
+
+    local rhel_major
+    rhel_major="$(ts_store_rhel_major_version)"
+
+    if (( rhel_major >= 10 )) && command -v gcc-toolset-15-env >/dev/null 2>&1; then
+        _wrapper=(gcc-toolset-15-env)
+        _cxx="g++"
+        _cc="gcc"
+        return 0
+    fi
+
+    if command -v scl >/dev/null 2>&1 && [[ -x /opt/rh/gcc-toolset-15/root/usr/bin/g++ ]]; then
+        _wrapper=(scl enable gcc-toolset-15 --)
+        _cxx="/opt/rh/gcc-toolset-15/root/usr/bin/g++"
+        _cc="/opt/rh/gcc-toolset-15/root/usr/bin/gcc"
+        return 0
+    fi
+
+    if command -v g++-15 >/dev/null 2>&1; then
+        _cxx="g++-15"
+        _cc="gcc-15"
+        return 0
+    fi
+
+    return 1
+}
+
 # Return 0 when $1 is an executable ninja with version >= 1.11 (C++23 modules).
 ts_store_ninja_version_ok() {
     local ninja_bin="$1"

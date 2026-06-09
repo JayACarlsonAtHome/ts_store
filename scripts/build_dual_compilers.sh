@@ -64,15 +64,33 @@ build_with_compiler() {
     cd "$build_dir"
 
     if [[ "$compiler" == gcc-toolset-15 ]]; then
-        # Use devtoolset to get GCC 15
-        scl enable gcc-toolset-15 -- \
-            cmake "${CMAKE_NINJA_ARGS[@]}" -DCMAKE_BUILD_TYPE=Debug \
-                  -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
-                  -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
-                  "${DEPS_CMAKE_ARGS[@]}" \
-                  "$PROJECT_ROOT"
-        scl enable gcc-toolset-15 -- \
-            cmake --build . --target ts_test_cli ts_store_001_TS ts_store_001_XS ts_store_002_TS ts_store_002_XS ts_store_003_TS ts_store_003_XS ts_store_004_TS ts_store_004_XS ts_store_005_TS ts_store_005_XS ts_store_006_TS ts_store_006_XS ts_store_007_TS ts_store_007_XS ts_store_flags ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j "$(nproc)"
+        local -a gcc_wrapper=()
+        local gcc_cxx="" gcc_cc=""
+        if ! ts_store_resolve_gcc_toolset_15 gcc_wrapper gcc_cxx gcc_cc; then
+            echo "ERROR: gcc-toolset-15 not available (need gcc-toolset-15-env on RHEL 10+, scl on RHEL 9, or g++-15)." >&2
+            return 1
+        fi
+
+        run_gcc_toolset() {
+            if ((${#gcc_wrapper[@]} > 0)); then
+                "${gcc_wrapper[@]}" "$@"
+            else
+                "$@"
+            fi
+        }
+
+        local -a cmake_compiler_args=()
+        if [[ -n "$gcc_cxx" ]]; then
+            cmake_compiler_args=(-DCMAKE_CXX_COMPILER="$gcc_cxx" -DCMAKE_C_COMPILER="$gcc_cc")
+        fi
+
+        run_gcc_toolset cmake "${CMAKE_NINJA_ARGS[@]}" -DCMAKE_BUILD_TYPE=Debug \
+              "${cmake_compiler_args[@]}" \
+              -DTS_STORE_ENABLE_JTEXT_PERSIST=ON \
+              -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
+              "${DEPS_CMAKE_ARGS[@]}" \
+              "$PROJECT_ROOT"
+        run_gcc_toolset cmake --build . --target ts_test_cli ts_store_001_TS ts_store_001_XS ts_store_002_TS ts_store_002_XS ts_store_003_TS ts_store_003_XS ts_store_004_TS ts_store_004_XS ts_store_005_TS ts_store_005_XS ts_store_006_TS ts_store_006_XS ts_store_007_TS ts_store_007_XS ts_store_flags ts_store_jtext_high_throughput_test ts_store_jtext_split_demo -j "$(nproc)"
     else
         # Assume it's a direct path to clang++ or just "clang++"
         cmake "${CMAKE_NINJA_ARGS[@]}" -DCMAKE_BUILD_TYPE=Debug \
