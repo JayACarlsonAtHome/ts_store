@@ -44,19 +44,14 @@ auto strip_eol(std::string_view sv) -> std::string_view
     return sv;
 }
 
-
 auto is_blank(std::string_view sv) -> bool
 {
-    bool result = false;
     for (char c : sv) {
-        if (!is_ws(c) && c != '\n' && c != '\r') return result;
+        if (!is_ws(c) && c != '\n' && c != '\r') return false;
     }
-    result = true;
-    return result;
+    return true;
 }
 
-
-/*  --This is currently unused -- in ts_store, maybe used somewhere else?
 auto is_standard_header_comment(std::string_view sv) -> bool
 {
     auto s = trim(strip_eol(sv));
@@ -73,7 +68,6 @@ auto is_standard_header_comment(std::string_view sv) -> bool
            s.starts_with("// Related Database") ||
            s.starts_with("// Related Table");
 }
-*/
 
 auto err(file_error_kind k, std::size_t line_no, std::string msg)
     -> std::unexpected<file_error>

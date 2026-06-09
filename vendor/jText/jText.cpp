@@ -85,35 +85,39 @@ auto JTextFile::parse_header(std::string_view line) -> bool {
 
 auto JTextFile::parse_entry(std::string_view line) -> std::expected<JTextEntry, std::string> {
     if (line.size() < 4) {
-        return std::unexpected{"Missing 'N. ' prefix"};
+        return std::unexpected{"Line too short for entry"};
     }
 
-    // Parse entry number (supports multi-digit: "10. ", "123. ", etc.)
+    // Parse entry number (supports 1..N, not only single-digit)
     size_t num = 0;
     auto [ptr, ec] = std::from_chars(line.data(), line.data() + line.size(), num);
-    if (ec != std::errc{} || ptr == line.data() || *ptr != '.') {
+    if (ec != std::errc{} || ptr >= line.data() + line.size() || *ptr != '.') {
         return std::unexpected{"Invalid entry number"};
     }
-    ++ptr;
-    if (ptr >= line.data() + line.size() || *ptr != ' ') {
-        return std::unexpected{"Missing space after entry number"};
+    if (ptr + 1 >= line.data() + line.size() || ptr[1] != ' ') {
+        return std::unexpected{"Missing space after 'N.'"};
     }
-    ++ptr;
 
-    std::string_view rest(ptr, static_cast<size_t>(line.data() + line.size() - ptr));
+    std::string_view rest(ptr + 2); // after ". "
 
     JTextEntry e;
     e.number = num;
     e.delimiter = '#';
 
-    // === New Format: #X# <data> # <comment> (writer: "#<sep># <fields>") ===
-    if (rest.size() >= 3 && rest[0] == '#' && rest[2] == '#') {
+    // === Marker format: #X# ... (writer emits "#|# "; legacy uses "#X##") ===
+    size_t opener_end = 0;
+    if (rest.size() >= 4 && rest[0] == '#' && rest[3] == '#') {
+        opener_end = 4;
+    } else if (rest.size() >= 3 && rest[0] == '#' && rest[2] == '#') {
+        opener_end = 3;
+    }
+    if (opener_end > 0) {
         char level_sep = rest[1];
         bool is_flat = (level_sep == '-');
         e.level_sep = is_flat ? 0 : level_sep;
 
-        std::string_view content = rest.substr(3);
-        if (!content.empty() && content[0] == ' ') {
+        std::string_view content = rest.substr(opener_end);
+        while (!content.empty() && (content.front() == ' ' || content.front() == '\t')) {
             content.remove_prefix(1);
         }
         size_t last_hash = content.rfind('#');
@@ -228,13 +232,7 @@ auto JTextFile::parse_stream(std::ifstream& in, bool full_read, std::string_view
         if (line.empty()) continue;
 
         // Skip comment lines in header area (# or // for standardized file headers)
-        if (in_header && line.starts_with('#')) {
-            if (parse_header(trim(line.substr(1)))) {
-                continue;
-            }
-            continue;
-        }
-        if (in_header && line.starts_with("//")) {
+        if (in_header && (line.starts_with('#') || line.starts_with("//"))) {
             continue;
         }
 
@@ -248,23 +246,23 @@ auto JTextFile::parse_stream(std::ifstream& in, bool full_read, std::string_view
                 in_header = false;
                 }
         }
-        if (line == "-- EOF --") break;
-
         // Section header
         if (line == "Field List" || line == "Data Section" ||
             (line.starts_with("-- ") && line.ends_with(" --"))) {
 
             cur_section = (line.starts_with("-- "))
                 ? trim(line.substr(3, line.size() - 6))
-                : trim(line);
+                : line;
 
             if (full_read || cur_section == target_section) {
                 sections.emplace_back();
                 active = &sections.back();
-                active->name = trim(cur_section);
+                active->name = cur_section;
             }
             continue;
             }
+
+        if (line == "-- EOF --") break;
 
         // Special block
         if (line.ends_with("*** ^^^ ###")) {

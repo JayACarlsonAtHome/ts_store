@@ -2,25 +2,29 @@
 
 ## Current state
 
-`ts_store` is a C++23 module-heavy event store with jText, Binary, and SQLite persistence. The **primary build workflow** is checklist-driven: one platform/compiler/disk combo per `./scripts/Build` invocation.
+`ts_store` is a C++23 module-heavy event store with jText, Binary, and SQLite persistence. The **primary build workflow** is checklist-driven: mark the rows you want on this host with `[x]`, then run `./scripts/Build` once — it walks [FileCheckList.txt](FileCheckList.txt) top to bottom and runs every `[x]` row (skipping `[ ]`).
 
 ### Proven on Linux Mint 22.0 (OS_003 / ssd)
 
 | Checklist row | Compiler | Smoke (113 scenarios) | Notes |
 |---------------|----------|----------------------|-------|
-| `[x] GCC / Linux Mint 22.0 / ssd` | g++-15 (PPA) | PASS | Full module matrix |
-| `[x] Clang / Linux Mint 22.0 / ssd` | clang++-20 | PASS | `TS_STORE_CLANG_LTO=OFF` default (compile-only LTO broke links) |
+| GCC / Linux Mint 22.0 / ssd | g++-15 (PPA) | PASS | Full module matrix |
+| Clang / Linux Mint 22.0 / ssd | clang++-20 | PASS | `TS_STORE_CLANG_LTO=OFF` default (compile-only LTO broke links) |
 
 Promoted summaries: `test-summary/OS_003/ssd/Smoke/` (226 manifest entries = gcc + clang).
 
-### Pending (run on target hardware)
+### Other hosts (leave `[ ]` until on that machine)
+
+On a given host, mark only the rows for **that** OS/compiler/disk with `[x]`; leave everything else `[ ]`. Example rows still to prove on target hardware:
 
 ```
-[ ] GCC    / RHEL 9.6        / x7k
-[ ] Clang  / RHEL 9.6        / x7K
+[ ] GCC    / RHEL 9.8        / ssd
+[ ] Clang  / RHEL 9.8        / ssd
 [ ] GCC    / RHEL 10.2       / x7k
 [ ] Clang  / RHEL 10.2       / x7K
 ```
+
+The script **never edits** `FileCheckList.txt` — `[x]` / `[ ]` are user-selected only.
 
 ### Legacy / bridge
 
@@ -44,23 +48,32 @@ Promoted summaries: `test-summary/OS_003/ssd/Smoke/` (226 manifest entries = gcc
 | `--FullTest=On` | Run matrix with `SIZE=full` (xFull leaf) |
 | Both Off | Build only; no `ts_test_cli run` |
 
-**Per run (automatic)**
+**Checklist markers (user-edited only)**
 
-1. Parse first `[ ]` row in [FileCheckList.txt](FileCheckList.txt)
+| Marker | Meaning |
+|--------|---------|
+| `[x]` | Run this row when `./scripts/Build` is invoked |
+| `[ ]` | Skip (wrong host, not ready, run later) |
+
+The script reads top to bottom and **does not change** any marker after a run.
+
+**Per `[x]` row (automatic)**
+
+1. Read the row from [FileCheckList.txt](FileCheckList.txt) (in file order)
 2. Resolve compiler (Mint GCC → `g++-15`; Mint Clang → `clang++-20`…`18`; RHEL GCC → `gcc-toolset-15` via `scl`)
 3. `source scripts/build_common.sh` → Ninja ≥ 1.11
 4. Configure + build full matrix in `build-seq/<slug>/`
-5. Run `ts_test_cli` with generated `run_params.txt` (disk + SIZE from flags)
+5. Run `ts_test_cli` with generated `run_params.txt` (disk from row; SIZE from flags; other defaults from [tests/test_params.txt](tests/test_params.txt))
 6. `./scripts/promote_summaries.sh --disk <disk>`
-7. Mark row `[x]`; delete `build-seq/<slug>/`
+7. Delete `build-seq/<slug>/`; continue to the next line
 
-**Adding a row** — append to `FileCheckList.txt`:
+**Adding a row** — append to `FileCheckList.txt` (usually `[ ]` until you are on the target host):
 
 ```
 [ ] GCC    / Linux Mint 22.0 / 10k
 ```
 
-Use `GCC` or `Clang`, platform string (free text), disk (`ssd`, `x7k`, `10k`).
+Use `GCC` or `Clang`, platform string (free text), disk (`ssd`, `x7k`, `10k`). Mark `[x]` on the rows you want before invoking `./scripts/Build`.
 
 ---
 
@@ -68,7 +81,7 @@ Use `GCC` or `Clang`, platform string (free text), disk (`ssd`, `x7k`, `10k`).
 
 | File | Role |
 |------|------|
-| [FileCheckList.txt](FileCheckList.txt) | Human-editable build queue |
+| [FileCheckList.txt](FileCheckList.txt) | User-editable run selector (`[x]` = run, `[ ]` = skip) |
 | [scripts/Build](scripts/Build) | Sequential orchestrator |
 | [scripts/build_common.sh](scripts/build_common.sh) | Ninja resolution |
 | [scripts/promote_summaries.sh](scripts/promote_summaries.sh) | `test-results/` → `test-summary/` |
@@ -102,7 +115,7 @@ Use `GCC` or `Clang`, platform string (free text), disk (`ssd`, `x7k`, `10k`).
 
 ## Next steps
 
-1. On RHEL 9.6 / x7k: run `./scripts/Build` for GCC row, then Clang row.
-2. Repeat for RHEL 10.2 when available.
+1. On each target host: mark that host's rows `[x]`, leave others `[ ]`, then `./scripts/Build …`.
+2. Repeat for RHEL 10.2 / other disks when those machines are available.
 3. Optional: additional disks (`10k`) on Mint — add checklist rows.
-4. Eventually retire `build_dual_compilers.sh` once all checklist rows are green on their target hosts.
+4. Eventually retire `build_dual_compilers.sh` once all rows are proven on their target hosts.

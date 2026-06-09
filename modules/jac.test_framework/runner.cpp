@@ -157,11 +157,15 @@ std::string test_to_subdir_name(const std::string& test) {
 
 fs::path compute_results_base(const fs::path& project_root,
                               const std::string& os_id,
+                              const std::string& compiler,
                               const std::string& disk_type,
                               const std::string& size) {
     fs::path base = project_root / "test-results";
     if (!os_id.empty()) {
         base /= os_id;
+    }
+    if (!compiler.empty()) {
+        base /= compiler;
     }
     base /= disk_type;
     if (!os_id.empty()) {

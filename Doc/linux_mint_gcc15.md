@@ -54,14 +54,14 @@ export NINJA=~/.local/bin/ninja
 
 ## Recommended: checklist-driven build
 
-Both Mint rows are proven on **ssd** (smoke, 113 scenarios per compiler):
+Both Mint rows are proven on **ssd** (smoke, 113 scenarios per compiler). On a Mint host, mark those rows `[x]` and leave other-platform rows `[ ]`:
 
 ```
 [x] GCC    / Linux Mint 22.0 / ssd
 [x] Clang  / Linux Mint 22.0 / ssd
 ```
 
-Run the next pending row:
+Then run:
 
 ```bash
 cd ~/git/ts_store
@@ -73,7 +73,7 @@ cd ~/git/ts_store
 | `GCC / Linux Mint …` | `g++-15`, `gcc-15` |
 | `Clang / Linux Mint …` | `clang++-20` (falls back to -19, -18) |
 
-The script builds under `build-seq/`, runs smoke tests, promotes to `test-summary/`, marks the row `[x]`, and deletes the transient build tree.
+The script walks the checklist top to bottom, runs each `[x]` row, builds under `build-seq/`, runs smoke tests, promotes to `test-summary/`, and deletes the transient build tree. It does **not** change `[x]` / `[ ]` markers.
 
 Full matrix (`xFull`):
 

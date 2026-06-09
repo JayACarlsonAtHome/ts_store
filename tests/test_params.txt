@@ -27,13 +27,13 @@
 # it's useful in a real multi-machine testing framework.
 #
 # The OS_MAP.txt will contain the human list:
-#   OS_001 = RHEL 9.6
+#   OS_001 = RHEL 9.8
 #   OS_002 = RHEL 10.2
 #   OS_003 = Linux Mint
 #
-# Result directories stay short for alignment (padded OS_00n):
-#   test-results/OS_001/x7k/xFull/...
-#   test-results/OS_002/10k/Smoke/...
+# Result directories stay short for alignment (padded OS_00n + compiler leaf):
+#   test-results/OS_001/gcc/x7k/xFull/...
+#   test-results/OS_001/clang/10k/Smoke/...
 #
 # Inside every leaf directory you will also find OS_INFO.txt with the
 # full details of the OS + run.
@@ -43,9 +43,9 @@
 #   SIZE=full   -> xFull
 #
 # If no OS_ID (auto or override), the older flat layout test-results/<DISK_TYPE>/ is used.
-DISK_TYPE=x7k
+DISK_TYPE=ssd
 SIZE=smoke
-OS_ID=OS_003  
+OS_ID=OS_001  
 001=x
 002=x
 003=x

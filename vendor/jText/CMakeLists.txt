@@ -58,9 +58,7 @@ endif()
 # ────────────────────────────────────────────────────────────────
 
 add_subdirectory(src)
-if(NOT TS_STORE_BUILDING_JTEXT_TOOLS)
-    add_subdirectory(tests)
-endif()
+add_subdirectory(tests)
 
 # ────────────────────────────────────────────────────────────────
 #  Early prototype tool (jtext_process)
@@ -96,7 +94,5 @@ message(STATUS "Project:      ${PROJECT_NAME} ${PROJECT_VERSION}")
 message(STATUS "C++ standard: C++${CMAKE_CXX_STANDARD}")
 message(STATUS "Build type:   ${CMAKE_BUILD_TYPE}")
 
-if(NOT TS_STORE_BUILDING_JTEXT_TOOLS)
 add_executable(jText_test tests/test_smoke.cpp)
-endif()
 

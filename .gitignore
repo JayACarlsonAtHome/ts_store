@@ -46,7 +46,7 @@ test-results/
 
 # Promoted lightweight summaries: test-summary/README.md hub, per-leaf README.md,
 # by_test/*.md, run_manifest.jtext (see exception above). Copied by promote_summaries.sh.
-# Layout: test-summary/OS_00n/<disk>/<Smoke|xFull>/...
+# Layout: test-summary/OS_00n/<compiler>/<disk>/<Smoke|xFull>/...
 !test-summary/
 
 # SQLite slurp DBs are regeneratable from manifest (ignore everywhere)

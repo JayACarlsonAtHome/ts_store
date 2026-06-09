@@ -185,7 +185,8 @@ void write_leaf_readme(const fs::path& path,
     for (const auto& r : rows) tests.insert(r.test);
 
     std::ofstream out(path);
-    out << "# Test Results — " << meta.os_id << " / " << meta.disk << " / " << meta.size_label << "\n\n";
+    out << "# Test Results — " << meta.os_id << " / " << meta.compilers << " / "
+        << meta.disk << " / " << meta.size_label << "\n\n";
     out << "**Run (UTC):** " << meta.run_utc << "  \n";
     out << "**Compilers:** " << meta.compilers << "  \n";
     out << "**Scenarios:** " << meta.passed << "/" << meta.total << " passed";
@@ -216,6 +217,7 @@ void write_leaf_readme(const fs::path& path,
 struct HubLeaf {
     std::string rel_path;
     std::string os_id;
+    std::string compiler;
     std::string disk;
     std::string size_label;
     std::string run_utc;
@@ -243,7 +245,12 @@ std::optional<HubLeaf> hub_leaf_from_readme(const fs::path& readme_path,
     }
     std::reverse(parts.begin(), parts.end());
 
-    if (parts.size() >= 3) {
+    if (parts.size() >= 4) {
+        h.os_id = parts[0];
+        h.compiler = parts[1];
+        h.disk = parts[2];
+        h.size_label = parts[3];
+    } else if (parts.size() == 3) {
         h.os_id = parts[0];
         h.disk = parts[1];
         h.size_label = parts[2];
@@ -268,6 +275,9 @@ std::optional<HubLeaf> hub_leaf_from_readme(const fs::path& readme_path,
             if (!meta.size_label.empty()) h.size_label = meta.size_label;
             h.run_utc = meta.run_utc;
             h.compilers = meta.compilers;
+            if (h.compiler.empty() && !meta.compilers.empty()) {
+                h.compiler = meta.compilers;
+            }
             h.total = meta.total;
             h.passed = meta.passed;
             h.failed = meta.failed;
@@ -281,8 +291,8 @@ void write_hub_readme(const fs::path& hub_path, const std::vector<HubLeaf>& leav
     out << "# Test Summary Hub\n\n";
     out << "Committed lightweight results promoted from `test-results/`. "
            "Each leaf links to a per-run README with per-test detail pages under `by_test/`.\n\n";
-    out << "| OS | Disk | Size | Compilers | Scenarios | Run (UTC) | Detail |\n";
-    out << "|----|------|------|-----------|-----------|-----------|--------|\n";
+    out << "| OS | Compiler | Disk | Size | Scenarios | Run (UTC) | Detail |\n";
+    out << "|----|----------|------|------|-----------|-----------|--------|\n";
 
     for (const auto& h : leaves) {
         std::string scenarios = h.has_manifest
@@ -292,9 +302,11 @@ void write_hub_readme(const fs::path& hub_path, const std::vector<HubLeaf>& leav
             scenarios += std::format(" (**{} failed**)", h.failed);
         }
         std::string run_utc = h.run_utc.empty() ? "—" : h.run_utc;
-        std::string compilers = h.compilers.empty() ? "—" : h.compilers;
+        std::string compiler = h.compiler.empty()
+            ? (h.compilers.empty() ? "—" : h.compilers)
+            : h.compiler;
         out << std::format("| {} | {} | {} | {} | {} | {} | [README]({}/README.md) |\n",
-                           h.os_id, h.disk, h.size_label, compilers,
+                           h.os_id, compiler, h.disk, h.size_label,
                            scenarios, run_utc, h.rel_path);
     }
     out << "\n";
@@ -324,6 +336,7 @@ bool write_test_summary_hub_impl(const fs::path& project_root) {
 
     std::sort(leaves.begin(), leaves.end(), [](const HubLeaf& a, const HubLeaf& b) {
         if (a.os_id != b.os_id) return a.os_id < b.os_id;
+        if (a.compiler != b.compiler) return a.compiler < b.compiler;
         if (a.disk != b.disk) return a.disk < b.disk;
         return a.size_label < b.size_label;
     });

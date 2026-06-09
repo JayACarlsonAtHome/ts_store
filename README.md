@@ -63,9 +63,9 @@ Link the matching CMake targets (e.g. `jac_ts_store_impl_testing`) — see [CMak
 
 - **Extensively tested** — All stress tests (001–007 TS/XS + flags) exercise the full double-buffered persistence matrix (binary + jText + SQL + pure in-memory) via **module imports**. See [tests/](tests/) and [scripts/ts-test](scripts/ts-test).
 - **Linux Mint 22.0 (OS_003 / ssd):** smoke matrix passes for **GCC 15** and **Clang 20** (113 scenarios each; 226 combined in manifest). Proof in [test-summary/OS_003/ssd/Smoke/](test-summary/OS_003/ssd/Smoke/).
-- **RHEL rows** in [FileCheckList.txt](FileCheckList.txt) are pending — run `./scripts/Build` on each target host.
+- **RHEL rows** in [FileCheckList.txt](FileCheckList.txt) — on each target host, mark that host's rows `[x]` and run `./scripts/Build` (leave other rows `[ ]`).
 - Heavy tests (005/006/007) scale up in `SIZE=full` (50 threads × 2k events; 005/007 × 3 runs) — tuned for ~30 min dual-compiler matrix on x7k. Only the last run performs persistence on 005/007 (see the test sources).
-- Per-OS + per-disk separation: results live under `test-results/OS_00n/<disk>/Smoke|xFull/` and lightweight summaries are promoted to the equivalent path under `test-summary/`. This keeps metrics from different machines and storage types (x7k = 7200 rpm HDD, 10k, ssd) cleanly separated while using short aligned directory names.
+- Per-OS + per-compiler + per-disk separation: results live under `test-results/OS_00n/<compiler>/<disk>/Smoke|xFull/` and lightweight summaries are promoted to the equivalent path under `test-summary/`. GCC and Clang no longer share a leaf directory.
 - `./scripts/Build` promotes summaries automatically after each checklist row; manual runs use [scripts/promote_summaries.sh](scripts/promote_summaries.sh).
 
 The core in-memory path + `DoubleBufferedWriter` + pluggable sinks (JText, Binary, and SQL via `SqlEventSink`) is the primary delivered capability. Advanced query/aggregation beyond `select(id)` remains future work.
@@ -227,17 +227,17 @@ See [BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md](BUILD_ISSUES_AND_FIXES_FOR_OTH
 
 ### Recommended: checklist-driven (`./scripts/Build`)
 
-One platform/compiler/disk per run. Edit [FileCheckList.txt](FileCheckList.txt), then:
+Edit [FileCheckList.txt](FileCheckList.txt): **`[x]`** = run on this host, **`[ ]`** = skip. The script walks the file top to bottom, runs every `[x]` row, and **never modifies** the checklist.
 
 ```bash
-# Smoke test for the first pending [ ] row
+# Smoke test for all [x] rows (e.g. RHEL 9.8 gcc + clang on this machine)
 ./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
 
 # Full matrix (xFull leaf, ~30 min on x7k for heavy tests)
 ./scripts/Build FileCheckList.txt --FullRebuild=Off --SmokeTest=Off --FullTest=On
 ```
 
-The script resolves Ninja (via [scripts/build_common.sh](scripts/build_common.sh)), picks the compiler for the row (Mint GCC → `g++-15`, Mint Clang → `clang++-20`, RHEL GCC → `gcc-toolset-15`), builds the full stress-test matrix in transient `build-seq/`, runs `ts_test_cli`, promotes summaries, marks the row `[x]`, and removes the build tree.
+Per `[x]` row the script resolves Ninja (via [scripts/build_common.sh](scripts/build_common.sh)), picks the compiler (Mint GCC → `g++-15`, Mint Clang → `clang++-20`, RHEL GCC → `gcc-toolset-15`), builds the full stress-test matrix in transient `build-seq/`, runs `ts_test_cli`, promotes summaries, and removes the build tree.
 
 Details: [FORWARDING.md](FORWARDING.md) · Mint toolchain: [Doc/linux_mint_gcc15.md](Doc/linux_mint_gcc15.md)
 
@@ -310,7 +310,7 @@ See `get_test_params()` / `build_scenario_list()` in [modules/jac.test_framework
 ### Important current practices
 
 - `DISK_TYPE` (x7k / 10k / ssd — normalized to exactly 3 characters) keeps results for different storage hardware completely separate.
-- The runner **auto-detects** the OS (via `uname` + `/etc/os-release`) and assigns or re-uses a short padded `OS_001` / `OS_002` ... ID. This produces the nested layout `test-results/OS_001/<DISK_TYPE>/<SIZE_LABEL>/` (SIZE_LABEL = "Smoke" or "xFull"). 
+- The runner **auto-detects** the OS (via `uname` + `/etc/os-release`) and assigns or re-uses a short padded `OS_001` / `OS_002` ... ID. This produces the nested layout `test-results/OS_001/<compiler>/<DISK_TYPE>/<SIZE_LABEL>/` (SIZE_LABEL = "Smoke" or "xFull"). 
   - A visible central list is kept in `test-results/OS_MAP.txt` (e.g. `OS_001 = RHEL 9.6`).
   - Full details for the run (including the assigned ID) are written to `OS_INFO.txt` inside the leaf directory.
   - You can force a specific ID with `OS_ID=OS_001` in params or `--os-id` on the CLI (override kept for debugging, weird containers/WSL/CI, migration, etc.).
@@ -383,7 +383,7 @@ See [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md) for diagrams and the full structu
 - `SqlEventSink` exists and is in the stress matrix, but SQL persistence is optional at configure time and less battle-tested than jText/Binary on every OS leaf.
 - No rotation, compaction, or retention policy on the persisted side.
 - Query/aggregation beyond `select(id)` is not implemented at runtime.
-- Smoke matrix on **Linux Mint 22.0 / ssd** is proven for **GCC 15** and **Clang 20**. RHEL checklist rows still need runs on target hardware.
+- Smoke matrix on **Linux Mint 22.0 / ssd** is proven for **GCC 15** and **Clang 20**. RHEL rows still need runs on each target host (mark `[x]` on that host only).
 - No automated CI yet — regression proof is manual smoke + promoted `test-summary/` commits.
 
 ---

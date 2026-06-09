@@ -215,7 +215,7 @@ The primary path is no longer `build_dual_compilers.sh` for every machine. Use [
 ./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
 ```
 
-One `[ ]` row per invocation: configure in transient `build-seq/<platform>-<compiler>/`, build full matrix, run `ts_test_cli`, promote, mark `[x]`, delete build tree.
+Walks `FileCheckList.txt` top to bottom: **`[x]`** rows are built and tested; **`[ ]`** rows are skipped. Per `[x]` row: configure in transient `build-seq/<platform>-<compiler>/`, build full matrix, run `ts_test_cli`, promote, delete build tree. The checklist is **never auto-edited** — markers are user-selected only.
 
 **Mint (OS_003 / ssd):** both rows pass smoke — GCC 15 (`g++-15` PPA) and Clang 20 (`clang++-20`).
 

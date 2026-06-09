@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
             opts.compilerx, compiler_explicit, launch_dir, exe_path);
 
         std::vector<std::string> selected = get_selected_tests(params);
-        fs::path results_base = compute_results_base(project_root, params.os_id, disk_type, size);
+        auto scenarios = build_scenario_list(selected, compilers, size);
 
         std::cout << "=== ts_store Test Matrix (C++ CLI) ===\n";
         std::cout << std::format("SIZE={:<6} DISK={:<4}", size, disk_type);
@@ -99,17 +99,15 @@ int main(int argc, char** argv) {
         }
         std::cout << " COMPILERS=";
         for (auto& c : compilers) std::cout << c << " ";
-        std::cout << "\nResults: " << results_base.string() << "\n";
-        std::cout << "Selected: ";
+        std::cout << "\nSelected: ";
         for (auto& s : selected) std::cout << s << " ";
-        std::cout << "\n\n";
-
-        auto scenarios = build_scenario_list(selected, compilers, size);
-        std::cout << "Total scenarios: " << scenarios.size() << "\n\n";
+        std::cout << "\nTotal scenarios: " << scenarios.size() << "\n\n";
 
         if (opts.dry_run) {
             std::cout << "DRY-RUN:\n";
             for (const auto& s : scenarios) {
+                fs::path results_base = compute_results_base(
+                    project_root, params.os_id, s.compiler, disk_type, size);
                 fs::path log_dir = scenario_log_dir(results_base, s);
                 fs::path log_path = log_dir / (s.compiler + "_" + s.persist + "_" + s.output_mode + ".log");
                 std::cout << std::format("  {:<22} {:<6} {:<4} {:<6} t={:>3} e={:>5} r={:>2}\n",
@@ -122,50 +120,56 @@ int main(int argc, char** argv) {
             return 0;
         }
 
-        fs::create_directories(results_base);
-
-        std::vector<RunResult> run_results;
-        run_results.reserve(scenarios.size());
-
         int failed = 0;
-        for (size_t i = 0; i < scenarios.size(); ++i) {
-            const auto& scen = scenarios[i];
-            std::cout << "[" << (i+1) << "/" << scenarios.size() << "] ";
-            fs::path log_dir = scenario_log_dir(results_base, scen);
-            RunResult rr = run_scenario(scen, project_root, log_dir);
-            run_results.push_back(rr);
-            if (!rr.success) ++failed;
+        int scenario_index = 0;
+
+        for (const auto& compiler : compilers) {
+            fs::path results_base = compute_results_base(
+                project_root, params.os_id, compiler, disk_type, size);
+            std::cout << "=== Compiler: " << compiler << " ===\n";
+            std::cout << "Results: " << results_base.string() << "\n\n";
+            fs::create_directories(results_base);
+
+            std::vector<RunResult> run_results;
+            for (const auto& scen : scenarios) {
+                if (scen.compiler != compiler) continue;
+                ++scenario_index;
+                std::cout << "[" << scenario_index << "/" << scenarios.size() << "] ";
+                fs::path log_dir = scenario_log_dir(results_base, scen);
+                RunResult rr = run_scenario(scen, project_root, log_dir);
+                run_results.push_back(rr);
+                if (!rr.success) ++failed;
+            }
+
+            if (run_results.empty()) continue;
+
+            RunMeta run_meta;
+            run_meta.os_id = params.os_id;
+            run_meta.disk_type = disk_type;
+            run_meta.size_label = size_label_from_size(size);
+            run_meta.compilers_csv = compiler;
+            run_meta.total_scenarios = static_cast<int>(run_results.size());
+            run_meta.passed = 0;
+            for (const auto& rr : run_results) {
+                if (rr.success) ++run_meta.passed;
+            }
+            run_meta.failed = run_meta.total_scenarios - run_meta.passed;
+
+            std::vector<RunResult> manifest_rows;
+            for (const auto& rr : run_results) {
+                if (scenario_in_manifest_pilot(rr.scenario)) {
+                    manifest_rows.push_back(rr);
+                }
+            }
+            if (!manifest_rows.empty()) {
+                write_run_manifest_jtext(results_base, run_meta, manifest_rows);
+                summarize_results_leaf(results_base, project_root);
+            }
+            std::cout << "\n";
         }
 
-        std::cout << "\n=== Summary ===\n";
+        std::cout << "=== Summary ===\n";
         std::cout << std::format("Total:   {:>3}\nFailed:  {:>3}\n", scenarios.size(), failed);
-
-        RunMeta run_meta;
-        run_meta.os_id = params.os_id;
-        run_meta.disk_type = disk_type;
-        run_meta.size_label = size_label_from_size(size);
-        {
-            std::ostringstream cs;
-            for (size_t i = 0; i < compilers.size(); ++i) {
-                if (i) cs << ',';
-                cs << compilers[i];
-            }
-            run_meta.compilers_csv = cs.str();
-        }
-        run_meta.total_scenarios = static_cast<int>(run_results.size());
-        run_meta.passed = static_cast<int>(run_results.size()) - failed;
-        run_meta.failed = failed;
-
-        std::vector<RunResult> manifest_rows;
-        for (const auto& rr : run_results) {
-            if (scenario_in_manifest_pilot(rr.scenario)) {
-                manifest_rows.push_back(rr);
-            }
-        }
-        if (!manifest_rows.empty()) {
-            write_run_manifest_jtext(results_base, run_meta, manifest_rows);
-            summarize_results_leaf(results_base, project_root);
-        }
 
         return failed > 0 ? 1 : 0;
 
@@ -174,15 +178,18 @@ int main(int argc, char** argv) {
         fs::path project_root = find_project_root(launch_dir);
 
         std::string disk_type;
+        std::string compiler;
         fs::path params_file = "tests/test_params.txt";
         for (int i = 2; i < argc; ++i) {
             std::string arg = argv[i];
             if (arg == "--disk" && i + 1 < argc) {
                 disk_type = argv[++i];
+            } else if (arg == "--compiler" && i + 1 < argc) {
+                compiler = argv[++i];
             } else if (arg == "--params" && i + 1 < argc) {
                 params_file = argv[++i];
             } else if (arg == "--help" || arg == "-h") {
-                std::cout << "summarize options: --disk <type> --params <file>\n";
+                std::cout << "summarize options: --disk <type> --compiler <gcc|clang> --params <file>\n";
                 return 0;
             }
         }
@@ -191,7 +198,7 @@ int main(int argc, char** argv) {
         if (disk_type.empty()) disk_type = params.disk_type;
 
         fs::path results_base = compute_results_base(
-            project_root, params.os_id, disk_type, params.size);
+            project_root, params.os_id, compiler, disk_type, params.size);
 
         if (!summarize_results_leaf(results_base, project_root)) {
             return 1;

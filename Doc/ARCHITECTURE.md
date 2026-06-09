@@ -152,7 +152,7 @@ ts_store/
 
 | Path | Notes |
 |------|-------|
-| [FileCheckList.txt](../FileCheckList.txt) | Build queue: compiler / platform / disk per row |
+| [FileCheckList.txt](../FileCheckList.txt) | User-editable run selector: `[x]` = run, `[ ]` = skip (never auto-edited) |
 | [FORWARDING.md](../FORWARDING.md) | Checklist build workflow and current status |
 | [CMakeLists.txt](../CMakeLists.txt) | Targets, persist options, compiler tuning flags |
 
@@ -168,7 +168,7 @@ flowchart LR
   B[scripts/Build]
   CMAKE[cmake + ninja]
   CLI[ts_test_cli]
-  RES[test-results/OS_00n/disk/Smoke|xFull/]
+  RES[test-results/OS_00n/compiler/disk/Smoke|xFull/]
   SUM[test-summary/]
 
   FC --> B
@@ -194,7 +194,8 @@ flowchart LR
 **Result tree** (short names for alignment):
 
 ```
-test-results/OS_003/ssd/Smoke/
+test-results/OS_003/gcc/ssd/Smoke/
+test-results/OS_003/clang/ssd/Smoke/
   run_manifest.jtext      # machine-readable matrix
   README.md               # navigation hub
   by_test/*.md            # per-binary summaries
@@ -207,12 +208,13 @@ OS id (`OS_001`, `OS_002`, …) is auto-detected or overridden; mapping in `test
 
 ## Build & toolchain architecture
 
-One **platform + compiler + disk** per `./scripts/Build` run:
+`./scripts/Build` walks [FileCheckList.txt](../FileCheckList.txt) top to bottom. Each **`[x]`** row is one **platform + compiler + disk** cycle (`[ ]` rows are skipped; markers are never auto-edited):
 
 1. Transient `build-seq/<platform>-<compiler>/` (removed after success)
 2. Full matrix targets built (001–007 TS/XS, flags, `ts_test_cli`, demos)
 3. `ts_test_cli run` from build dir (binaries must be cwd-adjacent)
 4. `promote_summaries.sh` → `test-summary/`
+5. Next `[x]` row in file order, until EOF
 
 | Host | GCC row | Clang row |
 |------|---------|-----------|

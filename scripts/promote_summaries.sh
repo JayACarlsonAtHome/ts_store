@@ -5,7 +5,7 @@
 # After a test run finishes, copy manifest + markdown navigation from the
 # (git-ignored) test-results/ tree into test-summary/ for commit.
 #
-# Promoted per leaf (OS_00n/<disk>/<Smoke|xFull>/):
+# Promoted per leaf (OS_00n/<compiler>/<disk>/<Smoke|xFull>/):
 #   run_manifest.jtext, README.md, by_test/*.md
 #
 # Then regenerates test-summary/README.md hub index via ts_test_cli summarize-hub.
@@ -84,7 +84,7 @@ prune_stale_summary_tree() {
             rm -rf "$d"
             pruned=1
         fi
-    done < <(find test-summary -mindepth 3 -maxdepth 3 -type d -print0 2>/dev/null)
+    done < <(find test-summary -type d \( -name Smoke -o -name xFull \) -print0 2>/dev/null)
     if [[ $pruned -eq 1 ]]; then
         find test-summary -depth -type d -empty -delete 2>/dev/null || true
     fi
@@ -146,6 +146,7 @@ HUB_CLI=""
 for candidate in \
     "$PROJECT_ROOT"/build-seq/*/ts_test_cli \
     "$PROJECT_ROOT"/build-mint/*/ts_test_cli \
+    "$PROJECT_ROOT/build-verify/ts_test_cli" \
     "$PROJECT_ROOT/build-dual/gcc/ts_test_cli" \
     "$PROJECT_ROOT/build-dual/clang/ts_test_cli"; do
     if [[ -x "$candidate" ]]; then
