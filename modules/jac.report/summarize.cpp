@@ -165,10 +165,8 @@ void write_test_page(const fs::path& path,
         if (r.test != test_name) continue;
         std::string log_link = r.log_relpath;
         if (!log_link.empty()) {
-            fs::path full_log = results_base / r.log_relpath;
-            fs::path rel_from_page = fs::relative(full_log, path.parent_path());
-            log_link = std::format("[log]({})", rel_from_page.string());
-            log_link += " *(local)*";
+            // by_test/ is one level below the leaf; logs live at <leaf>/<log_relpath>
+            log_link = std::format("[log](../{})", r.log_relpath);
         }
         out << std::format("| {} | {} | {} | {} | {:.2f}s | {} | {} |\n",
                            r.compiler, r.persist, r.output_mode,

@@ -1,0 +1,23 @@
+=== FINAL MASSIVE TEST — 100000 entries × 3 runs ===
+Using store.clear() — fastest, most realistic reuse
+
+No persistence attached — pure in-memory hot path
+
+  sample event 42 (t=0) (0 metrics)
+[VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+  sample event 42 (t=0) (0 metrics)
+[VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+Run  3 / 3
+  sample event 42 (t=0) (0 metrics)
+[VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+PASS —     6874 µs →  14547571 ops/sec
+
+
+═══════════════════════════════════════════════════════════════
+               FINAL RESULT — 3-RUN STATISTICS            
+═══════════════════════════════════════════════════════════════
+  Fastest run        :      6769 µs  →   14773231 ops/sec
+  Slowest run        :      7506 µs  →   13322675 ops/sec
+  Average            :      7050 µs  →   14185068 ops/sec
+  (100000 events per run, 100% verified, zero corruption)
+═══════════════════════════════════════════════════════════════

@@ -1,7 +1,7 @@
-# Test Results — OS_001 / GCC / SSD / XFULL
+# Test Results — OS_001 / gcc / ssd / xFull
 
 **Run (UTC):** 2026-06-09T03:23:21Z  
-**Compilers:** GCC  
+**Compilers:** gcc  
 **Scenarios:** 113/113 passed  
 **Manifest:** [run_manifest.jtext](run_manifest.jtext)  
 
@@ -23,6 +23,6 @@
 | TS_STORE_TEST_006_XS | 8 | 8 | 0 | [by_test/TS_STORE_TEST_006_XS.md](by_test/TS_STORE_TEST_006_XS.md) |
 | TS_STORE_TEST_007_TS | 8 | 8 | 0 | [by_test/TS_STORE_TEST_007_TS.md](by_test/TS_STORE_TEST_007_TS.md) |
 | TS_STORE_TEST_007_XS | 8 | 8 | 0 | [by_test/TS_STORE_TEST_007_XS.md](by_test/TS_STORE_TEST_007_XS.md) |
-| TS_STORE_TEST_FLAGS | 1 | 1 | 0 | [by_test/TS_STORE_TEST_FLAGS.md](by_test/TS_STORE_TEST_FLAGS.md) |
+| TS_STORE_TEST_flags | 1 | 1 | 0 | [by_test/TS_STORE_TEST_flags.md](by_test/TS_STORE_TEST_flags.md) |
 
 Raw logs live under `test-results/OS_001/gcc/ssd/xFull/` (gitignored).

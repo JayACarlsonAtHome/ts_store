@@ -6,7 +6,8 @@
 # (git-ignored) test-results/ tree into test-summary/ for commit.
 #
 # Promoted per leaf (OS_00n/<compiler>/<disk>/<Smoke|xFull>/):
-#   run_manifest.jtext, README.md, by_test/*.md
+#   run_manifest.jtext, README.md, by_test/*.md, *_logs/**/*.log
+#   (logs >64KiB are promoted as head/tail excerpts so xFull leaves stay committable)
 #
 # Then regenerates test-summary/README.md hub index via ts_test_cli summarize-hub.
 #
@@ -76,6 +77,50 @@ remove_legacy_summary_files() {
 }
 
 # Drop empty placeholder leaves (no README + no manifest) and empty parents.
+# Max bytes for promoting a full .log; larger files get a head/tail excerpt.
+LOG_PROMOTE_FULL_MAX=65536
+
+promote_log_file() {
+    local src="$1"
+    local dst="$2"
+    mkdir -p "$(dirname "$dst")"
+    local sz
+    sz=$(wc -c < "$src" | tr -d ' ')
+    if (( sz <= LOG_PROMOTE_FULL_MAX )); then
+        cp -f "$src" "$dst"
+        return 0
+    fi
+    {
+        echo "# Log excerpt (${sz} bytes in test-results/; full log not committed)"
+        head -n 40 "$src"
+        echo ""
+        echo "... [truncated — see test-results/ on the runner host for full log] ..."
+        echo ""
+        tail -n 20 "$src"
+    } > "$dst"
+}
+
+promote_leaf_logs() {
+    local src_leaf="$1"
+    local dst_leaf="$2"
+    local log_src log_rel dst_log promoted=0 excerpted=0
+    while IFS= read -r -d '' log_src; do
+        log_rel=${log_src#"$src_leaf"/}
+        dst_log="$dst_leaf/$log_rel"
+        promote_log_file "$log_src" "$dst_log"
+        local sz
+        sz=$(wc -c < "$log_src" | tr -d ' ')
+        if (( sz <= LOG_PROMOTE_FULL_MAX )); then
+            promoted=$((promoted + 1))
+        else
+            excerpted=$((excerpted + 1))
+        fi
+    done < <(find "$src_leaf" -type f -name '*.log' -print0 2>/dev/null)
+    if (( promoted + excerpted > 0 )); then
+        echo "  logs: $promoted full, $excerpted excerpt(s)"
+    fi
+}
+
 prune_stale_summary_tree() {
     local pruned=0
     while IFS= read -r -d '' d; do
@@ -133,6 +178,7 @@ for rel in "${LEAVES[@]}"; do
         mkdir -p "$dst/by_test"
         cp -f "$src/by_test/"*.md "$dst/by_test/" 2>/dev/null || true
     fi
+    promote_leaf_logs "$src" "$dst"
     count=$(find "$dst" -type f 2>/dev/null | wc -l | tr -d ' ')
     echo "  -> $dst/  (copied $count files)"
     find "$dst" -type f | sed 's/^/     /'

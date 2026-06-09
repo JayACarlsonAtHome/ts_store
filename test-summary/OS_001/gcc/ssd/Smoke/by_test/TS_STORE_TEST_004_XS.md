@@ -2,12 +2,12 @@
 
 | Compiler | Persist | Output | Records | Duration | Status | Log |
 |----------|---------|--------|---------|----------|--------|-----|
-| GCC | BINARY | OFF | 100 | 0.01s | PASS | [log](../BINARY_LOGS/TS_STORE_TEST_004_XS/GCC_BINARY_OFF.LOG) *(local)* |
-| GCC | BINARY | ON | 100 | 0.01s | PASS | [log](../BINARY_LOGS/TS_STORE_TEST_004_XS/GCC_BINARY_ON.LOG) *(local)* |
-| GCC | JTEXT | OFF | 100 | 0.00s | PASS | [log](../JTEXT_LOGS/TS_STORE_TEST_004_XS/GCC_JTEXT_OFF.LOG) *(local)* |
-| GCC | JTEXT | ON | 100 | 0.00s | PASS | [log](../JTEXT_LOGS/TS_STORE_TEST_004_XS/GCC_JTEXT_ON.LOG) *(local)* |
-| GCC | NONE | OFF | 100 | 0.00s | PASS | [log](../INMEM_LOGS/TS_STORE_TEST_004_XS/GCC_NONE_OFF.LOG) *(local)* |
-| GCC | NONE | ON | 100 | 0.00s | PASS | [log](../INMEM_LOGS/TS_STORE_TEST_004_XS/GCC_NONE_ON.LOG) *(local)* |
-| GCC | SQL | OFF | 100 | 0.00s | PASS | [log](../SQL_LOGS/TS_STORE_TEST_004_XS/GCC_SQL_OFF.LOG) *(local)* |
-| GCC | SQL | ON | 100 | 0.01s | PASS | [log](../SQL_LOGS/TS_STORE_TEST_004_XS/GCC_SQL_ON.LOG) *(local)* |
+| gcc | binary | off | 100 | 0.01s | PASS | [log](../binary_logs/TS_STORE_TEST_004_XS/gcc_binary_off.log) |
+| gcc | binary | on | 100 | 0.01s | PASS | [log](../binary_logs/TS_STORE_TEST_004_XS/gcc_binary_on.log) |
+| gcc | jtext | off | 100 | 0.00s | PASS | [log](../jText_logs/TS_STORE_TEST_004_XS/gcc_jtext_off.log) |
+| gcc | jtext | on | 100 | 0.00s | PASS | [log](../jText_logs/TS_STORE_TEST_004_XS/gcc_jtext_on.log) |
+| gcc | none | off | 100 | 0.00s | PASS | [log](../inmem_logs/TS_STORE_TEST_004_XS/gcc_none_off.log) |
+| gcc | none | on | 100 | 0.00s | PASS | [log](../inmem_logs/TS_STORE_TEST_004_XS/gcc_none_on.log) |
+| gcc | sql | off | 100 | 0.00s | PASS | [log](../sql_logs/TS_STORE_TEST_004_XS/gcc_sql_off.log) |
+| gcc | sql | on | 100 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_004_XS/gcc_sql_on.log) |
 

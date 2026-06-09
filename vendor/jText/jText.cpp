@@ -231,8 +231,16 @@ auto JTextFile::parse_stream(std::ifstream& in, bool full_read, std::string_view
         line = trim(line);
         if (line.empty()) continue;
 
-        // Skip comment lines in header area (# or // for standardized file headers)
-        if (in_header && (line.starts_with('#') || line.starts_with("//"))) {
+        // Header area: parse # JText metadata (Case, Purpose, …) before skipping
+        // generic # comment lines.
+        if (in_header && line.starts_with('#')) {
+            auto header_line = trim(line.substr(1));
+            if (parse_header(header_line)) {
+                continue;
+            }
+            continue;
+        }
+        if (in_header && line.starts_with("//")) {
             continue;
         }
 
