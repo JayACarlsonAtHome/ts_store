@@ -346,12 +346,12 @@ auto JTextFile::parse_stream(std::ifstream& in, bool full_read, std::string_view
 
             cur_section = (line.starts_with("-- "))
                 ? trim(line.substr(3, line.size() - 6))
-                : line;
+                : trim(line);
 
             if (full_read || cur_section == target_section) {
                 sections.emplace_back();
                 active = &sections.back();
-                active->name = cur_section;
+                active->name = trim(cur_section);
             }
             continue;
             }

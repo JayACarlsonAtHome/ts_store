@@ -2,7 +2,7 @@
 
 | Compiler | Persist | Output | Records | Duration | Status | Log |
 |----------|---------|--------|---------|----------|--------|-----|
-| gcc | binary | off | 100 | 0.00s | PASS | [log](../binary_logs/TS_STORE_TEST_004_TS/gcc_binary_off.log) |
+| gcc | binary | off | 100 | 0.01s | PASS | [log](../binary_logs/TS_STORE_TEST_004_TS/gcc_binary_off.log) |
 | gcc | binary | on | 100 | 0.01s | PASS | [log](../binary_logs/TS_STORE_TEST_004_TS/gcc_binary_on.log) |
 | gcc | jtext | off | 100 | 0.00s | PASS | [log](../jText_logs/TS_STORE_TEST_004_TS/gcc_jtext_off.log) |
 | gcc | jtext | on | 100 | 0.00s | PASS | [log](../jText_logs/TS_STORE_TEST_004_TS/gcc_jtext_on.log) |
