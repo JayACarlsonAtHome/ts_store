@@ -45,7 +45,7 @@
 # If no OS_ID (auto or override), the older flat layout test-results/<DISK_TYPE>/ is used.
 DISK_TYPE=ssd
 SIZE=full
-OS_ID=OS_001  
+OS_ID=OS_003  
 001=x
 002=x
 003=x

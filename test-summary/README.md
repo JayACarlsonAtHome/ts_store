@@ -9,9 +9,9 @@ Committed lightweight results promoted from `test-results/`. Each leaf links to 
 | OS_001 | gcc | ssd | Smoke | 113/113 | 2026-06-09T04:33:51Z | [README](OS_001/gcc/ssd/Smoke/README.md) |
 | OS_001 | gcc | ssd | xFull | 113/113 | 2026-06-09T03:23:21Z | [README](OS_001/gcc/ssd/xFull/README.md) |
 | OS_003 | clang | ssd | Smoke | 113/113 | 2026-06-09T23:18:00Z | [README](OS_003/clang/ssd/Smoke/README.md) |
-| OS_003 | clang | ssd | xFull | 113/113 | 2026-06-09T23:29:04Z | [README](OS_003/clang/ssd/xFull/README.md) |
+| OS_003 | clang | ssd | xFull | 113/113 | 2026-06-09T23:56:20Z | [README](OS_003/clang/ssd/xFull/README.md) |
 | OS_003 | gcc | ssd | Smoke | 113/113 | 2026-06-09T23:15:34Z | [README](OS_003/gcc/ssd/Smoke/README.md) |
-| OS_003 | gcc | ssd | xFull | 113/113 | 2026-06-09T23:26:03Z | [README](OS_003/gcc/ssd/xFull/README.md) |
+| OS_003 | gcc | ssd | xFull | 113/113 | 2026-06-09T23:53:18Z | [README](OS_003/gcc/ssd/xFull/README.md) |
 | OS_003 | gcc | x7k | xFull | 113/113 | 2026-06-07T15:31:47Z | [README](OS_003/x7k/xFull/README.md) |
 | OS_003 | gcc,clang | 10k | Smoke | 226/226 | 2026-06-07T15:18:27Z | [README](OS_003/10k/Smoke/README.md) |
 | OS_003 | gcc,clang | 10k | xFull | 226/226 | 2026-06-07T15:22:41Z | [README](OS_003/10k/xFull/README.md) |

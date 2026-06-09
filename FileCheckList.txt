@@ -1,6 +1,6 @@
-[ ] GCC    / Linux Mint 22.0 / ssd
-[ ] Clang  / Linux Mint 22.0 / ssd
-[x] GCC    / RHEL 9.8        / ssd
-[x] Clang  / RHEL 9.8        / ssd
+[x] GCC    / Linux Mint 22.0 / ssd
+[x] Clang  / Linux Mint 22.0 / ssd
+[ ] GCC    / RHEL 9.8        / ssd
+[ ] Clang  / RHEL 9.8        / ssd
 [ ] GCC    / RHEL 10.2       / x7k
 [ ] Clang  / RHEL 10.2       / x7K

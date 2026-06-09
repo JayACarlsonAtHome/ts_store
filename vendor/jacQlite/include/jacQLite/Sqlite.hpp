@@ -47,7 +47,7 @@ inline std::string column<std::string>(sqlite3_stmt* stmt, int col) {
     const unsigned char* txt = sqlite3_column_text(stmt, col);
     if (!txt) return {};
     int len = sqlite3_column_bytes(stmt, col);
-    return std::string(reinterpret_cast<const char*>(txt), len);
+    return std::string(reinterpret_cast<const char*>(txt), static_cast<size_t>(len));
 }
 
 template<>
@@ -155,7 +155,7 @@ public:
 
     class Statement {
     public:
-        Statement(Sqlite& db, const std::string& sql) : db_(&db) {
+        Statement(Sqlite& db, const std::string& sql) {
             if (sqlite3_prepare_v2(db.db_, sql.c_str(), -1, &stmt_, nullptr) != SQLITE_OK) {
                 throw SqliteError("Failed to prepare: " + sql + " - " + sqlite3_errmsg(db.db_));
             }
@@ -186,17 +186,22 @@ public:
             sqlite3_reset(stmt_);
         }
 
-        // Indexed binding helpers (for dynamic column counts, e.g. metric tables in SqlEventSink)
         void clear_bindings() {
             sqlite3_clear_bindings(stmt_);
         }
 
+        // Runtime bind helpers for dynamic column counts (metric tables, slurpers)
         void bind_int64(int idx, int64_t v) {
             sqlite3_bind_int64(stmt_, idx, v);
         }
-
         void bind_double(int idx, double v) {
             sqlite3_bind_double(stmt_, idx, v);
+        }
+        void bind_text(int idx, const std::string& v) {
+            sqlite3_bind_text(stmt_, idx, v.c_str(), static_cast<int>(v.size()), SQLITE_TRANSIENT);
+        }
+        void bind_null(int idx) {
+            sqlite3_bind_null(stmt_, idx);
         }
 
         // Variadic extraction using the "peel first, recurse on ellipses" pattern
@@ -239,7 +244,6 @@ public:
         }
 
         sqlite3_stmt* stmt_ = nullptr;
-        Sqlite* db_ = nullptr;
     };
 
     Statement prepare(const std::string& sql) {
