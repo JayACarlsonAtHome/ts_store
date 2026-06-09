@@ -196,11 +196,22 @@ flowchart LR
 ```
 test-results/OS_003/gcc/ssd/Smoke/
 test-results/OS_003/clang/ssd/Smoke/
-  run_manifest.jtext      # machine-readable matrix
+  run_manifest.jtext      # machine-readable matrix (jText light profile)
   README.md               # navigation hub
   by_test/*.md            # per-binary summaries
   binary_logs/ jText_logs/ sql_logs/ inmem_logs/ unit_logs/
 ```
+
+### jText profiles in ts_store
+
+ts_store uses two jText **file profiles** (formal rules in sibling `jText/SPEC.md` §2.0):
+
+| Profile | Files | Purpose |
+|---------|-------|---------|
+| **Light** | `run_manifest.jtext` | Test-matrix summary: `//` wrapper, `#` metadata, `-- Section --`, `# Fields: *.jtFlds`, compact `#\|#` rows |
+| **Full** | Event `*.jtext` + sidecars | High-throughput persistence: `===` sections, SQL templates, `=== <#include#> Fields ===` |
+
+Light-profile manifests are written by `jac.report` (`manifest.cpp`), consumed by `summarize.cpp`, and promoted to `test-summary/`. Shared field lists: `tests/jtext_includes/run_manifest_*_fields.jtFlds`. Reference sample: `jText/samples/light_profile/run_manifest.jtext`.
 
 OS id (`OS_001`, `OS_002`, …) is auto-detected or overridden; mapping in `test-results/OS_MAP.txt`. Promotion copies lightweight files to mirrored paths under `test-summary/`.
 

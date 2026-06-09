@@ -1,0 +1,14 @@
+//File:    tests/jtext_includes/run_manifest_scenarios_fields.jtFlds
+//Date:    2026-06-08
+//Purpose: jText Field List File for ts_store run_manifest Scenarios section (common)
+//Related: type=ts_store table=ts_run_manifest_scenarios
+
+=== Fields ===
+ 1. #/# test/String/Not Null # test subdir (TS_STORE_TEST_NNN_*)
+ 2. #/# compiler/String/Not Null # gcc or clang
+ 3. #/# persist/String/Not Null # none, binary, jtext, sql
+ 4. #/# output_mode/String/Not Null # on or off
+ 5. #/# records/Number/Not Null # event/record count for scenario
+ 6. #/# duration_sec/Number/Not Null # wall time seconds
+ 7. #/# status/String/Not Null # PASS or FAIL
+ 8. #/# log_relpath/String/Nullable # log path relative to results leaf

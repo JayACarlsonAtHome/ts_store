@@ -8,6 +8,6 @@
 | gcc | jtext | on | 100 | 0.00s | PASS | [log](../jText_logs/TS_STORE_TEST_003_TS/gcc_jtext_on.log) |
 | gcc | none | off | 100 | 0.00s | PASS | [log](../inmem_logs/TS_STORE_TEST_003_TS/gcc_none_off.log) |
 | gcc | none | on | 100 | 0.00s | PASS | [log](../inmem_logs/TS_STORE_TEST_003_TS/gcc_none_on.log) |
-| gcc | sql | off | 100 | 0.00s | PASS | [log](../sql_logs/TS_STORE_TEST_003_TS/gcc_sql_off.log) |
-| gcc | sql | on | 100 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_003_TS/gcc_sql_on.log) |
+| gcc | sql | off | 100 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_003_TS/gcc_sql_off.log) |
+| gcc | sql | on | 100 | 0.00s | PASS | [log](../sql_logs/TS_STORE_TEST_003_TS/gcc_sql_on.log) |
 

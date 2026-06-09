@@ -1,64 +1,64 @@
-# Log excerpt (425350 bytes in test-results/; full log not committed)
-Writer start time : 39159073618 µs
-Reader start time : 39159073776 µs
-Reader start lag  : 157 µs
-Writer stop time  : 39159074035 µs
-Reader stop time  : 39159074131 µs
-Reader finish lag : 95 µs
+# Log excerpt (425351 bytes in test-results/; full log not committed)
+Writer start time : 43581064025 µs
+Reader start time : 43581064212 µs
+Reader start lag  : 187 µs
+Writer stop time  : 43581064501 µs
+Reader stop time  : 43581064606 µs
+Reader finish lag : 105 µs
 
 Tail-reader result: 1000 hits, 0 misses (should be 0)
 [VERIFY] ALL 1000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:0  Thread_ID:1  Event_ID:0 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:0  Thread_ID:0  Event_ID:0 
                   Actual   Len(26): Not Set, default payload 😎
                   Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:1  Thread_ID:1  Event_ID:1 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:1  Thread_ID:0  Event_ID:1 
                   Actual   Len(26): Trace processing request 😎
                   Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:2  Thread_ID:1  Event_ID:2 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:2  Thread_ID:0  Event_ID:2 
                   Actual   Len(26): Debug processing request 😎
                   Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:3  Thread_ID:1  Event_ID:3 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:3  Thread_ID:0  Event_ID:3 
                   Actual   Len(25): Info processing request 😊
                   Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:4  Thread_ID:1  Event_ID:4 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:4  Thread_ID:0  Event_ID:4 
                   Actual   Len(36): Warning in processing notification 😕
                   Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:5  Thread_ID:1  Event_ID:5 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:5  Thread_ID:0  Event_ID:5 
                   Actual   Len(34): Error in processing notification 😣
                   Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:6  Thread_ID:1  Event_ID:6 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:6  Thread_ID:0  Event_ID:6 
                   Actual   Len(29): Critical processing request 😣
                   Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:7  Thread_ID:1  Event_ID:7 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:7  Thread_ID:0  Event_ID:7 
                   Actual   Len(40): Fatal error in processing notification 💀
                   Expected Len(40): Fatal error in processing notification 💀
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:8  Thread_ID:1  Event_ID:8 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:8  Thread_ID:0  Event_ID:8 
                   Actual   Len(26): Not Set, default payload 😎
                   Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:9  Thread_ID:1  Event_ID:9 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:9  Thread_ID:0  Event_ID:9 
                   Actual   Len(26): Trace processing request 😎
                   Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:10  Thread_ID:1  Event_ID:10 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:10  Thread_ID:0  Event_ID:10 
 
 ... [truncated — see test-results/ on the runner host for full log] ...
 
- 983            -   Fatal...   NET.................        0      87   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 984            -   Not Set.   NET.................        0      88   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 985            -   Trace...   NET.................        0      89   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 986            -   Not Set.   GFX.................        9      96   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 987            -   Debug...   NET.................        0      90   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 988            -   Trace...   GFX.................        9      97   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 989            -   Debug...   GFX.................        9      98   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 990            -   Info....   GFX.................        9      99   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 991            -   Info....   NET.................        0      91   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 992            -   Warn....   NET.................        0      92   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 993            -   Error...   NET.................        0      93   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 994            -   Critical   NET.................        0      94   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 995            -   Fatal...   NET.................        0      95   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 996            -   Not Set.   NET.................        0      96   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 997            -   Trace...   NET.................        0      97   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 998            -   Debug...   NET.................        0      98   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 999            -   Info....   NET.................        0      99   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 983            -   Info....   DB..................        1      83   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 984            -   Warn....   DB..................        1      84   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 985            -   Error...   DB..................        1      85   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 986            -   Critical   DB..................        1      86   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 987            -   Fatal...   DB..................        1      87   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 988            -   Not Set.   DB..................        1      88   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 989            -   Trace...   DB..................        1      89   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 990            -   Debug...   DB..................        1      90   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 991            -   Info....   DB..................        1      91   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 992            -   Warn....   DB..................        1      92   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 993            -   Error...   DB..................        1      93   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 994            -   Critical   DB..................        1      94   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 995            -   Fatal...   DB..................        1      95   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 996            -   Not Set.   DB..................        1      96   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 997            -   Trace...   DB..................        1      97   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 998            -   Debug...   DB..................        1      98   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 999            -   Info....   DB..................        1      99   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
 ==================================================================================================================
 Note: Output is zero-indexed → last printed entry is ID 999. Expected last ID = 999.
 Total entries stored: 1000 (expected: 1000)

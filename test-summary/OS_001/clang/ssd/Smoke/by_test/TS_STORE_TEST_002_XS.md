@@ -9,5 +9,5 @@
 | clang | none | off | 100 | 0.00s | PASS | [log](../inmem_logs/TS_STORE_TEST_002_XS/clang_none_off.log) |
 | clang | none | on | 100 | 0.00s | PASS | [log](../inmem_logs/TS_STORE_TEST_002_XS/clang_none_on.log) |
 | clang | sql | off | 100 | 0.00s | PASS | [log](../sql_logs/TS_STORE_TEST_002_XS/clang_sql_off.log) |
-| clang | sql | on | 100 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_002_XS/clang_sql_on.log) |
+| clang | sql | on | 100 | 0.00s | PASS | [log](../sql_logs/TS_STORE_TEST_002_XS/clang_sql_on.log) |
 

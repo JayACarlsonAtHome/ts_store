@@ -152,7 +152,7 @@ The test framework uses an `OS_00n` / disk / size layout. Start at the hub:
 - [test-summary/README.md](test-summary/README.md) — index of all promoted runs (`{OS}/{disk}/{Smoke|xFull}`)
 - Example leaf: [test-summary/OS_003/ssd/Smoke/README.md](test-summary/OS_003/ssd/Smoke/README.md) — per-test links under `by_test/`
 
-Each leaf includes `run_manifest.jtext` (machine-readable matrix), `README.md` (navigation), and `by_test/*.md` (per-binary detail).
+Each leaf includes `run_manifest.jtext` (machine-readable matrix in jText **light profile**: `//` + `#` headers, `--` sections, `# Fields:` includes — see `Doc/ARCHITECTURE.md` and `jText/SPEC.md` §2.0), `README.md` (navigation), and `by_test/*.md` (per-binary detail).
 
 Raw logs, .jtext/.bin artifacts, and per-run `.meta` files live under the (git-ignored) `test-results/` tree. Only the small promoted tree under `test-summary/` is intended to be committed.
 

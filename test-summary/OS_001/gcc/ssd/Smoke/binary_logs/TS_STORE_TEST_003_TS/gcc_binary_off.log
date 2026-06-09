@@ -1,314 +1,314 @@
-Writer start time : 39149311510 µs
-Reader start time : 39149311633 µs
-Reader start lag  : 123 µs
-Writer stop time  : 39149311711 µs
-Reader stop time  : 39149311787 µs
-Reader finish lag : 76 µs
+Writer start time : 43570411844 µs
+Reader start time : 43570411953 µs
+Reader start lag  : 109 µs
+Writer stop time  : 43570412046 µs
+Reader stop time  : 43570412136 µs
+Reader finish lag : 90 µs
 
 Tail-reader result: 100 hits, 0 misses (should be 0)
 [VERIFY] ALL 100 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
 [TEST-VERIFY] TEST PAYLOADS VALID  ID:0  Thread_ID:1  Event_ID:0 
                   Actual   Len(26): Not Set, default payload 😎
                   Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:1  Thread_ID:1  Event_ID:1 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:1  Thread_ID:2  Event_ID:0 
+                  Actual   Len(26): Not Set, default payload 😎
+                  Expected Len(26): Not Set, default payload 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:2  Thread_ID:3  Event_ID:0 
+                  Actual   Len(26): Not Set, default payload 😎
+                  Expected Len(26): Not Set, default payload 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:3  Thread_ID:1  Event_ID:1 
                   Actual   Len(26): Trace processing request 😎
                   Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:2  Thread_ID:1  Event_ID:2 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:4  Thread_ID:2  Event_ID:1 
+                  Actual   Len(26): Trace processing request 😎
+                  Expected Len(26): Trace processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:5  Thread_ID:0  Event_ID:0 
+                  Actual   Len(26): Not Set, default payload 😎
+                  Expected Len(26): Not Set, default payload 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:6  Thread_ID:2  Event_ID:2 
                   Actual   Len(26): Debug processing request 😎
                   Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:3  Thread_ID:1  Event_ID:3 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:7  Thread_ID:3  Event_ID:1 
+                  Actual   Len(26): Trace processing request 😎
+                  Expected Len(26): Trace processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:8  Thread_ID:1  Event_ID:2 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:9  Thread_ID:2  Event_ID:3 
                   Actual   Len(25): Info processing request 😊
                   Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:4  Thread_ID:1  Event_ID:4 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:10  Thread_ID:3  Event_ID:2 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:11  Thread_ID:1  Event_ID:3 
+                  Actual   Len(25): Info processing request 😊
+                  Expected Len(25): Info processing request 😊
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:12  Thread_ID:2  Event_ID:4 
                   Actual   Len(36): Warning in processing notification 😕
                   Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:5  Thread_ID:1  Event_ID:5 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:13  Thread_ID:3  Event_ID:3 
+                  Actual   Len(25): Info processing request 😊
+                  Expected Len(25): Info processing request 😊
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:14  Thread_ID:1  Event_ID:4 
+                  Actual   Len(36): Warning in processing notification 😕
+                  Expected Len(36): Warning in processing notification 😕
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:15  Thread_ID:3  Event_ID:4 
+                  Actual   Len(36): Warning in processing notification 😕
+                  Expected Len(36): Warning in processing notification 😕
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:16  Thread_ID:4  Event_ID:0 
+                  Actual   Len(26): Not Set, default payload 😎
+                  Expected Len(26): Not Set, default payload 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:17  Thread_ID:2  Event_ID:5 
                   Actual   Len(34): Error in processing notification 😣
                   Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:6  Thread_ID:1  Event_ID:6 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:18  Thread_ID:1  Event_ID:5 
+                  Actual   Len(34): Error in processing notification 😣
+                  Expected Len(34): Error in processing notification 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:19  Thread_ID:3  Event_ID:5 
+                  Actual   Len(34): Error in processing notification 😣
+                  Expected Len(34): Error in processing notification 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:20  Thread_ID:2  Event_ID:6 
                   Actual   Len(29): Critical processing request 😣
                   Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:7  Thread_ID:0  Event_ID:0 
-                  Actual   Len(26): Not Set, default payload 😎
-                  Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:8  Thread_ID:1  Event_ID:7 
-                  Actual   Len(40): Fatal error in processing notification 💀
-                  Expected Len(40): Fatal error in processing notification 💀
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:9  Thread_ID:1  Event_ID:8 
-                  Actual   Len(26): Not Set, default payload 😎
-                  Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:10  Thread_ID:1  Event_ID:9 
-                  Actual   Len(26): Trace processing request 😎
-                  Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:11  Thread_ID:1  Event_ID:10 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:12  Thread_ID:1  Event_ID:11 
-                  Actual   Len(25): Info processing request 😊
-                  Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:13  Thread_ID:1  Event_ID:12 
-                  Actual   Len(36): Warning in processing notification 😕
-                  Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:14  Thread_ID:2  Event_ID:0 
-                  Actual   Len(26): Not Set, default payload 😎
-                  Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:15  Thread_ID:3  Event_ID:0 
-                  Actual   Len(26): Not Set, default payload 😎
-                  Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:16  Thread_ID:1  Event_ID:13 
-                  Actual   Len(34): Error in processing notification 😣
-                  Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:17  Thread_ID:0  Event_ID:1 
-                  Actual   Len(26): Trace processing request 😎
-                  Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:18  Thread_ID:2  Event_ID:1 
-                  Actual   Len(26): Trace processing request 😎
-                  Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:19  Thread_ID:0  Event_ID:2 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:20  Thread_ID:3  Event_ID:1 
-                  Actual   Len(26): Trace processing request 😎
-                  Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:21  Thread_ID:2  Event_ID:2 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:22  Thread_ID:1  Event_ID:14 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:21  Thread_ID:3  Event_ID:6 
                   Actual   Len(29): Critical processing request 😣
                   Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:23  Thread_ID:0  Event_ID:3 
-                  Actual   Len(25): Info processing request 😊
-                  Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:24  Thread_ID:3  Event_ID:2 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:25  Thread_ID:2  Event_ID:3 
-                  Actual   Len(25): Info processing request 😊
-                  Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:26  Thread_ID:1  Event_ID:15 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:22  Thread_ID:2  Event_ID:7 
                   Actual   Len(40): Fatal error in processing notification 💀
                   Expected Len(40): Fatal error in processing notification 💀
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:27  Thread_ID:3  Event_ID:3 
-                  Actual   Len(25): Info processing request 😊
-                  Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:28  Thread_ID:0  Event_ID:4 
-                  Actual   Len(36): Warning in processing notification 😕
-                  Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:29  Thread_ID:1  Event_ID:16 
-                  Actual   Len(26): Not Set, default payload 😎
-                  Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:30  Thread_ID:4  Event_ID:0 
-                  Actual   Len(26): Not Set, default payload 😎
-                  Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:31  Thread_ID:2  Event_ID:4 
-                  Actual   Len(36): Warning in processing notification 😕
-                  Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:32  Thread_ID:3  Event_ID:4 
-                  Actual   Len(36): Warning in processing notification 😕
-                  Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:33  Thread_ID:2  Event_ID:5 
-                  Actual   Len(34): Error in processing notification 😣
-                  Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:34  Thread_ID:3  Event_ID:5 
-                  Actual   Len(34): Error in processing notification 😣
-                  Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:35  Thread_ID:4  Event_ID:1 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:23  Thread_ID:4  Event_ID:1 
                   Actual   Len(26): Trace processing request 😎
                   Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:36  Thread_ID:2  Event_ID:6 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:24  Thread_ID:1  Event_ID:6 
                   Actual   Len(29): Critical processing request 😣
                   Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:37  Thread_ID:1  Event_ID:17 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:25  Thread_ID:0  Event_ID:1 
                   Actual   Len(26): Trace processing request 😎
                   Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:38  Thread_ID:3  Event_ID:6 
-                  Actual   Len(29): Critical processing request 😣
-                  Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:39  Thread_ID:2  Event_ID:7 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:26  Thread_ID:3  Event_ID:7 
                   Actual   Len(40): Fatal error in processing notification 💀
                   Expected Len(40): Fatal error in processing notification 💀
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:40  Thread_ID:4  Event_ID:2 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:41  Thread_ID:0  Event_ID:5 
-                  Actual   Len(34): Error in processing notification 😣
-                  Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:42  Thread_ID:1  Event_ID:18 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:43  Thread_ID:3  Event_ID:7 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:27  Thread_ID:1  Event_ID:7 
                   Actual   Len(40): Fatal error in processing notification 💀
                   Expected Len(40): Fatal error in processing notification 💀
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:44  Thread_ID:1  Event_ID:19 
-                  Actual   Len(25): Info processing request 😊
-                  Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:45  Thread_ID:2  Event_ID:8 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:28  Thread_ID:1  Event_ID:8 
                   Actual   Len(26): Not Set, default payload 😎
                   Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:46  Thread_ID:3  Event_ID:8 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:29  Thread_ID:3  Event_ID:8 
                   Actual   Len(26): Not Set, default payload 😎
                   Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:47  Thread_ID:4  Event_ID:3 
-                  Actual   Len(25): Info processing request 😊
-                  Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:48  Thread_ID:0  Event_ID:6 
-                  Actual   Len(29): Critical processing request 😣
-                  Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:49  Thread_ID:2  Event_ID:9 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:30  Thread_ID:2  Event_ID:8 
+                  Actual   Len(26): Not Set, default payload 😎
+                  Expected Len(26): Not Set, default payload 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:31  Thread_ID:4  Event_ID:2 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:32  Thread_ID:1  Event_ID:9 
                   Actual   Len(26): Trace processing request 😎
                   Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:50  Thread_ID:4  Event_ID:4 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:33  Thread_ID:4  Event_ID:3 
+                  Actual   Len(25): Info processing request 😊
+                  Expected Len(25): Info processing request 😊
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:34  Thread_ID:0  Event_ID:2 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:35  Thread_ID:3  Event_ID:9 
+                  Actual   Len(26): Trace processing request 😎
+                  Expected Len(26): Trace processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:36  Thread_ID:1  Event_ID:10 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:37  Thread_ID:3  Event_ID:10 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:38  Thread_ID:2  Event_ID:9 
+                  Actual   Len(26): Trace processing request 😎
+                  Expected Len(26): Trace processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:39  Thread_ID:4  Event_ID:4 
                   Actual   Len(36): Warning in processing notification 😕
                   Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:51  Thread_ID:0  Event_ID:7 
-                  Actual   Len(40): Fatal error in processing notification 💀
-                  Expected Len(40): Fatal error in processing notification 💀
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:52  Thread_ID:3  Event_ID:9 
-                  Actual   Len(26): Trace processing request 😎
-                  Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:53  Thread_ID:2  Event_ID:10 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:54  Thread_ID:4  Event_ID:5 
-                  Actual   Len(34): Error in processing notification 😣
-                  Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:55  Thread_ID:3  Event_ID:10 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:56  Thread_ID:2  Event_ID:11 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:40  Thread_ID:3  Event_ID:11 
                   Actual   Len(25): Info processing request 😊
                   Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:57  Thread_ID:0  Event_ID:8 
-                  Actual   Len(26): Not Set, default payload 😎
-                  Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:58  Thread_ID:4  Event_ID:6 
-                  Actual   Len(29): Critical processing request 😣
-                  Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:59  Thread_ID:3  Event_ID:11 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:41  Thread_ID:1  Event_ID:11 
                   Actual   Len(25): Info processing request 😊
                   Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:60  Thread_ID:4  Event_ID:7 
-                  Actual   Len(40): Fatal error in processing notification 💀
-                  Expected Len(40): Fatal error in processing notification 💀
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:61  Thread_ID:2  Event_ID:12 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:42  Thread_ID:2  Event_ID:10 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:43  Thread_ID:2  Event_ID:11 
+                  Actual   Len(25): Info processing request 😊
+                  Expected Len(25): Info processing request 😊
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:44  Thread_ID:0  Event_ID:3 
+                  Actual   Len(25): Info processing request 😊
+                  Expected Len(25): Info processing request 😊
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:45  Thread_ID:2  Event_ID:12 
                   Actual   Len(36): Warning in processing notification 😕
                   Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:62  Thread_ID:0  Event_ID:9 
-                  Actual   Len(26): Trace processing request 😎
-                  Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:63  Thread_ID:3  Event_ID:12 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:46  Thread_ID:4  Event_ID:5 
+                  Actual   Len(34): Error in processing notification 😣
+                  Expected Len(34): Error in processing notification 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:47  Thread_ID:3  Event_ID:12 
                   Actual   Len(36): Warning in processing notification 😕
                   Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:64  Thread_ID:4  Event_ID:8 
-                  Actual   Len(26): Not Set, default payload 😎
-                  Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:65  Thread_ID:2  Event_ID:13 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:48  Thread_ID:2  Event_ID:13 
                   Actual   Len(34): Error in processing notification 😣
                   Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:66  Thread_ID:0  Event_ID:10 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:67  Thread_ID:3  Event_ID:13 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:49  Thread_ID:1  Event_ID:12 
+                  Actual   Len(36): Warning in processing notification 😕
+                  Expected Len(36): Warning in processing notification 😕
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:50  Thread_ID:3  Event_ID:13 
                   Actual   Len(34): Error in processing notification 😣
                   Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:68  Thread_ID:4  Event_ID:9 
-                  Actual   Len(26): Trace processing request 😎
-                  Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:69  Thread_ID:2  Event_ID:14 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:51  Thread_ID:4  Event_ID:6 
                   Actual   Len(29): Critical processing request 😣
                   Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:70  Thread_ID:0  Event_ID:11 
-                  Actual   Len(25): Info processing request 😊
-                  Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:71  Thread_ID:2  Event_ID:15 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:52  Thread_ID:0  Event_ID:4 
+                  Actual   Len(36): Warning in processing notification 😕
+                  Expected Len(36): Warning in processing notification 😕
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:53  Thread_ID:2  Event_ID:14 
+                  Actual   Len(29): Critical processing request 😣
+                  Expected Len(29): Critical processing request 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:54  Thread_ID:3  Event_ID:14 
+                  Actual   Len(29): Critical processing request 😣
+                  Expected Len(29): Critical processing request 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:55  Thread_ID:4  Event_ID:7 
                   Actual   Len(40): Fatal error in processing notification 💀
                   Expected Len(40): Fatal error in processing notification 💀
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:56  Thread_ID:1  Event_ID:13 
+                  Actual   Len(34): Error in processing notification 😣
+                  Expected Len(34): Error in processing notification 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:57  Thread_ID:0  Event_ID:5 
+                  Actual   Len(34): Error in processing notification 😣
+                  Expected Len(34): Error in processing notification 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:58  Thread_ID:4  Event_ID:8 
+                  Actual   Len(26): Not Set, default payload 😎
+                  Expected Len(26): Not Set, default payload 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:59  Thread_ID:1  Event_ID:14 
+                  Actual   Len(29): Critical processing request 😣
+                  Expected Len(29): Critical processing request 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:60  Thread_ID:3  Event_ID:15 
+                  Actual   Len(40): Fatal error in processing notification 💀
+                  Expected Len(40): Fatal error in processing notification 💀
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:61  Thread_ID:2  Event_ID:15 
+                  Actual   Len(40): Fatal error in processing notification 💀
+                  Expected Len(40): Fatal error in processing notification 💀
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:62  Thread_ID:4  Event_ID:9 
+                  Actual   Len(26): Trace processing request 😎
+                  Expected Len(26): Trace processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:63  Thread_ID:0  Event_ID:6 
+                  Actual   Len(29): Critical processing request 😣
+                  Expected Len(29): Critical processing request 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:64  Thread_ID:3  Event_ID:16 
+                  Actual   Len(26): Not Set, default payload 😎
+                  Expected Len(26): Not Set, default payload 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:65  Thread_ID:2  Event_ID:16 
+                  Actual   Len(26): Not Set, default payload 😎
+                  Expected Len(26): Not Set, default payload 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:66  Thread_ID:1  Event_ID:15 
+                  Actual   Len(40): Fatal error in processing notification 💀
+                  Expected Len(40): Fatal error in processing notification 💀
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:67  Thread_ID:3  Event_ID:17 
+                  Actual   Len(26): Trace processing request 😎
+                  Expected Len(26): Trace processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:68  Thread_ID:2  Event_ID:17 
+                  Actual   Len(26): Trace processing request 😎
+                  Expected Len(26): Trace processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:69  Thread_ID:0  Event_ID:7 
+                  Actual   Len(40): Fatal error in processing notification 💀
+                  Expected Len(40): Fatal error in processing notification 💀
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:70  Thread_ID:1  Event_ID:16 
+                  Actual   Len(26): Not Set, default payload 😎
+                  Expected Len(26): Not Set, default payload 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:71  Thread_ID:2  Event_ID:18 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
 [TEST-VERIFY] TEST PAYLOADS VALID  ID:72  Thread_ID:4  Event_ID:10 
                   Actual   Len(26): Debug processing request 😎
                   Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:73  Thread_ID:0  Event_ID:12 
-                  Actual   Len(36): Warning in processing notification 😕
-                  Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:74  Thread_ID:3  Event_ID:14 
-                  Actual   Len(29): Critical processing request 😣
-                  Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:75  Thread_ID:4  Event_ID:11 
-                  Actual   Len(25): Info processing request 😊
-                  Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:76  Thread_ID:2  Event_ID:16 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:73  Thread_ID:0  Event_ID:8 
                   Actual   Len(26): Not Set, default payload 😎
                   Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:77  Thread_ID:3  Event_ID:15 
-                  Actual   Len(40): Fatal error in processing notification 💀
-                  Expected Len(40): Fatal error in processing notification 💀
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:78  Thread_ID:4  Event_ID:12 
-                  Actual   Len(36): Warning in processing notification 😕
-                  Expected Len(36): Warning in processing notification 😕
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:79  Thread_ID:0  Event_ID:13 
-                  Actual   Len(34): Error in processing notification 😣
-                  Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:80  Thread_ID:2  Event_ID:17 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:74  Thread_ID:1  Event_ID:17 
                   Actual   Len(26): Trace processing request 😎
                   Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:81  Thread_ID:3  Event_ID:16 
-                  Actual   Len(26): Not Set, default payload 😎
-                  Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:82  Thread_ID:4  Event_ID:13 
-                  Actual   Len(34): Error in processing notification 😣
-                  Expected Len(34): Error in processing notification 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:83  Thread_ID:3  Event_ID:17 
-                  Actual   Len(26): Trace processing request 😎
-                  Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:84  Thread_ID:0  Event_ID:14 
-                  Actual   Len(29): Critical processing request 😣
-                  Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:85  Thread_ID:2  Event_ID:18 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:86  Thread_ID:3  Event_ID:18 
-                  Actual   Len(26): Debug processing request 😎
-                  Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:87  Thread_ID:4  Event_ID:14 
-                  Actual   Len(29): Critical processing request 😣
-                  Expected Len(29): Critical processing request 😣
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:88  Thread_ID:3  Event_ID:19 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:75  Thread_ID:2  Event_ID:19 
                   Actual   Len(25): Info processing request 😊
                   Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:89  Thread_ID:0  Event_ID:15 
-                  Actual   Len(40): Fatal error in processing notification 💀
-                  Expected Len(40): Fatal error in processing notification 💀
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:76  Thread_ID:3  Event_ID:18 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:77  Thread_ID:4  Event_ID:11 
+                  Actual   Len(25): Info processing request 😊
+                  Expected Len(25): Info processing request 😊
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:78  Thread_ID:1  Event_ID:18 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:79  Thread_ID:0  Event_ID:9 
+                  Actual   Len(26): Trace processing request 😎
+                  Expected Len(26): Trace processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:80  Thread_ID:4  Event_ID:12 
+                  Actual   Len(36): Warning in processing notification 😕
+                  Expected Len(36): Warning in processing notification 😕
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:81  Thread_ID:1  Event_ID:19 
+                  Actual   Len(25): Info processing request 😊
+                  Expected Len(25): Info processing request 😊
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:82  Thread_ID:0  Event_ID:10 
+                  Actual   Len(26): Debug processing request 😎
+                  Expected Len(26): Debug processing request 😎
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:83  Thread_ID:0  Event_ID:11 
+                  Actual   Len(25): Info processing request 😊
+                  Expected Len(25): Info processing request 😊
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:84  Thread_ID:3  Event_ID:19 
+                  Actual   Len(25): Info processing request 😊
+                  Expected Len(25): Info processing request 😊
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:85  Thread_ID:0  Event_ID:12 
+                  Actual   Len(36): Warning in processing notification 😕
+                  Expected Len(36): Warning in processing notification 😕
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:86  Thread_ID:4  Event_ID:13 
+                  Actual   Len(34): Error in processing notification 😣
+                  Expected Len(34): Error in processing notification 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:87  Thread_ID:0  Event_ID:13 
+                  Actual   Len(34): Error in processing notification 😣
+                  Expected Len(34): Error in processing notification 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:88  Thread_ID:4  Event_ID:14 
+                  Actual   Len(29): Critical processing request 😣
+                  Expected Len(29): Critical processing request 😣
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:89  Thread_ID:0  Event_ID:14 
+                  Actual   Len(29): Critical processing request 😣
+                  Expected Len(29): Critical processing request 😣
 [TEST-VERIFY] TEST PAYLOADS VALID  ID:90  Thread_ID:4  Event_ID:15 
                   Actual   Len(40): Fatal error in processing notification 💀
                   Expected Len(40): Fatal error in processing notification 💀
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:91  Thread_ID:2  Event_ID:19 
-                  Actual   Len(25): Info processing request 😊
-                  Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:92  Thread_ID:0  Event_ID:16 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:91  Thread_ID:0  Event_ID:15 
+                  Actual   Len(40): Fatal error in processing notification 💀
+                  Expected Len(40): Fatal error in processing notification 💀
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:92  Thread_ID:4  Event_ID:16 
                   Actual   Len(26): Not Set, default payload 😎
                   Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:93  Thread_ID:4  Event_ID:16 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:93  Thread_ID:0  Event_ID:16 
                   Actual   Len(26): Not Set, default payload 😎
                   Expected Len(26): Not Set, default payload 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:94  Thread_ID:0  Event_ID:17 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:94  Thread_ID:4  Event_ID:17 
                   Actual   Len(26): Trace processing request 😎
                   Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:95  Thread_ID:4  Event_ID:17 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:95  Thread_ID:0  Event_ID:17 
                   Actual   Len(26): Trace processing request 😎
                   Expected Len(26): Trace processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:96  Thread_ID:0  Event_ID:18 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:96  Thread_ID:4  Event_ID:18 
                   Actual   Len(26): Debug processing request 😎
                   Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:97  Thread_ID:4  Event_ID:18 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:97  Thread_ID:0  Event_ID:18 
                   Actual   Len(26): Debug processing request 😎
                   Expected Len(26): Debug processing request 😎
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:98  Thread_ID:0  Event_ID:19 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:98  Thread_ID:4  Event_ID:19 
                   Actual   Len(25): Info processing request 😊
                   Expected Len(25): Info processing request 😊
-[TEST-VERIFY] TEST PAYLOADS VALID  ID:99  Thread_ID:4  Event_ID:19 
+[TEST-VERIFY] TEST PAYLOADS VALID  ID:99  Thread_ID:0  Event_ID:19 
                   Actual   Len(25): Info processing request 😊
                   Expected Len(25): Info processing request 😊
 ALL 100 ENTRIES VERIFIED — ZERO CORRUPTION
-Store duration: 87 µs (225 → 312)
+Store duration: 92 µs (209 → 301)
 ts_store <
    Threads    = 5
    Events     = 20
@@ -316,106 +316,106 @@ ts_store <
    Time Stamp = On>
 =========================================================================================================================
  ID            TIME (µs)   SEVERITY   CATEGORY............   Thread   Event   PAYLOAD....................................   
-  0                  225   Not Set.   DB..................        1       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
-  1                  231   Trace...   DB..................        1       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
-  2                  233   Debug...   DB..................        1       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
-  3                  234   Info....   DB..................        1       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
-  4                  236   Warn....   DB..................        1       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
-  5                  237   Error...   DB..................        1       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
-  6                  240   Critical   DB..................        1       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
-  7                  243   Not Set.   NET.................        0       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
-  8                  242   Fatal...   DB..................        1       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
-  9                  243   Not Set.   DB..................        1       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 10                  244   Trace...   DB..................        1       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 11                  246   Debug...   DB..................        1      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 12                  247   Info....   DB..................        1      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 13                  249   Warn....   DB..................        1      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 14                  250   Not Set.   UI..................        2       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 15                  250   Not Set.   SYS.................        3       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 16                  250   Error...   DB..................        1      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 17                  254   Trace...   NET.................        0       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 18                  254   Trace...   UI..................        2       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 19                  256   Debug...   NET.................        0       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 20                  256   Trace...   SYS.................        3       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 21                  256   Debug...   UI..................        2       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 22                  258   Critical   DB..................        1      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 23                  258   Info....   NET.................        0       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 24                  258   Debug...   SYS.................        3       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 25                  258   Info....   UI..................        2       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 26                  260   Fatal...   DB..................        1      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 27                  261   Info....   SYS.................        3       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 28                  261   Warn....   NET.................        0       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 29                  262   Not Set.   DB..................        1      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 30                  264   Not Set.   GFX.................        4       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 31                  264   Warn....   UI..................        2       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 32                  266   Warn....   SYS.................        3       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 33                  266   Error...   UI..................        2       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 34                  267   Error...   SYS.................        3       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 35                  268   Trace...   GFX.................        4       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 36                  269   Critical   UI..................        2       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 37                  270   Trace...   DB..................        1      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 38                  270   Critical   SYS.................        3       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 39                  271   Fatal...   UI..................        2       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 40                  271   Debug...   GFX.................        4       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 41                  271   Error...   NET.................        0       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 42                  271   Debug...   DB..................        1      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 43                  272   Fatal...   SYS.................        3       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 44                  273   Info....   DB..................        1      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 45                  274   Not Set.   UI..................        2       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 46                  275   Not Set.   SYS.................        3       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 47                  277   Info....   GFX.................        4       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 48                  277   Critical   NET.................        0       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 49                  278   Trace...   UI..................        2       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 50                  278   Warn....   GFX.................        4       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 51                  278   Fatal...   NET.................        0       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 52                  279   Trace...   SYS.................        3       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 53                  280   Debug...   UI..................        2      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 54                  281   Error...   GFX.................        4       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 55                  281   Debug...   SYS.................        3      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 56                  282   Info....   UI..................        2      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 57                  284   Not Set.   NET.................        0       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 58                  284   Critical   GFX.................        4       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 59                  286   Info....   SYS.................        3      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 60                  286   Fatal...   GFX.................        4       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 61                  287   Warn....   UI..................        2      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 62                  287   Trace...   NET.................        0       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 63                  288   Warn....   SYS.................        3      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 64                  288   Not Set.   GFX.................        4       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 65                  289   Error...   UI..................        2      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 66                  289   Debug...   NET.................        0      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 67                  290   Error...   SYS.................        3      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 68                  290   Trace...   GFX.................        4       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 69                  290   Critical   UI..................        2      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 70                  291   Info....   NET.................        0      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 71                  292   Fatal...   UI..................        2      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 72                  292   Debug...   GFX.................        4      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 73                  292   Warn....   NET.................        0      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 74                  293   Critical   SYS.................        3      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 75                  294   Info....   GFX.................        4      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 76                  295   Not Set.   UI..................        2      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 77                  295   Fatal...   SYS.................        3      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 78                  296   Warn....   GFX.................        4      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
- 79                  296   Error...   NET.................        0      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 80                  296   Trace...   UI..................        2      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 81                  296   Not Set.   SYS.................        3      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 82                  297   Error...   GFX.................        4      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
- 83                  299   Trace...   SYS.................        3      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 84                  300   Critical   NET.................        0      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 85                  300   Debug...   UI..................        2      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 86                  300   Debug...   SYS.................        3      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 87                  301   Critical   GFX.................        4      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
- 88                  302   Info....   SYS.................        3      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 89                  303   Fatal...   NET.................        0      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 90                  303   Fatal...   GFX.................        4      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
- 91                  304   Info....   UI..................        2      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 92                  305   Not Set.   NET.................        0      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 93                  305   Not Set.   GFX.................        4      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
- 94                  307   Trace...   NET.................        0      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 95                  309   Trace...   GFX.................        4      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
- 96                  309   Debug...   NET.................        0      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 97                  311   Debug...   GFX.................        4      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
- 98                  311   Info....   NET.................        0      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
- 99                  312   Info....   GFX.................        4      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+  0                  209   Not Set.   DB..................        1       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+  1                  210   Not Set.   UI..................        2       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+  2                  221   Not Set.   SYS.................        3       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+  3                  222   Trace...   DB..................        1       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+  4                  223   Trace...   UI..................        2       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+  5                  226   Not Set.   NET.................        0       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+  6                  224   Debug...   UI..................        2       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+  7                  225   Trace...   SYS.................        3       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+  8                  226   Debug...   DB..................        1       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+  9                  226   Info....   UI..................        2       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 10                  226   Debug...   SYS.................        3       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 11                  227   Info....   DB..................        1       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 12                  228   Warn....   UI..................        2       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 13                  228   Info....   SYS.................        3       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 14                  229   Warn....   DB..................        1       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 15                  230   Warn....   SYS.................        3       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 16                  231   Not Set.   GFX.................        4       0   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 17                  230   Error...   UI..................        2       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 18                  231   Error...   DB..................        1       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 19                  231   Error...   SYS.................        3       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 20                  233   Critical   UI..................        2       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 21                  234   Critical   SYS.................        3       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 22                  235   Fatal...   UI..................        2       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 23                  235   Trace...   GFX.................        4       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 24                  242   Critical   DB..................        1       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 25                  245   Trace...   NET.................        0       1   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 26                  244   Fatal...   SYS.................        3       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 27                  244   Fatal...   DB..................        1       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 28                  245   Not Set.   DB..................        1       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 29                  246   Not Set.   SYS.................        3       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 30                  246   Not Set.   UI..................        2       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 31                  249   Debug...   GFX.................        4       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 32                  251   Trace...   DB..................        1       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 33                  251   Info....   GFX.................        4       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 34                  253   Debug...   NET.................        0       2   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 35                  252   Trace...   SYS.................        3       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 36                  253   Debug...   DB..................        1      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 37                  254   Debug...   SYS.................        3      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 38                  254   Trace...   UI..................        2       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 39                  255   Warn....   GFX.................        4       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 40                  255   Info....   SYS.................        3      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 41                  255   Info....   DB..................        1      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 42                  256   Debug...   UI..................        2      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 43                  258   Info....   UI..................        2      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 44                  259   Info....   NET.................        0       3   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 45                  260   Warn....   UI..................        2      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 46                  260   Error...   GFX.................        4       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 47                  261   Warn....   SYS.................        3      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 48                  262   Error...   UI..................        2      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 49                  262   Warn....   DB..................        1      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 50                  263   Error...   SYS.................        3      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 51                  264   Critical   GFX.................        4       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 52                  265   Warn....   NET.................        0       4   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 53                  265   Critical   UI..................        2      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 54                  265   Critical   SYS.................        3      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 55                  266   Fatal...   GFX.................        4       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 56                  266   Error...   DB..................        1      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 57                  270   Error...   NET.................        0       5   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 58                  270   Not Set.   GFX.................        4       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 59                  271   Critical   DB..................        1      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 60                  271   Fatal...   SYS.................        3      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 61                  272   Fatal...   UI..................        2      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 62                  272   Trace...   GFX.................        4       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 63                  273   Critical   NET.................        0       6   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 64                  273   Not Set.   SYS.................        3      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 65                  274   Not Set.   UI..................        2      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 66                  275   Fatal...   DB..................        1      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 67                  275   Trace...   SYS.................        3      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 68                  275   Trace...   UI..................        2      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 69                  276   Fatal...   NET.................        0       7   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 70                  276   Not Set.   DB..................        1      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 71                  277   Debug...   UI..................        2      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 72                  277   Debug...   GFX.................        4      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 73                  277   Not Set.   NET.................        0       8   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 74                  278   Trace...   DB..................        1      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 75                  279   Info....   UI..................        2      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 76                  280   Debug...   SYS.................        3      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 77                  280   Info....   GFX.................        4      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 78                  280   Debug...   DB..................        1      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 79                  282   Trace...   NET.................        0       9   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 80                  282   Warn....   GFX.................        4      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 81                  283   Info....   DB..................        1      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 82                  285   Debug...   NET.................        0      10   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 83                  287   Info....   NET.................        0      11   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 84                  288   Info....   SYS.................        3      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 85                  289   Warn....   NET.................        0      12   Warning in processing notification 😕....   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Warn 
+ 86                  289   Error...   GFX.................        4      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 87                  291   Error...   NET.................        0      13   Error in processing notification 😣......   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Error 
+ 88                  291   Critical   GFX.................        4      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 89                  293   Critical   NET.................        0      14   Critical processing request 😣...........   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Critical 
+ 90                  293   Fatal...   GFX.................        4      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 91                  295   Fatal...   NET.................        0      15   Fatal error in processing notification 💀   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 92                  295   Not Set.   GFX.................        4      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 93                  297   Not Set.   NET.................        0      16   Not Set, default payload 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 94                  297   Trace...   GFX.................        4      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 95                  298   Trace...   NET.................        0      17   Trace processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Trace 
+ 96                  298   Debug...   GFX.................        4      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 97                  300   Debug...   NET.................        0      18   Debug processing request 😎..............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Debug 
+ 98                  300   Info....   GFX.................        4      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
+ 99                  301   Info....   NET.................        0      19   Info processing request 😊...............   FLAGS: LogConsole, KeeperRecord, HotCacheHint, HasData, HasIntData, HasDblData | Severity: Info 
 =========================================================================================================================
 Note: Output is zero-indexed → last printed entry is ID 99. Expected last ID = 99.
 Total entries stored: 100 (expected: 100)

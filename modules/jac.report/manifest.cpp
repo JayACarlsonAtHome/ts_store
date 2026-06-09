@@ -6,6 +6,7 @@ module;
 #include <cctype>
 #include <chrono>
 #include <ctime>
+#include <fstream>
 #include <format>
 #include <iostream>
 #include <map>
@@ -18,6 +19,7 @@ module;
 module jac.report;
 
 import jac.jtext.reader;
+import jac.jtext.writer;
 
 namespace fs = std::filesystem;
 
@@ -46,17 +48,46 @@ std::vector<std::string> split_fields(const JTextEntry& e) {
     return out;
 }
 
-JTextEntry make_entry(size_t num, const std::vector<std::string>& fields, std::string_view comment = {}) {
-    JTextEntry e;
-    e.number = num;
-    e.delimiter = '#';
-    e.level_sep = '|';
-    e.fields.reserve(fields.size());
-    for (const auto& f : fields) {
-        e.fields.push_back(f);
+void write_compact_row(std::ostream& out,
+                       size_t num,
+                       size_t pad_width,
+                       const std::vector<std::string>& fields) {
+    write_jtext_line_number(out, num, pad_width);
+    out << "#|# ";
+    for (size_t i = 0; i < fields.size(); ++i) {
+        if (i > 0) out << '|';
+        out << fields[i];
     }
-    e.comment = std::string(comment);
-    return e;
+    out << '\n';
+}
+
+std::string jtext_includes_rel(const fs::path& from_dir) {
+    fs::path p = fs::absolute(from_dir);
+    for (;;) {
+        if (fs::exists(p / "tests/jtext_includes")) {
+            auto rel = fs::relative(p / "tests/jtext_includes", from_dir);
+            std::string s = rel.generic_string();
+            if (s.empty() || s == ".") return "tests/jtext_includes";
+            return s;
+        }
+        if (!p.has_parent_path() || p == p.parent_path()) break;
+        p = p.parent_path();
+    }
+    return "../../../../tests/jtext_includes";
+}
+
+void write_manifest_section(std::ostream& out,
+                            std::string_view section_name,
+                            std::string_view fields_jtflds,
+                            const std::vector<std::vector<std::string>>& rows) {
+    write_light_section_banner(out, section_name);
+    write_fields_include_line(out, fields_jtflds);
+    const size_t pad_width = jtext_line_pad_width_for_count(rows.size());
+    size_t n = 1;
+    for (const auto& row : rows) {
+        write_compact_row(out, n++, pad_width, row);
+    }
+    out << '\n';
 }
 
 std::optional<RunResult> parse_scenario_entry(const JTextEntry& e, const fs::path& results_base) {
@@ -214,36 +245,11 @@ bool write_run_manifest_jtext(const fs::path& results_base,
         if (r.success) ++passed; else ++failed;
     }
 
-    JTextFile jf;
-    jf.date = meta.run_utc.empty() ? utc_now_iso() : meta.run_utc;
-    jf.purpose = "ts_store test matrix run manifest";
-    jf.table_name = "ts_run_manifest";
-    jf.filename = "run_manifest.jtext";
-    jf.case_mode = CaseMode::Sensitive;
+    const std::string run_utc = meta.run_utc.empty() ? utc_now_iso() : meta.run_utc;
 
     std::string compilers_csv = merge_compilers_csv(
         load_existing_compilers_csv(jtext_path), meta.compilers_csv);
 
-    JTextSection meta_sec;
-    meta_sec.name = "RunMeta";
-    meta_sec.entries.push_back(make_entry(
-        1,
-        {
-            meta.os_id,
-            meta.disk_type,
-            meta.size_label,
-            jf.date,
-            compilers_csv,
-            std::to_string(static_cast<int>(merged.size())),
-            std::to_string(passed),
-            std::to_string(failed),
-        },
-        "os_id|disk|size|run_utc|compilers|total|passed|failed"
-    ));
-
-    JTextSection scen_sec;
-    scen_sec.name = "Scenarios";
-    size_t n = 1;
     std::vector<RunResult> sorted;
     sorted.reserve(merged.size());
     for (auto& [_, r] : merged) sorted.push_back(r);
@@ -254,32 +260,71 @@ bool write_run_manifest_jtext(const fs::path& results_base,
         return a.scenario.output_mode < b.scenario.output_mode;
     });
 
+    std::vector<std::vector<std::string>> scenario_rows;
+    scenario_rows.reserve(sorted.size());
     for (const auto& r : sorted) {
         std::string log_rel;
         if (!r.log_path.empty()) {
-            log_rel = fs::relative(r.log_path, results_base).string();
+            log_rel = fs::relative(r.log_path, results_base).generic_string();
         }
         int records = scenario_record_count(r.scenario);
-        scen_sec.entries.push_back(make_entry(
-            n++,
-            {
-                test_to_subdir_name(r.scenario.test),
-                r.scenario.compiler,
-                r.scenario.persist,
-                r.scenario.output_mode,
-                std::to_string(records),
-                std::format("{:.3f}", r.duration_sec),
-                r.success ? "PASS" : "FAIL",
-                log_rel,
-            },
-            "test|compiler|persist|output|records|duration_sec|status|log_relpath"
-        ));
+        scenario_rows.push_back({
+            test_to_subdir_name(r.scenario.test),
+            r.scenario.compiler,
+            r.scenario.persist,
+            r.scenario.output_mode,
+            std::to_string(records),
+            std::format("{:.3f}", r.duration_sec),
+            r.success ? "PASS" : "FAIL",
+            log_rel,
+        });
     }
 
-    jf.sections = {std::move(meta_sec), std::move(scen_sec)};
+    const std::string inc_rel = jtext_includes_rel(results_base);
+    const std::string runmeta_fields =
+        inc_rel + "/run_manifest_runmeta_fields.jtFlds";
+    const std::string scenarios_fields =
+        inc_rel + "/run_manifest_scenarios_fields.jtFlds";
 
-    if (auto wr = jf.write(jtext_path.string()); !wr) {
-        std::cerr << "ERROR writing manifest: " << wr.error() << "\n";
+    std::ofstream out(jtext_path);
+    if (!out) {
+        std::cerr << "ERROR opening manifest for write: " << jtext_path << "\n";
+        return false;
+    }
+
+    write_file_comment_header(
+        out,
+        jtext_path.string(),
+        "ts_store test matrix run manifest",
+        "type=ts_store table=ts_run_manifest");
+
+    write_jtext_hash_header(
+        out,
+        run_utc,
+        "ts_store test matrix run manifest",
+        CaseMode::Sensitive,
+        "ts_run_manifest");
+    out << '\n';
+
+    write_manifest_section(
+        out,
+        "RunMeta",
+        runmeta_fields,
+        {{
+            meta.os_id,
+            meta.disk_type,
+            meta.size_label,
+            run_utc,
+            compilers_csv,
+            std::to_string(static_cast<int>(merged.size())),
+            std::to_string(passed),
+            std::to_string(failed),
+        }});
+
+    write_manifest_section(out, "Scenarios", scenarios_fields, scenario_rows);
+
+    if (!out) {
+        std::cerr << "ERROR writing manifest: " << jtext_path << "\n";
         return false;
     }
 

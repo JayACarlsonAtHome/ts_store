@@ -1,0 +1,14 @@
+//File:    tests/jtext_includes/run_manifest_runmeta_fields.jtFlds
+//Date:    2026-06-08
+//Purpose: jText Field List File for ts_store run_manifest RunMeta section (common)
+//Related: type=ts_store table=ts_run_manifest
+
+=== Fields ===
+ 1. #/# os_id/String/Not Null # platform id (e.g. OS_001)
+ 2. #/# disk/String/Not Null # disk type (ssd, x7k, 10k)
+ 3. #/# size_label/String/Not Null # matrix size (Smoke, xFull)
+ 4. #/# run_utc/String/Not Null # run timestamp (ISO 8601)
+ 5. #/# compilers/String/Not Null # compiler(s) in this leaf (csv)
+ 6. #/# total/Number/Not Null # scenario count
+ 7. #/# passed/Number/Not Null # passed scenarios
+ 8. #/# failed/Number/Not Null # failed scenarios

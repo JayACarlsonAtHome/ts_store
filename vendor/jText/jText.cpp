@@ -1,6 +1,7 @@
 #include "jText.h"
 #include <charconv>
 #include <filesystem>
+#include <optional>
 #include <sstream>
 #include <algorithm>
 #include <unordered_set>
@@ -120,13 +121,15 @@ auto JTextFile::parse_entry(std::string_view line) -> std::expected<JTextEntry, 
         while (!content.empty() && (content.front() == ' ' || content.front() == '\t')) {
             content.remove_prefix(1);
         }
-        size_t last_hash = content.rfind('#');
-        if (last_hash == std::string_view::npos) {
-            return std::unexpected{"Missing final '#' for comment"};
-        }
 
-        std::string data_part = trim(content.substr(0, last_hash));
-        std::string comment_part = trim(content.substr(last_hash + 1));
+        std::string data_part;
+        std::string comment_part;
+        if (auto comment_sep = content.rfind(" # "); comment_sep != std::string_view::npos) {
+            data_part = trim(content.substr(0, comment_sep));
+            comment_part = trim(content.substr(comment_sep + 3));
+        } else {
+            data_part = trim(content);
+        }
 
         if (data_part == "NULL" || data_part == "null" || data_part == "Null") {
             e.is_null = true;
@@ -219,17 +222,90 @@ auto JTextFile::parse_special_block(std::ifstream& in, JTextSection& sec)
 // Main Parser
 // ===================================================================
 
+namespace {
+
+auto spec_marker_interior(std::string_view line) -> std::optional<std::string> {
+    if (line.size() < 8 || !line.starts_with("===") || !line.ends_with("===")) {
+        return std::nullopt;
+    }
+    return JTextFile::trim(line.substr(3, line.size() - 6));
+}
+
+void activate_section(JTextFile& file,
+                      bool full_read,
+                      std::string_view target_section,
+                      std::string_view name,
+                      std::string& cur_section,
+                      JTextSection*& active) {
+    cur_section = std::string(name);
+    if (full_read || cur_section == target_section) {
+        file.sections.emplace_back();
+        active = &file.sections.back();
+        active->name = cur_section;
+    } else {
+        active = nullptr;
+    }
+}
+
+} // namespace
+
 auto JTextFile::parse_stream(std::ifstream& in, bool full_read, std::string_view target_section)
     -> std::expected<void, std::string>
 {
     std::string line;
     bool in_header = true;
+    bool file_has_spec_markers = false;
+    bool in_fields_block = false;
+    bool in_data_block = false;
     std::string cur_section;
     JTextSection* active = nullptr;
 
     while (std::getline(in, line)) {
         line = trim(line);
         if (line.empty()) continue;
+
+        if (auto interior = spec_marker_interior(line)) {
+            const auto& marker = *interior;
+
+            if (marker == "jText File") {
+                continue;
+            }
+            if (marker == "End File" || marker == "End Section" || marker == "End Data" ||
+                marker == "End Fields") {
+                if (marker == "End Fields") in_fields_block = false;
+                if (marker == "End Data") in_data_block = false;
+                continue;
+            }
+            if (marker.starts_with("Section: ")) {
+                file_has_spec_markers = true;
+                in_header = false;
+                in_fields_block = false;
+                in_data_block = false;
+                activate_section(*this, full_read, target_section,
+                                 trim(marker.substr(std::string_view("Section: ").size())),
+                                 cur_section, active);
+                continue;
+            }
+            if (marker == "Fields") {
+                in_fields_block = true;
+                in_data_block = false;
+                continue;
+            }
+            if (marker == "Data") {
+                file_has_spec_markers = true;
+                in_fields_block = false;
+                in_data_block = true;
+                if (!active && !cur_section.empty()) {
+                    activate_section(*this, full_read, target_section, cur_section,
+                                     cur_section, active);
+                }
+                continue;
+            }
+            if (marker.starts_with("<#include#>")) {
+                continue;
+            }
+            continue;
+        }
 
         // Header area: parse # JText metadata (Case, Purpose, …) before skipping
         // generic # comment lines.
@@ -254,7 +330,17 @@ auto JTextFile::parse_stream(std::ifstream& in, bool full_read, std::string_view
                 in_header = false;
                 }
         }
-        // Section header
+
+        if (in_fields_block) {
+            continue;
+        }
+
+        // Light profile: "# Fields: path.jtFlds" include (after // + # header blocks).
+        if (line.starts_with("# Fields:")) {
+            continue;
+        }
+
+        // Legacy section header
         if (line == "Field List" || line == "Data Section" ||
             (line.starts_with("-- ") && line.ends_with(" --"))) {
 
@@ -285,13 +371,17 @@ auto JTextFile::parse_stream(std::ifstream& in, bool full_read, std::string_view
             continue;
         }
 
+        const bool parse_data_row =
+            active &&
+            (!file_has_spec_markers || in_data_block);
+
         // Normal entry
-        if (auto res = parse_entry(line); res) {
-            if (active) {
+        if (parse_data_row) {
+            if (auto res = parse_entry(line); res) {
                 active->entries.push_back(std::move(*res));
+            } else {
+                log_error(std::format("Invalid entry: {}", line));
             }
-        } else {
-            log_error(std::format("Invalid entry: {}", line));
         }
     }
 
@@ -364,6 +454,7 @@ auto JTextFile::write(std::string_view filepath) const -> std::expected<void, st
 
     for (const auto& sec : sections) {
         writer.begin_section(sec.name);
+        writer.set_line_number_pad_width(jtext_line_pad_width_for_count(sec.entries.size()));
         for (const auto& e : sec.entries) {
             writer.append_entry(e);
         }
@@ -507,6 +598,51 @@ void write_file_comment_header(std::ostream& os,
     os << "//\n";
 }
 
+size_t jtext_line_pad_width_for_count(size_t item_count) {
+    if (item_count <= 9) return 1;
+    return std::to_string(item_count).size();
+}
+
+void write_jtext_line_number(std::ostream& out, size_t number, size_t pad_width) {
+    std::string s = std::to_string(number);
+    if (pad_width > s.size()) {
+        out << std::string(pad_width - s.size(), ' ');
+    }
+    out << s << ". ";
+}
+
+void write_jtext_hash_header(std::ostream& out,
+                               std::string_view created_utc,
+                               std::string_view purpose,
+                               CaseMode case_mode,
+                               std::string_view table_name,
+                               std::string_view sql_dialect,
+                               bool auto_id) {
+    out << std::format("# JText File - created {}\n", created_utc);
+    out << std::format("# Purpose - {}\n", purpose);
+    out << std::format("# Case: {}\n",
+        case_mode == CaseMode::Insensitive ? "INSENSITIVE" : "Sensitive");
+    if (!sql_dialect.empty()) {
+        out << std::format("# SQL Dialect: {}\n", sql_dialect);
+    }
+    if (!table_name.empty()) {
+        out << std::format("# Table Name: {}\n", table_name);
+    }
+    if (!sql_dialect.empty()) {
+        out << std::format("# AutoID: {}\n", auto_id ? "yes" : "no");
+        out << "# Note: Field types are user-defined and not validated. "
+               "The SQL generator will use them as provided.\n";
+    }
+}
+
+void write_light_section_banner(std::ostream& out, std::string_view section_name) {
+    out << "-- " << section_name << " --\n\n";
+}
+
+void write_fields_include_line(std::ostream& out, std::string_view jtflds_path) {
+    out << "# Fields: " << jtflds_path << "\n\n";
+}
+
 namespace {
 
 void write_header_block(std::ostream& out,
@@ -536,7 +672,7 @@ void write_header_block(std::ostream& out,
     out << "\n";
 }
 
-void write_entry_to_stream(std::ostream& out, const JTextEntry& e)
+void write_entry_to_stream(std::ostream& out, const JTextEntry& e, size_t pad_width)
 {
     if (e.is_special_block) {
         out << "*** ^^^ ###\n";
@@ -546,10 +682,7 @@ void write_entry_to_stream(std::ostream& out, const JTextEntry& e)
         return;
     }
 
-    char numbuf[32];
-    auto [p, ec] = std::to_chars(numbuf, numbuf + sizeof(numbuf), e.number);
-    out.write(numbuf, p - numbuf);
-    out << ". ";
+    write_jtext_line_number(out, e.number, pad_width);
 
     char sep = (e.level_sep == 0) ? '-' : e.level_sep;
     out << "#" << sep << "# ";
@@ -571,7 +704,7 @@ void write_entry_to_stream(std::ostream& out, const JTextEntry& e)
 }
 
 // Helper for auto-batching: format once into a string (cheaper to store than full JTextEntry)
-static std::string format_entry(const JTextEntry& e)
+static std::string format_entry(const JTextEntry& e, size_t pad_width)
 {
     if (e.is_special_block) {
         std::string s;
@@ -586,11 +719,11 @@ static std::string format_entry(const JTextEntry& e)
     std::string s;
     s.reserve(256);
 
-    // Faster than std::format for the common case
-    char numbuf[32];
-    auto [p, ec] = std::to_chars(numbuf, numbuf + sizeof(numbuf), e.number);
-    s.append(numbuf, p);
-    s += ". ";
+    {
+        std::ostringstream os;
+        write_jtext_line_number(os, e.number, pad_width);
+        s += os.str();
+    }
 
     char sep = (e.level_sep == 0) ? '-' : e.level_sep;
     s += '#';
@@ -619,15 +752,17 @@ static std::string format_entry(const JTextEntry& e)
 static std::string format_row(size_t number,
                               const std::vector<std::string>& fields,
                               std::string_view comment,
-                              char level_sep)
+                              char level_sep,
+                              size_t pad_width)
 {
     std::string s;
     s.reserve(256);
 
-    char numbuf[32];
-    auto [p, ec] = std::to_chars(numbuf, numbuf + sizeof(numbuf), number);
-    s.append(numbuf, p);
-    s += ". ";
+    {
+        std::ostringstream os;
+        write_jtext_line_number(os, number, pad_width);
+        s += os.str();
+    }
 
     char sep = (level_sep == 0) ? '-' : level_sep;
     s += '#';
@@ -736,6 +871,8 @@ void JTextWriter::set_sql_dialect(std::string_view dialect) { sql_dialect_ = dia
 void JTextWriter::set_table_name(std::string_view name) { table_name_ = name; }
 void JTextWriter::set_auto_id(bool enabled) { auto_id_ = enabled; }
 
+void JTextWriter::set_line_number_pad_width(size_t width) { line_pad_width_ = width; }
+
 void JTextWriter::write_header()
 {
     ensure_not_finalized();
@@ -763,6 +900,7 @@ void JTextWriter::begin_section(std::string_view name)
     if (!out_) return;
 
     flush_pending_batch();   // never buffer across section boundaries
+    line_pad_width_ = 0;
     write_section_header(*out_, name);
     out_->put('\n');
 }
@@ -774,12 +912,12 @@ void JTextWriter::append_entry(const JTextEntry& entry)
     if (!out_) return;
 
     if (auto_batch_size_ > 0) {
-        pending_batch_.push_back(format_entry(entry));
+        pending_batch_.push_back(format_entry(entry, line_pad_width_));
         if (pending_batch_.size() >= auto_batch_size_) {
             flush_pending_batch();
         }
     } else {
-        write_entry_to_stream(*out_, entry);
+        write_entry_to_stream(*out_, entry, line_pad_width_);
     }
 }
 
@@ -791,14 +929,14 @@ void JTextWriter::append_entries(std::span<const JTextEntry> entries)
 
     if (auto_batch_size_ > 0) {
         for (const auto& e : entries) {
-            pending_batch_.push_back(format_entry(e));
+            pending_batch_.push_back(format_entry(e, line_pad_width_));
             if (pending_batch_.size() >= auto_batch_size_) {
                 flush_pending_batch();
             }
         }
     } else {
         for (const auto& e : entries) {
-            write_entry_to_stream(*out_, e);
+            write_entry_to_stream(*out_, e, line_pad_width_);
         }
     }
 }
@@ -819,7 +957,7 @@ void JTextWriter::append_row(size_t number,
 
     if (auto_batch_size_ > 0) {
         // Fast path: format directly into the pending batch without ever creating a JTextEntry
-        pending_batch_.push_back(format_row(number, fields, comment, level_sep));
+        pending_batch_.push_back(format_row(number, fields, comment, level_sep, line_pad_width_));
         if (pending_batch_.size() >= auto_batch_size_) {
             flush_pending_batch();
         }
@@ -829,7 +967,7 @@ void JTextWriter::append_row(size_t number,
         for (const auto& f : fields) e.fields.emplace_back(f);
         e.comment = std::string(comment);
         e.level_sep = level_sep;
-        write_entry_to_stream(*out_, e);
+        write_entry_to_stream(*out_, e, line_pad_width_);
     }
 }
 
