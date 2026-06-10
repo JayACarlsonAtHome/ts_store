@@ -44,10 +44,11 @@
 #
 # If no OS_ID (auto or override), the older flat layout test-results/<DISK_TYPE>/ is used.
 #
-# Number formatting in CLI summaries (Total/Failed/scenario counts):
-#   Default: system locale (LC_NUMERIC / LANG) — e.g. 12,123,123 or 12.123.123
-#   TS_STORE_NUMBER_LOCALE=en_US.UTF-8  — force a locale name
-#   TS_STORE_THOUSANDS_SEP=,            — explicit separator (comma or dot)
+# Number formatting in CLI summaries and benchmark stats (ops/sec, µs, events):
+#   Default: comma grouping (10,564,124) unless locale env vars are set
+#   TS_STORE_NUMBER_LOCALE=en_US.utf8  — force a locale name
+#   TS_STORE_THOUSANDS_SEP=.           — explicit separator (comma or dot)
+#   LC_NUMERIC / LANG                  — use system locale grouping
 DISK_TYPE=ssd
 SIZE=full
 OS_ID=OS_003  

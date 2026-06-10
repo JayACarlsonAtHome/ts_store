@@ -201,9 +201,9 @@ int main(int argc, char** argv)
                 {
                     double ops_per_sec = static_cast<double>(TOTAL) * 1'000'000.0 / static_cast<double>(microseconds);
                     std::cout << "PASS — "
-                              << std::setw(8) << microseconds << " µs → "
-                              << std::fixed << std::setprecision(0)
-                              << std::setw(9) << static_cast<size_t>(ops_per_sec + 0.5)
+                              << format_locale_int(static_cast<std::uint64_t>(microseconds))
+                              << " µs → "
+                              << format_locale_int(static_cast<std::uint64_t>(ops_per_sec + 0.5))
                               << " ops/sec\n\n";
                 }
             }
@@ -223,15 +223,20 @@ int main(int argc, char** argv)
 
     std::cout << "\n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";
-    std::cout << "               FINAL RESULT — " << RUNS << "-RUN STATISTICS            \n";
+    std::cout << "               FINAL RESULT — " << format_locale_int(RUNS)
+              << "-RUN STATISTICS            \n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";
-    std::cout << "  Fastest run        : " << std::setw(9) << *min_it << " µs  → "
-              << std::setw(10) << static_cast<uint64_t>(max_ops_sec + 0.5) << " ops/sec\n";
-    std::cout << "  Slowest run        : " << std::setw(9) << *max_it << " µs  → "
-              << std::setw(10) << static_cast<uint64_t>(min_ops_sec + 0.5) << " ops/sec\n";
-    std::cout << "  Average            : " << std::setw(9) << avg_us     << " µs  → "
-              << std::setw(10) << static_cast<uint64_t>(avg_ops_sec + 0.5) << " ops/sec\n";
-    std::cout << "  (" << TOTAL << " events per run, 100% verified, zero corruption)\n";
+    std::cout << "  Fastest run        : "
+              << format_locale_int(static_cast<std::uint64_t>(*min_it)) << " µs  → "
+              << format_locale_int(static_cast<std::uint64_t>(max_ops_sec + 0.5)) << " ops/sec\n";
+    std::cout << "  Slowest run        : "
+              << format_locale_int(static_cast<std::uint64_t>(*max_it)) << " µs  → "
+              << format_locale_int(static_cast<std::uint64_t>(min_ops_sec + 0.5)) << " ops/sec\n";
+    std::cout << "  Average            : "
+              << format_locale_int(static_cast<std::uint64_t>(avg_us + 0.5)) << " µs  → "
+              << format_locale_int(static_cast<std::uint64_t>(avg_ops_sec + 0.5)) << " ops/sec\n";
+    std::cout << "  (" << format_locale_int(static_cast<std::uint64_t>(TOTAL))
+              << " events per run, 100% verified, zero corruption)\n";
     std::cout << "═══════════════════════════════════════════════════════════════\n";
 
     return 0;
