@@ -85,6 +85,7 @@ target_sources(jac_report
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         FILES modules/jac.report/jac.report.cppm
     PRIVATE
+        modules/jac.report/format.cpp
         modules/jac.report/manifest.cpp
         modules/jac.report/summarize.cpp
 )

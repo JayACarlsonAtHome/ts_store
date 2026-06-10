@@ -294,10 +294,10 @@ void write_hub_readme(const fs::path& hub_path, const std::vector<HubLeaf>& leav
 
     for (const auto& h : leaves) {
         std::string scenarios = h.has_manifest
-            ? std::format("{}/{}", h.passed, h.total)
+            ? std::format("{}/{}", format_locale_int(h.passed), format_locale_int(h.total))
             : "—";
         if (h.has_manifest && h.failed > 0) {
-            scenarios += std::format(" (**{} failed**)", h.failed);
+            scenarios += std::format(" (**{} failed**)", format_locale_int(h.failed));
         }
         std::string run_utc = h.run_utc.empty() ? "—" : h.run_utc;
         std::string compiler = h.compiler.empty()

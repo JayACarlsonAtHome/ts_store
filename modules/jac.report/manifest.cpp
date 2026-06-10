@@ -329,6 +329,7 @@ bool write_run_manifest_jtext(const fs::path& results_base,
     }
 
     std::cout << "Wrote manifest: " << jtext_path.string()
-              << " (" << merged.size() << " scenarios)\n";
+              << " (" << format_locale_int(static_cast<std::uint64_t>(merged.size()))
+              << " scenarios)\n";
     return true;
 }

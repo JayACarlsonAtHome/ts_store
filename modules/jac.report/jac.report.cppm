@@ -63,3 +63,7 @@ export bool summarize_results_leaf(const fs::path& results_base,
                                    const fs::path& project_root);
 
 export bool write_test_summary_hub(const fs::path& project_root);
+
+export std::string format_locale_int(std::int64_t value);
+export std::string format_locale_int(std::uint64_t value);
+export std::string format_locale_int(int value);

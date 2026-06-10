@@ -101,7 +101,8 @@ int main(int argc, char** argv) {
         for (auto& c : compilers) std::cout << c << " ";
         std::cout << "\nSelected: ";
         for (auto& s : selected) std::cout << s << " ";
-        std::cout << "\nTotal scenarios: " << scenarios.size() << "\n\n";
+        std::cout << "\nTotal scenarios: "
+                  << format_locale_int(static_cast<std::uint64_t>(scenarios.size())) << "\n\n";
 
         if (opts.dry_run) {
             std::cout << "DRY-RUN:\n";
@@ -134,7 +135,9 @@ int main(int argc, char** argv) {
             for (const auto& scen : scenarios) {
                 if (scen.compiler != compiler) continue;
                 ++scenario_index;
-                std::cout << "[" << scenario_index << "/" << scenarios.size() << "] ";
+                std::cout << "[" << format_locale_int(scenario_index) << "/"
+                          << format_locale_int(static_cast<std::uint64_t>(scenarios.size()))
+                          << "] ";
                 fs::path log_dir = scenario_log_dir(results_base, scen);
                 RunResult rr = run_scenario(scen, project_root, log_dir);
                 run_results.push_back(rr);
@@ -169,7 +172,9 @@ int main(int argc, char** argv) {
         }
 
         std::cout << "=== Summary ===\n";
-        std::cout << std::format("Total:   {:>3}\nFailed:  {:>3}\n", scenarios.size(), failed);
+        std::cout << std::format("Total:   {}\nFailed:  {}\n",
+                                 format_locale_int(static_cast<std::uint64_t>(scenarios.size())),
+                                 format_locale_int(failed));
 
         return failed > 0 ? 1 : 0;
 
