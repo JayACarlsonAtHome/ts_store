@@ -7,7 +7,7 @@
 | gcc | jtext | off | 100 | 0.01s | PASS | [log](../jText_logs/TS_STORE_TEST_002_TS/gcc_jtext_off.log) |
 | gcc | jtext | on | 100 | 0.01s | PASS | [log](../jText_logs/TS_STORE_TEST_002_TS/gcc_jtext_on.log) |
 | gcc | none | off | 100 | 0.01s | PASS | [log](../inmem_logs/TS_STORE_TEST_002_TS/gcc_none_off.log) |
-| gcc | none | on | 100 | 0.01s | PASS | [log](../inmem_logs/TS_STORE_TEST_002_TS/gcc_none_on.log) |
-| gcc | sql | off | 100 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_002_TS/gcc_sql_off.log) |
-| gcc | sql | on | 100 | 0.03s | PASS | [log](../sql_logs/TS_STORE_TEST_002_TS/gcc_sql_on.log) |
+| gcc | none | on | 100 | 0.00s | PASS | [log](../inmem_logs/TS_STORE_TEST_002_TS/gcc_none_on.log) |
+| gcc | sql | off | 100 | 0.00s | PASS | [log](../sql_logs/TS_STORE_TEST_002_TS/gcc_sql_off.log) |
+| gcc | sql | on | 100 | 0.02s | PASS | [log](../sql_logs/TS_STORE_TEST_002_TS/gcc_sql_on.log) |
 

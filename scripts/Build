@@ -4,8 +4,8 @@
 # Usage:
 #   ./scripts/Build FileCheckList.txt [--FullRebuild=On/Off] [--SmokeTest=On/Off] [--FullTest=On/Off]
 #
-# Walks FileCheckList.txt top to bottom. Rows marked [x] are built and tested; rows
-# marked [ ] are skipped. Continues until end of file.
+# Walks FileCheckList.txt top to bottom. Section headers (#OS_001 or OS_003) set OS_ID
+# for subsequent rows. Rows marked [x] are built and tested; [ ] are skipped.
 
 set -euo pipefail
 
@@ -135,10 +135,31 @@ resolve_compiler() {
   fi
 }
 
+parse_os_section() {
+  local line="$1"
+  local trimmed
+  trimmed="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  if [[ "$trimmed" =~ ^#?(OS_[0-9]{3})$ ]]; then
+    echo "${BASH_REMATCH[1]}"
+    return 0
+  fi
+  return 1
+}
+
+set_run_param() {
+  local file="$1" key="$2" value="$3"
+  if grep -q "^${key}=" "$file" 2>/dev/null; then
+    sed -i "s/^${key}=.*/${key}=${value}/" "$file"
+  else
+    echo "${key}=${value}" >> "$file"
+  fi
+}
+
 process_checklist_row() {
   local checklist_line="$1"
   local row_num="$2"
   local row_total="$3"
+  local os_id="$4"
 
   # Parse: [x] GCC    / RHEL 9.8 / ssd
   local details compiler_field platform_field disk_field
@@ -158,7 +179,7 @@ process_checklist_row() {
   echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
   echo "Checklist: $CHECKLIST"
   echo "Running:   $checklist_line"
-  echo "Parsed:    compiler=$compiler_field platform=$platform_field disk=$disk_norm"
+  echo "Parsed:    os_id=$os_id compiler=$compiler_field platform=$platform_field disk=$disk_norm"
   echo "Flags:     FullRebuild=$FULL_REBUILD SmokeTest=$SMOKE_TEST FullTest=$FULL_TEST"
   echo "Build dir: $build_dir (transient — removed after success)"
   echo
@@ -222,11 +243,12 @@ process_checklist_row() {
     params_rel="build-seq/${platform_slug}-${compiler_slug}/run_params.txt"
     params_abs="$build_dir/run_params.txt"
     cp "$PROJECT_ROOT/tests/test_params.txt" "$params_abs"
-    sed -i "s/^SIZE=.*/SIZE=${test_size}/" "$params_abs"
-    sed -i "s/^DISK_TYPE=.*/DISK_TYPE=${disk_norm}/" "$params_abs"
+    set_run_param "$params_abs" "OS_ID" "$os_id"
+    set_run_param "$params_abs" "SIZE" "$test_size"
+    set_run_param "$params_abs" "DISK_TYPE" "$disk_norm"
 
     echo
-    echo "=== Test matrix (SIZE=$test_size DISK=$disk_norm) ==="
+    echo "=== Test matrix (OS_ID=$os_id SIZE=$test_size DISK=$disk_norm) ==="
     ./ts_test_cli run --compiler "$TEST_CLI_COMPILER" --disk "$disk_norm" --params "$params_rel"
   else
     echo
@@ -282,12 +304,35 @@ MATRIX_TARGETS=(
 )
 
 ROW_NUM=0
+CURRENT_OS_ID=""
 while IFS= read -r line || [[ -n "$line" ]]; do
-  if [[ ! "$line" =~ ^\[x\] ]]; then
+  trimmed="${line#"${line%%[![:space:]]*}"}"
+  trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+  [[ -z "$trimmed" ]] && continue
+
+  if os_from_section="$(parse_os_section "$trimmed")"; then
+    CURRENT_OS_ID="$os_from_section"
     continue
   fi
+
+  row="$trimmed"
+  if [[ "$row" == \[*\]* ]]; then
+    row="${row%%#*}"
+    row="${row%"${row##*[![:space:]]}"}"
+  fi
+
+  if [[ ! "$row" =~ ^\[x\] ]]; then
+    continue
+  fi
+
+  if [[ -z "$CURRENT_OS_ID" ]]; then
+    echo "ERROR: [x] row before any OS_00n section header in $CHECKLIST:" >&2
+    echo "  $row" >&2
+    exit 1
+  fi
+
   ROW_NUM=$((ROW_NUM + 1))
-  process_checklist_row "$line" "$ROW_NUM" "$RUN_COUNT"
+  process_checklist_row "$row" "$ROW_NUM" "$RUN_COUNT" "$CURRENT_OS_ID"
 done < "$CHECKLIST"
 
 echo "=== All $ROW_NUM [x] row(s) complete ==="

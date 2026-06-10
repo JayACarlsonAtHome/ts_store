@@ -1,9 +1,9 @@
 //File:    /home/jay/git/ts_store/test-results/OS_003/gcc/ssd/Smoke/run_manifest.jtext
-//Date:    2026-06-09
+//Date:    2026-06-10
 //Purpose: ts_store test matrix run manifest
 //Related: type=ts_store table=ts_run_manifest
 //
-# JText File - created 2026-06-09T23:15:34Z
+# JText File - created 2026-06-10T01:45:41Z
 # Purpose - ts_store test matrix run manifest
 # Case: Sensitive
 # Table Name: ts_run_manifest
@@ -12,123 +12,123 @@
 
 # Fields: ../../../../../tests/jtext_includes/run_manifest_runmeta_fields.jtFlds
 
-1. #|# OS_003|ssd|Smoke|2026-06-09T23:15:34Z|gcc|113|113|0
+1. #|# OS_003|ssd|Smoke|2026-06-10T01:45:41Z|gcc|113|113|0
 
 -- Scenarios --
 
 # Fields: ../../../../../tests/jtext_includes/run_manifest_scenarios_fields.jtFlds
 
-  1. #|# TS_STORE_TEST_001_TS|gcc|binary|off|100|0.029|PASS|binary_logs/TS_STORE_TEST_001_TS/gcc_binary_off.log
-  2. #|# TS_STORE_TEST_001_TS|gcc|binary|on|100|0.021|PASS|binary_logs/TS_STORE_TEST_001_TS/gcc_binary_on.log
-  3. #|# TS_STORE_TEST_001_TS|gcc|jtext|off|100|0.026|PASS|jText_logs/TS_STORE_TEST_001_TS/gcc_jtext_off.log
-  4. #|# TS_STORE_TEST_001_TS|gcc|jtext|on|100|0.027|PASS|jText_logs/TS_STORE_TEST_001_TS/gcc_jtext_on.log
-  5. #|# TS_STORE_TEST_001_TS|gcc|none|off|100|0.022|PASS|inmem_logs/TS_STORE_TEST_001_TS/gcc_none_off.log
-  6. #|# TS_STORE_TEST_001_TS|gcc|none|on|100|0.022|PASS|inmem_logs/TS_STORE_TEST_001_TS/gcc_none_on.log
-  7. #|# TS_STORE_TEST_001_TS|gcc|sql|off|100|0.025|PASS|sql_logs/TS_STORE_TEST_001_TS/gcc_sql_off.log
-  8. #|# TS_STORE_TEST_001_TS|gcc|sql|on|100|0.042|PASS|sql_logs/TS_STORE_TEST_001_TS/gcc_sql_on.log
-  9. #|# TS_STORE_TEST_001_XS|gcc|binary|off|100|0.030|PASS|binary_logs/TS_STORE_TEST_001_XS/gcc_binary_off.log
- 10. #|# TS_STORE_TEST_001_XS|gcc|binary|on|100|0.030|PASS|binary_logs/TS_STORE_TEST_001_XS/gcc_binary_on.log
- 11. #|# TS_STORE_TEST_001_XS|gcc|jtext|off|100|0.024|PASS|jText_logs/TS_STORE_TEST_001_XS/gcc_jtext_off.log
- 12. #|# TS_STORE_TEST_001_XS|gcc|jtext|on|100|0.025|PASS|jText_logs/TS_STORE_TEST_001_XS/gcc_jtext_on.log
- 13. #|# TS_STORE_TEST_001_XS|gcc|none|off|100|0.022|PASS|inmem_logs/TS_STORE_TEST_001_XS/gcc_none_off.log
- 14. #|# TS_STORE_TEST_001_XS|gcc|none|on|100|0.024|PASS|inmem_logs/TS_STORE_TEST_001_XS/gcc_none_on.log
- 15. #|# TS_STORE_TEST_001_XS|gcc|sql|off|100|0.025|PASS|sql_logs/TS_STORE_TEST_001_XS/gcc_sql_off.log
- 16. #|# TS_STORE_TEST_001_XS|gcc|sql|on|100|0.042|PASS|sql_logs/TS_STORE_TEST_001_XS/gcc_sql_on.log
- 17. #|# TS_STORE_TEST_002_TS|gcc|binary|off|100|0.013|PASS|binary_logs/TS_STORE_TEST_002_TS/gcc_binary_off.log
- 18. #|# TS_STORE_TEST_002_TS|gcc|binary|on|100|0.015|PASS|binary_logs/TS_STORE_TEST_002_TS/gcc_binary_on.log
- 19. #|# TS_STORE_TEST_002_TS|gcc|jtext|off|100|0.013|PASS|jText_logs/TS_STORE_TEST_002_TS/gcc_jtext_off.log
- 20. #|# TS_STORE_TEST_002_TS|gcc|jtext|on|100|0.013|PASS|jText_logs/TS_STORE_TEST_002_TS/gcc_jtext_on.log
- 21. #|# TS_STORE_TEST_002_TS|gcc|none|off|100|0.011|PASS|inmem_logs/TS_STORE_TEST_002_TS/gcc_none_off.log
- 22. #|# TS_STORE_TEST_002_TS|gcc|none|on|100|0.012|PASS|inmem_logs/TS_STORE_TEST_002_TS/gcc_none_on.log
- 23. #|# TS_STORE_TEST_002_TS|gcc|sql|off|100|0.013|PASS|sql_logs/TS_STORE_TEST_002_TS/gcc_sql_off.log
- 24. #|# TS_STORE_TEST_002_TS|gcc|sql|on|100|0.029|PASS|sql_logs/TS_STORE_TEST_002_TS/gcc_sql_on.log
- 25. #|# TS_STORE_TEST_002_XS|gcc|binary|off|100|0.014|PASS|binary_logs/TS_STORE_TEST_002_XS/gcc_binary_off.log
- 26. #|# TS_STORE_TEST_002_XS|gcc|binary|on|100|0.015|PASS|binary_logs/TS_STORE_TEST_002_XS/gcc_binary_on.log
- 27. #|# TS_STORE_TEST_002_XS|gcc|jtext|off|100|0.014|PASS|jText_logs/TS_STORE_TEST_002_XS/gcc_jtext_off.log
- 28. #|# TS_STORE_TEST_002_XS|gcc|jtext|on|100|0.012|PASS|jText_logs/TS_STORE_TEST_002_XS/gcc_jtext_on.log
- 29. #|# TS_STORE_TEST_002_XS|gcc|none|off|100|0.011|PASS|inmem_logs/TS_STORE_TEST_002_XS/gcc_none_off.log
- 30. #|# TS_STORE_TEST_002_XS|gcc|none|on|100|0.010|PASS|inmem_logs/TS_STORE_TEST_002_XS/gcc_none_on.log
- 31. #|# TS_STORE_TEST_002_XS|gcc|sql|off|100|0.013|PASS|sql_logs/TS_STORE_TEST_002_XS/gcc_sql_off.log
- 32. #|# TS_STORE_TEST_002_XS|gcc|sql|on|100|0.029|PASS|sql_logs/TS_STORE_TEST_002_XS/gcc_sql_on.log
- 33. #|# TS_STORE_TEST_003_TS|gcc|binary|off|100|0.027|PASS|binary_logs/TS_STORE_TEST_003_TS/gcc_binary_off.log
- 34. #|# TS_STORE_TEST_003_TS|gcc|binary|on|100|0.028|PASS|binary_logs/TS_STORE_TEST_003_TS/gcc_binary_on.log
- 35. #|# TS_STORE_TEST_003_TS|gcc|jtext|off|100|0.026|PASS|jText_logs/TS_STORE_TEST_003_TS/gcc_jtext_off.log
- 36. #|# TS_STORE_TEST_003_TS|gcc|jtext|on|100|0.024|PASS|jText_logs/TS_STORE_TEST_003_TS/gcc_jtext_on.log
- 37. #|# TS_STORE_TEST_003_TS|gcc|none|off|100|0.024|PASS|inmem_logs/TS_STORE_TEST_003_TS/gcc_none_off.log
- 38. #|# TS_STORE_TEST_003_TS|gcc|none|on|100|0.022|PASS|inmem_logs/TS_STORE_TEST_003_TS/gcc_none_on.log
- 39. #|# TS_STORE_TEST_003_TS|gcc|sql|off|100|0.024|PASS|sql_logs/TS_STORE_TEST_003_TS/gcc_sql_off.log
- 40. #|# TS_STORE_TEST_003_TS|gcc|sql|on|100|0.038|PASS|sql_logs/TS_STORE_TEST_003_TS/gcc_sql_on.log
- 41. #|# TS_STORE_TEST_003_XS|gcc|binary|off|100|0.028|PASS|binary_logs/TS_STORE_TEST_003_XS/gcc_binary_off.log
- 42. #|# TS_STORE_TEST_003_XS|gcc|binary|on|100|0.030|PASS|binary_logs/TS_STORE_TEST_003_XS/gcc_binary_on.log
- 43. #|# TS_STORE_TEST_003_XS|gcc|jtext|off|100|0.025|PASS|jText_logs/TS_STORE_TEST_003_XS/gcc_jtext_off.log
- 44. #|# TS_STORE_TEST_003_XS|gcc|jtext|on|100|0.024|PASS|jText_logs/TS_STORE_TEST_003_XS/gcc_jtext_on.log
- 45. #|# TS_STORE_TEST_003_XS|gcc|none|off|100|0.024|PASS|inmem_logs/TS_STORE_TEST_003_XS/gcc_none_off.log
- 46. #|# TS_STORE_TEST_003_XS|gcc|none|on|100|0.023|PASS|inmem_logs/TS_STORE_TEST_003_XS/gcc_none_on.log
- 47. #|# TS_STORE_TEST_003_XS|gcc|sql|off|100|0.026|PASS|sql_logs/TS_STORE_TEST_003_XS/gcc_sql_off.log
- 48. #|# TS_STORE_TEST_003_XS|gcc|sql|on|100|0.040|PASS|sql_logs/TS_STORE_TEST_003_XS/gcc_sql_on.log
- 49. #|# TS_STORE_TEST_004_TS|gcc|binary|off|100|0.026|PASS|binary_logs/TS_STORE_TEST_004_TS/gcc_binary_off.log
- 50. #|# TS_STORE_TEST_004_TS|gcc|binary|on|100|0.030|PASS|binary_logs/TS_STORE_TEST_004_TS/gcc_binary_on.log
- 51. #|# TS_STORE_TEST_004_TS|gcc|jtext|off|100|0.024|PASS|jText_logs/TS_STORE_TEST_004_TS/gcc_jtext_off.log
- 52. #|# TS_STORE_TEST_004_TS|gcc|jtext|on|100|0.024|PASS|jText_logs/TS_STORE_TEST_004_TS/gcc_jtext_on.log
- 53. #|# TS_STORE_TEST_004_TS|gcc|none|off|100|0.023|PASS|inmem_logs/TS_STORE_TEST_004_TS/gcc_none_off.log
- 54. #|# TS_STORE_TEST_004_TS|gcc|none|on|100|0.022|PASS|inmem_logs/TS_STORE_TEST_004_TS/gcc_none_on.log
- 55. #|# TS_STORE_TEST_004_TS|gcc|sql|off|100|0.024|PASS|sql_logs/TS_STORE_TEST_004_TS/gcc_sql_off.log
- 56. #|# TS_STORE_TEST_004_TS|gcc|sql|on|100|0.039|PASS|sql_logs/TS_STORE_TEST_004_TS/gcc_sql_on.log
- 57. #|# TS_STORE_TEST_004_XS|gcc|binary|off|100|0.027|PASS|binary_logs/TS_STORE_TEST_004_XS/gcc_binary_off.log
- 58. #|# TS_STORE_TEST_004_XS|gcc|binary|on|100|0.029|PASS|binary_logs/TS_STORE_TEST_004_XS/gcc_binary_on.log
- 59. #|# TS_STORE_TEST_004_XS|gcc|jtext|off|100|0.028|PASS|jText_logs/TS_STORE_TEST_004_XS/gcc_jtext_off.log
- 60. #|# TS_STORE_TEST_004_XS|gcc|jtext|on|100|0.025|PASS|jText_logs/TS_STORE_TEST_004_XS/gcc_jtext_on.log
- 61. #|# TS_STORE_TEST_004_XS|gcc|none|off|100|0.022|PASS|inmem_logs/TS_STORE_TEST_004_XS/gcc_none_off.log
- 62. #|# TS_STORE_TEST_004_XS|gcc|none|on|100|0.023|PASS|inmem_logs/TS_STORE_TEST_004_XS/gcc_none_on.log
- 63. #|# TS_STORE_TEST_004_XS|gcc|sql|off|100|0.025|PASS|sql_logs/TS_STORE_TEST_004_XS/gcc_sql_off.log
- 64. #|# TS_STORE_TEST_004_XS|gcc|sql|on|100|0.040|PASS|sql_logs/TS_STORE_TEST_004_XS/gcc_sql_on.log
- 65. #|# TS_STORE_TEST_005_TS|gcc|binary|off|1000|0.012|PASS|binary_logs/TS_STORE_TEST_005_TS/gcc_binary_off.log
- 66. #|# TS_STORE_TEST_005_TS|gcc|binary|on|1000|0.019|PASS|binary_logs/TS_STORE_TEST_005_TS/gcc_binary_on.log
- 67. #|# TS_STORE_TEST_005_TS|gcc|jtext|off|1000|0.009|PASS|jText_logs/TS_STORE_TEST_005_TS/gcc_jtext_off.log
- 68. #|# TS_STORE_TEST_005_TS|gcc|jtext|on|1000|0.009|PASS|jText_logs/TS_STORE_TEST_005_TS/gcc_jtext_on.log
- 69. #|# TS_STORE_TEST_005_TS|gcc|none|off|1000|0.005|PASS|inmem_logs/TS_STORE_TEST_005_TS/gcc_none_off.log
+  1. #|# TS_STORE_TEST_001_TS|gcc|binary|off|100|0.008|PASS|binary_logs/TS_STORE_TEST_001_TS/gcc_binary_off.log
+  2. #|# TS_STORE_TEST_001_TS|gcc|binary|on|100|0.014|PASS|binary_logs/TS_STORE_TEST_001_TS/gcc_binary_on.log
+  3. #|# TS_STORE_TEST_001_TS|gcc|jtext|off|100|0.011|PASS|jText_logs/TS_STORE_TEST_001_TS/gcc_jtext_off.log
+  4. #|# TS_STORE_TEST_001_TS|gcc|jtext|on|100|0.009|PASS|jText_logs/TS_STORE_TEST_001_TS/gcc_jtext_on.log
+  5. #|# TS_STORE_TEST_001_TS|gcc|none|off|100|0.006|PASS|inmem_logs/TS_STORE_TEST_001_TS/gcc_none_off.log
+  6. #|# TS_STORE_TEST_001_TS|gcc|none|on|100|0.009|PASS|inmem_logs/TS_STORE_TEST_001_TS/gcc_none_on.log
+  7. #|# TS_STORE_TEST_001_TS|gcc|sql|off|100|0.010|PASS|sql_logs/TS_STORE_TEST_001_TS/gcc_sql_off.log
+  8. #|# TS_STORE_TEST_001_TS|gcc|sql|on|100|0.020|PASS|sql_logs/TS_STORE_TEST_001_TS/gcc_sql_on.log
+  9. #|# TS_STORE_TEST_001_XS|gcc|binary|off|100|0.010|PASS|binary_logs/TS_STORE_TEST_001_XS/gcc_binary_off.log
+ 10. #|# TS_STORE_TEST_001_XS|gcc|binary|on|100|0.011|PASS|binary_logs/TS_STORE_TEST_001_XS/gcc_binary_on.log
+ 11. #|# TS_STORE_TEST_001_XS|gcc|jtext|off|100|0.007|PASS|jText_logs/TS_STORE_TEST_001_XS/gcc_jtext_off.log
+ 12. #|# TS_STORE_TEST_001_XS|gcc|jtext|on|100|0.008|PASS|jText_logs/TS_STORE_TEST_001_XS/gcc_jtext_on.log
+ 13. #|# TS_STORE_TEST_001_XS|gcc|none|off|100|0.008|PASS|inmem_logs/TS_STORE_TEST_001_XS/gcc_none_off.log
+ 14. #|# TS_STORE_TEST_001_XS|gcc|none|on|100|0.010|PASS|inmem_logs/TS_STORE_TEST_001_XS/gcc_none_on.log
+ 15. #|# TS_STORE_TEST_001_XS|gcc|sql|off|100|0.007|PASS|sql_logs/TS_STORE_TEST_001_XS/gcc_sql_off.log
+ 16. #|# TS_STORE_TEST_001_XS|gcc|sql|on|100|0.025|PASS|sql_logs/TS_STORE_TEST_001_XS/gcc_sql_on.log
+ 17. #|# TS_STORE_TEST_002_TS|gcc|binary|off|100|0.005|PASS|binary_logs/TS_STORE_TEST_002_TS/gcc_binary_off.log
+ 18. #|# TS_STORE_TEST_002_TS|gcc|binary|on|100|0.008|PASS|binary_logs/TS_STORE_TEST_002_TS/gcc_binary_on.log
+ 19. #|# TS_STORE_TEST_002_TS|gcc|jtext|off|100|0.007|PASS|jText_logs/TS_STORE_TEST_002_TS/gcc_jtext_off.log
+ 20. #|# TS_STORE_TEST_002_TS|gcc|jtext|on|100|0.005|PASS|jText_logs/TS_STORE_TEST_002_TS/gcc_jtext_on.log
+ 21. #|# TS_STORE_TEST_002_TS|gcc|none|off|100|0.006|PASS|inmem_logs/TS_STORE_TEST_002_TS/gcc_none_off.log
+ 22. #|# TS_STORE_TEST_002_TS|gcc|none|on|100|0.004|PASS|inmem_logs/TS_STORE_TEST_002_TS/gcc_none_on.log
+ 23. #|# TS_STORE_TEST_002_TS|gcc|sql|off|100|0.004|PASS|sql_logs/TS_STORE_TEST_002_TS/gcc_sql_off.log
+ 24. #|# TS_STORE_TEST_002_TS|gcc|sql|on|100|0.018|PASS|sql_logs/TS_STORE_TEST_002_TS/gcc_sql_on.log
+ 25. #|# TS_STORE_TEST_002_XS|gcc|binary|off|100|0.005|PASS|binary_logs/TS_STORE_TEST_002_XS/gcc_binary_off.log
+ 26. #|# TS_STORE_TEST_002_XS|gcc|binary|on|100|0.011|PASS|binary_logs/TS_STORE_TEST_002_XS/gcc_binary_on.log
+ 27. #|# TS_STORE_TEST_002_XS|gcc|jtext|off|100|0.003|PASS|jText_logs/TS_STORE_TEST_002_XS/gcc_jtext_off.log
+ 28. #|# TS_STORE_TEST_002_XS|gcc|jtext|on|100|0.004|PASS|jText_logs/TS_STORE_TEST_002_XS/gcc_jtext_on.log
+ 29. #|# TS_STORE_TEST_002_XS|gcc|none|off|100|0.003|PASS|inmem_logs/TS_STORE_TEST_002_XS/gcc_none_off.log
+ 30. #|# TS_STORE_TEST_002_XS|gcc|none|on|100|0.003|PASS|inmem_logs/TS_STORE_TEST_002_XS/gcc_none_on.log
+ 31. #|# TS_STORE_TEST_002_XS|gcc|sql|off|100|0.004|PASS|sql_logs/TS_STORE_TEST_002_XS/gcc_sql_off.log
+ 32. #|# TS_STORE_TEST_002_XS|gcc|sql|on|100|0.020|PASS|sql_logs/TS_STORE_TEST_002_XS/gcc_sql_on.log
+ 33. #|# TS_STORE_TEST_003_TS|gcc|binary|off|100|0.011|PASS|binary_logs/TS_STORE_TEST_003_TS/gcc_binary_off.log
+ 34. #|# TS_STORE_TEST_003_TS|gcc|binary|on|100|0.015|PASS|binary_logs/TS_STORE_TEST_003_TS/gcc_binary_on.log
+ 35. #|# TS_STORE_TEST_003_TS|gcc|jtext|off|100|0.009|PASS|jText_logs/TS_STORE_TEST_003_TS/gcc_jtext_off.log
+ 36. #|# TS_STORE_TEST_003_TS|gcc|jtext|on|100|0.007|PASS|jText_logs/TS_STORE_TEST_003_TS/gcc_jtext_on.log
+ 37. #|# TS_STORE_TEST_003_TS|gcc|none|off|100|0.009|PASS|inmem_logs/TS_STORE_TEST_003_TS/gcc_none_off.log
+ 38. #|# TS_STORE_TEST_003_TS|gcc|none|on|100|0.009|PASS|inmem_logs/TS_STORE_TEST_003_TS/gcc_none_on.log
+ 39. #|# TS_STORE_TEST_003_TS|gcc|sql|off|100|0.009|PASS|sql_logs/TS_STORE_TEST_003_TS/gcc_sql_off.log
+ 40. #|# TS_STORE_TEST_003_TS|gcc|sql|on|100|0.021|PASS|sql_logs/TS_STORE_TEST_003_TS/gcc_sql_on.log
+ 41. #|# TS_STORE_TEST_003_XS|gcc|binary|off|100|0.012|PASS|binary_logs/TS_STORE_TEST_003_XS/gcc_binary_off.log
+ 42. #|# TS_STORE_TEST_003_XS|gcc|binary|on|100|0.011|PASS|binary_logs/TS_STORE_TEST_003_XS/gcc_binary_on.log
+ 43. #|# TS_STORE_TEST_003_XS|gcc|jtext|off|100|0.008|PASS|jText_logs/TS_STORE_TEST_003_XS/gcc_jtext_off.log
+ 44. #|# TS_STORE_TEST_003_XS|gcc|jtext|on|100|0.009|PASS|jText_logs/TS_STORE_TEST_003_XS/gcc_jtext_on.log
+ 45. #|# TS_STORE_TEST_003_XS|gcc|none|off|100|0.008|PASS|inmem_logs/TS_STORE_TEST_003_XS/gcc_none_off.log
+ 46. #|# TS_STORE_TEST_003_XS|gcc|none|on|100|0.009|PASS|inmem_logs/TS_STORE_TEST_003_XS/gcc_none_on.log
+ 47. #|# TS_STORE_TEST_003_XS|gcc|sql|off|100|0.009|PASS|sql_logs/TS_STORE_TEST_003_XS/gcc_sql_off.log
+ 48. #|# TS_STORE_TEST_003_XS|gcc|sql|on|100|0.024|PASS|sql_logs/TS_STORE_TEST_003_XS/gcc_sql_on.log
+ 49. #|# TS_STORE_TEST_004_TS|gcc|binary|off|100|0.033|PASS|binary_logs/TS_STORE_TEST_004_TS/gcc_binary_off.log
+ 50. #|# TS_STORE_TEST_004_TS|gcc|binary|on|100|0.013|PASS|binary_logs/TS_STORE_TEST_004_TS/gcc_binary_on.log
+ 51. #|# TS_STORE_TEST_004_TS|gcc|jtext|off|100|0.015|PASS|jText_logs/TS_STORE_TEST_004_TS/gcc_jtext_off.log
+ 52. #|# TS_STORE_TEST_004_TS|gcc|jtext|on|100|0.019|PASS|jText_logs/TS_STORE_TEST_004_TS/gcc_jtext_on.log
+ 53. #|# TS_STORE_TEST_004_TS|gcc|none|off|100|0.010|PASS|inmem_logs/TS_STORE_TEST_004_TS/gcc_none_off.log
+ 54. #|# TS_STORE_TEST_004_TS|gcc|none|on|100|0.009|PASS|inmem_logs/TS_STORE_TEST_004_TS/gcc_none_on.log
+ 55. #|# TS_STORE_TEST_004_TS|gcc|sql|off|100|0.008|PASS|sql_logs/TS_STORE_TEST_004_TS/gcc_sql_off.log
+ 56. #|# TS_STORE_TEST_004_TS|gcc|sql|on|100|0.024|PASS|sql_logs/TS_STORE_TEST_004_TS/gcc_sql_on.log
+ 57. #|# TS_STORE_TEST_004_XS|gcc|binary|off|100|0.012|PASS|binary_logs/TS_STORE_TEST_004_XS/gcc_binary_off.log
+ 58. #|# TS_STORE_TEST_004_XS|gcc|binary|on|100|0.012|PASS|binary_logs/TS_STORE_TEST_004_XS/gcc_binary_on.log
+ 59. #|# TS_STORE_TEST_004_XS|gcc|jtext|off|100|0.009|PASS|jText_logs/TS_STORE_TEST_004_XS/gcc_jtext_off.log
+ 60. #|# TS_STORE_TEST_004_XS|gcc|jtext|on|100|0.011|PASS|jText_logs/TS_STORE_TEST_004_XS/gcc_jtext_on.log
+ 61. #|# TS_STORE_TEST_004_XS|gcc|none|off|100|0.012|PASS|inmem_logs/TS_STORE_TEST_004_XS/gcc_none_off.log
+ 62. #|# TS_STORE_TEST_004_XS|gcc|none|on|100|0.007|PASS|inmem_logs/TS_STORE_TEST_004_XS/gcc_none_on.log
+ 63. #|# TS_STORE_TEST_004_XS|gcc|sql|off|100|0.009|PASS|sql_logs/TS_STORE_TEST_004_XS/gcc_sql_off.log
+ 64. #|# TS_STORE_TEST_004_XS|gcc|sql|on|100|0.022|PASS|sql_logs/TS_STORE_TEST_004_XS/gcc_sql_on.log
+ 65. #|# TS_STORE_TEST_005_TS|gcc|binary|off|1000|0.007|PASS|binary_logs/TS_STORE_TEST_005_TS/gcc_binary_off.log
+ 66. #|# TS_STORE_TEST_005_TS|gcc|binary|on|1000|0.012|PASS|binary_logs/TS_STORE_TEST_005_TS/gcc_binary_on.log
+ 67. #|# TS_STORE_TEST_005_TS|gcc|jtext|off|1000|0.008|PASS|jText_logs/TS_STORE_TEST_005_TS/gcc_jtext_off.log
+ 68. #|# TS_STORE_TEST_005_TS|gcc|jtext|on|1000|0.010|PASS|jText_logs/TS_STORE_TEST_005_TS/gcc_jtext_on.log
+ 69. #|# TS_STORE_TEST_005_TS|gcc|none|off|1000|0.006|PASS|inmem_logs/TS_STORE_TEST_005_TS/gcc_none_off.log
  70. #|# TS_STORE_TEST_005_TS|gcc|none|on|1000|0.006|PASS|inmem_logs/TS_STORE_TEST_005_TS/gcc_none_on.log
- 71. #|# TS_STORE_TEST_005_TS|gcc|sql|off|1000|0.009|PASS|sql_logs/TS_STORE_TEST_005_TS/gcc_sql_off.log
+ 71. #|# TS_STORE_TEST_005_TS|gcc|sql|off|1000|0.008|PASS|sql_logs/TS_STORE_TEST_005_TS/gcc_sql_off.log
  72. #|# TS_STORE_TEST_005_TS|gcc|sql|on|1000|0.012|PASS|sql_logs/TS_STORE_TEST_005_TS/gcc_sql_on.log
- 73. #|# TS_STORE_TEST_005_XS|gcc|binary|off|1000|0.008|PASS|binary_logs/TS_STORE_TEST_005_XS/gcc_binary_off.log
+ 73. #|# TS_STORE_TEST_005_XS|gcc|binary|off|1000|0.007|PASS|binary_logs/TS_STORE_TEST_005_XS/gcc_binary_off.log
  74. #|# TS_STORE_TEST_005_XS|gcc|binary|on|1000|0.010|PASS|binary_logs/TS_STORE_TEST_005_XS/gcc_binary_on.log
- 75. #|# TS_STORE_TEST_005_XS|gcc|jtext|off|1000|0.008|PASS|jText_logs/TS_STORE_TEST_005_XS/gcc_jtext_off.log
+ 75. #|# TS_STORE_TEST_005_XS|gcc|jtext|off|1000|0.009|PASS|jText_logs/TS_STORE_TEST_005_XS/gcc_jtext_off.log
  76. #|# TS_STORE_TEST_005_XS|gcc|jtext|on|1000|0.008|PASS|jText_logs/TS_STORE_TEST_005_XS/gcc_jtext_on.log
  77. #|# TS_STORE_TEST_005_XS|gcc|none|off|1000|0.006|PASS|inmem_logs/TS_STORE_TEST_005_XS/gcc_none_off.log
- 78. #|# TS_STORE_TEST_005_XS|gcc|none|on|1000|0.006|PASS|inmem_logs/TS_STORE_TEST_005_XS/gcc_none_on.log
- 79. #|# TS_STORE_TEST_005_XS|gcc|sql|off|1000|0.008|PASS|sql_logs/TS_STORE_TEST_005_XS/gcc_sql_off.log
- 80. #|# TS_STORE_TEST_005_XS|gcc|sql|on|1000|0.011|PASS|sql_logs/TS_STORE_TEST_005_XS/gcc_sql_on.log
- 81. #|# TS_STORE_TEST_006_TS|gcc|binary|off|1000|0.067|PASS|binary_logs/TS_STORE_TEST_006_TS/gcc_binary_off.log
- 82. #|# TS_STORE_TEST_006_TS|gcc|binary|on|1000|0.082|PASS|binary_logs/TS_STORE_TEST_006_TS/gcc_binary_on.log
- 83. #|# TS_STORE_TEST_006_TS|gcc|jtext|off|1000|0.045|PASS|jText_logs/TS_STORE_TEST_006_TS/gcc_jtext_off.log
- 84. #|# TS_STORE_TEST_006_TS|gcc|jtext|on|1000|0.045|PASS|jText_logs/TS_STORE_TEST_006_TS/gcc_jtext_on.log
- 85. #|# TS_STORE_TEST_006_TS|gcc|none|off|1000|0.051|PASS|inmem_logs/TS_STORE_TEST_006_TS/gcc_none_off.log
- 86. #|# TS_STORE_TEST_006_TS|gcc|none|on|1000|0.045|PASS|inmem_logs/TS_STORE_TEST_006_TS/gcc_none_on.log
- 87. #|# TS_STORE_TEST_006_TS|gcc|sql|off|1000|0.044|PASS|sql_logs/TS_STORE_TEST_006_TS/gcc_sql_off.log
- 88. #|# TS_STORE_TEST_006_TS|gcc|sql|on|1000|0.055|PASS|sql_logs/TS_STORE_TEST_006_TS/gcc_sql_on.log
- 89. #|# TS_STORE_TEST_006_XS|gcc|binary|off|1000|0.108|PASS|binary_logs/TS_STORE_TEST_006_XS/gcc_binary_off.log
- 90. #|# TS_STORE_TEST_006_XS|gcc|binary|on|1000|0.087|PASS|binary_logs/TS_STORE_TEST_006_XS/gcc_binary_on.log
- 91. #|# TS_STORE_TEST_006_XS|gcc|jtext|off|1000|0.103|PASS|jText_logs/TS_STORE_TEST_006_XS/gcc_jtext_off.log
- 92. #|# TS_STORE_TEST_006_XS|gcc|jtext|on|1000|0.106|PASS|jText_logs/TS_STORE_TEST_006_XS/gcc_jtext_on.log
- 93. #|# TS_STORE_TEST_006_XS|gcc|none|off|1000|0.050|PASS|inmem_logs/TS_STORE_TEST_006_XS/gcc_none_off.log
- 94. #|# TS_STORE_TEST_006_XS|gcc|none|on|1000|0.047|PASS|inmem_logs/TS_STORE_TEST_006_XS/gcc_none_on.log
- 95. #|# TS_STORE_TEST_006_XS|gcc|sql|off|1000|0.048|PASS|sql_logs/TS_STORE_TEST_006_XS/gcc_sql_off.log
- 96. #|# TS_STORE_TEST_006_XS|gcc|sql|on|1000|0.098|PASS|sql_logs/TS_STORE_TEST_006_XS/gcc_sql_on.log
- 97. #|# TS_STORE_TEST_007_TS|gcc|binary|off|1000|0.009|PASS|binary_logs/TS_STORE_TEST_007_TS/gcc_binary_off.log
- 98. #|# TS_STORE_TEST_007_TS|gcc|binary|on|1000|0.007|PASS|binary_logs/TS_STORE_TEST_007_TS/gcc_binary_on.log
- 99. #|# TS_STORE_TEST_007_TS|gcc|jtext|off|1000|0.006|PASS|jText_logs/TS_STORE_TEST_007_TS/gcc_jtext_off.log
-100. #|# TS_STORE_TEST_007_TS|gcc|jtext|on|1000|0.007|PASS|jText_logs/TS_STORE_TEST_007_TS/gcc_jtext_on.log
-101. #|# TS_STORE_TEST_007_TS|gcc|none|off|1000|0.005|PASS|inmem_logs/TS_STORE_TEST_007_TS/gcc_none_off.log
-102. #|# TS_STORE_TEST_007_TS|gcc|none|on|1000|0.004|PASS|inmem_logs/TS_STORE_TEST_007_TS/gcc_none_on.log
-103. #|# TS_STORE_TEST_007_TS|gcc|sql|off|1000|0.007|PASS|sql_logs/TS_STORE_TEST_007_TS/gcc_sql_off.log
-104. #|# TS_STORE_TEST_007_TS|gcc|sql|on|1000|0.020|PASS|sql_logs/TS_STORE_TEST_007_TS/gcc_sql_on.log
-105. #|# TS_STORE_TEST_007_XS|gcc|binary|off|1000|0.008|PASS|binary_logs/TS_STORE_TEST_007_XS/gcc_binary_off.log
-106. #|# TS_STORE_TEST_007_XS|gcc|binary|on|1000|0.009|PASS|binary_logs/TS_STORE_TEST_007_XS/gcc_binary_on.log
+ 78. #|# TS_STORE_TEST_005_XS|gcc|none|on|1000|0.007|PASS|inmem_logs/TS_STORE_TEST_005_XS/gcc_none_on.log
+ 79. #|# TS_STORE_TEST_005_XS|gcc|sql|off|1000|0.007|PASS|sql_logs/TS_STORE_TEST_005_XS/gcc_sql_off.log
+ 80. #|# TS_STORE_TEST_005_XS|gcc|sql|on|1000|0.010|PASS|sql_logs/TS_STORE_TEST_005_XS/gcc_sql_on.log
+ 81. #|# TS_STORE_TEST_006_TS|gcc|binary|off|1000|0.055|PASS|binary_logs/TS_STORE_TEST_006_TS/gcc_binary_off.log
+ 82. #|# TS_STORE_TEST_006_TS|gcc|binary|on|1000|0.054|PASS|binary_logs/TS_STORE_TEST_006_TS/gcc_binary_on.log
+ 83. #|# TS_STORE_TEST_006_TS|gcc|jtext|off|1000|0.053|PASS|jText_logs/TS_STORE_TEST_006_TS/gcc_jtext_off.log
+ 84. #|# TS_STORE_TEST_006_TS|gcc|jtext|on|1000|0.051|PASS|jText_logs/TS_STORE_TEST_006_TS/gcc_jtext_on.log
+ 85. #|# TS_STORE_TEST_006_TS|gcc|none|off|1000|0.050|PASS|inmem_logs/TS_STORE_TEST_006_TS/gcc_none_off.log
+ 86. #|# TS_STORE_TEST_006_TS|gcc|none|on|1000|0.048|PASS|inmem_logs/TS_STORE_TEST_006_TS/gcc_none_on.log
+ 87. #|# TS_STORE_TEST_006_TS|gcc|sql|off|1000|0.052|PASS|sql_logs/TS_STORE_TEST_006_TS/gcc_sql_off.log
+ 88. #|# TS_STORE_TEST_006_TS|gcc|sql|on|1000|0.063|PASS|sql_logs/TS_STORE_TEST_006_TS/gcc_sql_on.log
+ 89. #|# TS_STORE_TEST_006_XS|gcc|binary|off|1000|0.056|PASS|binary_logs/TS_STORE_TEST_006_XS/gcc_binary_off.log
+ 90. #|# TS_STORE_TEST_006_XS|gcc|binary|on|1000|0.058|PASS|binary_logs/TS_STORE_TEST_006_XS/gcc_binary_on.log
+ 91. #|# TS_STORE_TEST_006_XS|gcc|jtext|off|1000|0.049|PASS|jText_logs/TS_STORE_TEST_006_XS/gcc_jtext_off.log
+ 92. #|# TS_STORE_TEST_006_XS|gcc|jtext|on|1000|0.055|PASS|jText_logs/TS_STORE_TEST_006_XS/gcc_jtext_on.log
+ 93. #|# TS_STORE_TEST_006_XS|gcc|none|off|1000|0.048|PASS|inmem_logs/TS_STORE_TEST_006_XS/gcc_none_off.log
+ 94. #|# TS_STORE_TEST_006_XS|gcc|none|on|1000|0.048|PASS|inmem_logs/TS_STORE_TEST_006_XS/gcc_none_on.log
+ 95. #|# TS_STORE_TEST_006_XS|gcc|sql|off|1000|0.052|PASS|sql_logs/TS_STORE_TEST_006_XS/gcc_sql_off.log
+ 96. #|# TS_STORE_TEST_006_XS|gcc|sql|on|1000|0.065|PASS|sql_logs/TS_STORE_TEST_006_XS/gcc_sql_on.log
+ 97. #|# TS_STORE_TEST_007_TS|gcc|binary|off|1000|0.008|PASS|binary_logs/TS_STORE_TEST_007_TS/gcc_binary_off.log
+ 98. #|# TS_STORE_TEST_007_TS|gcc|binary|on|1000|0.013|PASS|binary_logs/TS_STORE_TEST_007_TS/gcc_binary_on.log
+ 99. #|# TS_STORE_TEST_007_TS|gcc|jtext|off|1000|0.009|PASS|jText_logs/TS_STORE_TEST_007_TS/gcc_jtext_off.log
+100. #|# TS_STORE_TEST_007_TS|gcc|jtext|on|1000|0.010|PASS|jText_logs/TS_STORE_TEST_007_TS/gcc_jtext_on.log
+101. #|# TS_STORE_TEST_007_TS|gcc|none|off|1000|0.004|PASS|inmem_logs/TS_STORE_TEST_007_TS/gcc_none_off.log
+102. #|# TS_STORE_TEST_007_TS|gcc|none|on|1000|0.005|PASS|inmem_logs/TS_STORE_TEST_007_TS/gcc_none_on.log
+103. #|# TS_STORE_TEST_007_TS|gcc|sql|off|1000|0.009|PASS|sql_logs/TS_STORE_TEST_007_TS/gcc_sql_off.log
+104. #|# TS_STORE_TEST_007_TS|gcc|sql|on|1000|0.019|PASS|sql_logs/TS_STORE_TEST_007_TS/gcc_sql_on.log
+105. #|# TS_STORE_TEST_007_XS|gcc|binary|off|1000|0.011|PASS|binary_logs/TS_STORE_TEST_007_XS/gcc_binary_off.log
+106. #|# TS_STORE_TEST_007_XS|gcc|binary|on|1000|0.008|PASS|binary_logs/TS_STORE_TEST_007_XS/gcc_binary_on.log
 107. #|# TS_STORE_TEST_007_XS|gcc|jtext|off|1000|0.006|PASS|jText_logs/TS_STORE_TEST_007_XS/gcc_jtext_off.log
-108. #|# TS_STORE_TEST_007_XS|gcc|jtext|on|1000|0.006|PASS|jText_logs/TS_STORE_TEST_007_XS/gcc_jtext_on.log
-109. #|# TS_STORE_TEST_007_XS|gcc|none|off|1000|0.006|PASS|inmem_logs/TS_STORE_TEST_007_XS/gcc_none_off.log
+108. #|# TS_STORE_TEST_007_XS|gcc|jtext|on|1000|0.008|PASS|jText_logs/TS_STORE_TEST_007_XS/gcc_jtext_on.log
+109. #|# TS_STORE_TEST_007_XS|gcc|none|off|1000|0.004|PASS|inmem_logs/TS_STORE_TEST_007_XS/gcc_none_off.log
 110. #|# TS_STORE_TEST_007_XS|gcc|none|on|1000|0.005|PASS|inmem_logs/TS_STORE_TEST_007_XS/gcc_none_on.log
 111. #|# TS_STORE_TEST_007_XS|gcc|sql|off|1000|0.008|PASS|sql_logs/TS_STORE_TEST_007_XS/gcc_sql_off.log
 112. #|# TS_STORE_TEST_007_XS|gcc|sql|on|1000|0.019|PASS|sql_logs/TS_STORE_TEST_007_XS/gcc_sql_on.log
-113. #|# TS_STORE_TEST_flags|gcc|unit|off|1|0.003|PASS|unit_logs/TS_STORE_TEST_flags/gcc_unit_off.log
+113. #|# TS_STORE_TEST_flags|gcc|unit|off|1|0.002|PASS|unit_logs/TS_STORE_TEST_flags/gcc_unit_off.log
 
