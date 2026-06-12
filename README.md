@@ -16,11 +16,11 @@ The hot path (`save_event`) is designed to stay as close to pure in-memory speed
 
 ts_store began as a **learning experiment**: C++23, bounded hot-path storage, flags, and persistence sinks explored incrementally. It is growing into a **regression platform** — not finished yet, but aimed at verifying every meaningful change to ts_store before it lands.
 
-The automated matrix (`ts_test_cli`, tests 001–007 TS/XS, flags unit test, gcc+clang smoke via [FileCheckList.txt](FileCheckList.txt)) is the proof layer: millions of events, multiple persist modes, per-OS and per-disk result leaves, and promoted summaries under [test-summary/](test-summary/).
+The automated matrix (`ts_test_cli`, tests 001–007 TS/XS, flags unit test, checklist-driven via [FileCheckList.txt](FileCheckList.txt)) is the proof layer: millions of events, multiple persist modes, per-OS and per-disk result leaves, and promoted summaries under [test-summary/](test-summary/).
 
 **C++23 modules** are used throughout tests and examples. They are **not for portability** — they speed up incremental compiles on a **single** machine + compiler combo. The goal is **not** to ship a reusable SDK for other repos. On one fixed toolchain, when you touch flags, a sink, or the core buffer, **only the affected module units recompile**. Tests and examples use `import`; implementation still lives under `include/beman/ts_store/ts_store_headers/` (module `.cppm` files are thin shims — moving bodies into modules is future work).
 
-**New machine, CPU, OS, or compiler?** Rebuild **all** modules once from source (`./scripts/Build --FullRebuild=On`, or clean cmake — see [Building](#building) and [Doc/ARCHITECTURE.md § Modules are not for portability](Doc/ARCHITECTURE.md#modules-are-not-for-portability)). Only `modules/**/*.cppm` and companion `.cpp` sources are in git; BMIs (`.gcm`, `.pcm`, `.ddi`, etc.) are gitignored and must never be copied between environments. After that one full build on the new host, module artifacts can be **reused for testing and incremental dev on that same system** until the toolchain changes again.
+**New machine, CPU, OS, or compiler?** Rebuild **all** modules once from source (`./scripts/Build FileCheckList.txt --FullRebuild=On`, or a clean cmake tree — see [Building](#building) and [Doc/ARCHITECTURE.md § Modules are not for portability](Doc/ARCHITECTURE.md#modules-are-not-for-portability)). Only `modules/**/*.cppm` and companion `.cpp` sources are in git; BMIs (`.gcm`, `.pcm`, `.ddi`, etc.) are gitignored and must never be copied between environments. After that one full build on the new host, module artifacts can be **reused for testing and incremental dev on that same system** until the toolchain changes again.
 
 ---
 
@@ -61,12 +61,12 @@ Link the matching CMake targets (e.g. `jac_ts_store_impl_testing`) — see [CMak
 
 ## Current Status (mid-2026)
 
-- **Extensively tested** — All stress tests (001–007 TS/XS + flags) exercise the full double-buffered persistence matrix (binary + jText + SQL + pure in-memory) via **module imports**. See [tests/](tests/) and [scripts/ts-test](scripts/ts-test).
-- **Linux Mint 22.0 (OS_003 / ssd):** smoke matrix passes for **GCC 15** and **Clang 20** (113 scenarios each; 226 combined in manifest). Proof in [test-summary/OS_003/ssd/Smoke/](test-summary/OS_003/ssd/Smoke/).
+- **Extensively tested** — All stress tests (001–007 TS/XS + flags) exercise the full double-buffered persistence matrix (binary + jText + SQL + pure in-memory) via **module imports**. See [tests/](tests/) and [scripts/Build](scripts/Build).
+- **Linux Mint 22.0 (OS_003 / ssd):** Smoke and xFull pass for **GCC 15** and **Clang 20** (113 scenarios per compiler). Proof: [test-summary/OS_003/gcc/ssd/](test-summary/OS_003/gcc/ssd/) and [test-summary/OS_003/clang/ssd/](test-summary/OS_003/clang/ssd/) — each leaf includes hardware/hostname from `OS_INFO.txt`.
 - **RHEL rows** in [FileCheckList.txt](FileCheckList.txt) — on each target host, mark that host's rows `[x]` and run `./scripts/Build` (leave other rows `[ ]`).
-- Heavy tests (005/006/007) scale up in `SIZE=full` (50 threads × 2k events; 005/007 × 3 runs) — tuned for ~30 min gcc+clang matrix on x7k. Only the last run performs persistence on 005/007 (see the test sources).
-- Per-OS + per-compiler + per-disk separation: results live under `test-results/OS_00n/<compiler>/<disk>/Smoke|xFull/` and lightweight summaries are promoted to the equivalent path under `test-summary/`. GCC and Clang no longer share a leaf directory.
-- `./scripts/Build` promotes summaries automatically after each checklist row; manual runs use [scripts/promote_summaries.sh](scripts/promote_summaries.sh).
+- Heavy tests (005/006/007) scale up in `SIZE=full` (50 threads × 2k events; 005/007 × 3 runs) — tuned for ~30 min per compiler on **x7k**; on SSD the same matrix finishes in minutes. Only the last run performs persistence on 005/007 (see the test sources).
+- Results layout: `test-results/OS_00n/<compiler>/<disk>/Smoke|xFull/` → promoted to the same path under `test-summary/`. GCC and Clang are separate leaves.
+- `./scripts/Build` promotes summaries after each checklist row; manual `ts_test_cli` runs use [scripts/promote_summaries.sh](scripts/promote_summaries.sh).
 
 The core in-memory path + `DoubleBufferedWriter` + pluggable sinks (JText, Binary, and SQL via `SqlEventSink`) is the primary delivered capability. Advanced query/aggregation beyond `select(id)` remains future work.
 
@@ -147,12 +147,12 @@ Typical results from the full stress matrix (see the latest summaries under `tes
 
 **Primary results documents** (committed, per-OS + per-disk):
 
-The test framework uses an `OS_00n` / disk / size layout. Start at the hub:
+The test framework uses an `OS_00n / compiler / disk / size` layout. Start at the hub:
 
-- [test-summary/README.md](test-summary/README.md) — index of all promoted runs (`{OS}/{disk}/{Smoke|xFull}`)
-- Example leaf: [test-summary/OS_003/ssd/Smoke/README.md](test-summary/OS_003/ssd/Smoke/README.md) — per-test links under `by_test/`
+- [test-summary/README.md](test-summary/README.md) — index of all promoted runs (`{OS}/{compiler}/{disk}/{Smoke|xFull}`)
+- Example leaf: [test-summary/OS_003/gcc/ssd/Smoke/README.md](test-summary/OS_003/gcc/ssd/Smoke/README.md) — per-test links under `by_test/`
 
-Each leaf includes `run_manifest.jtext` (machine-readable matrix in jText **light profile**: `//` + `#` headers, `--` sections, `# Fields:` includes — see `Doc/ARCHITECTURE.md` and `jText/SPEC.md` §2.0), `README.md` (navigation), and `by_test/*.md` (per-binary detail).
+Each leaf includes `run_manifest.jtext` (machine-readable matrix in jText **standard profile**: `//` + `#` headers, `--` sections, `# Fields:` includes — see [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md)), `OS_INFO.txt` (host snapshot), `README.md` (navigation), and `by_test/*.md` (per-binary detail).
 
 Raw logs, .jtext/.bin artifacts, and per-run `.meta` files live under the (git-ignored) `test-results/` tree. Only the small promoted tree under `test-summary/` is intended to be committed.
 
@@ -233,7 +233,7 @@ Edit [FileCheckList.txt](FileCheckList.txt): **`[x]`** = run on this host, **`[ 
 # Smoke test for all [x] rows (e.g. RHEL 9.8 gcc + clang on this machine)
 ./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
 
-# Full matrix (xFull leaf, ~30 min on x7k for heavy tests)
+# Full matrix (xFull leaf; ~30 min per compiler on x7k, much faster on SSD)
 ./scripts/Build FileCheckList.txt --FullRebuild=Off --SmokeTest=Off --FullTest=On
 ```
 
@@ -271,52 +271,46 @@ cd build-manual && ./ts_test_cli run --compiler gcc --disk ssd
 
 ## Running the Automated Test Suite
 
-All stress tests are driven by the new **C++ CLI tool**:
+**Primary path:** [scripts/Build](scripts/Build) + [FileCheckList.txt](FileCheckList.txt) (see [Building](#building)). That drives configure, build, `ts_test_cli run`, promote, and cleanup per `[x]` row.
 
-- [tools/test_cli/main.cpp](tools/test_cli/main.cpp) built as `ts_test_cli`
-- Wrapper: [scripts/ts-test](scripts/ts-test)
-- [tests/test_params.txt](tests/test_params.txt) — controls `SIZE`, `DISK_TYPE`, selected tests, and optional `OS_ID`
-
-Single C++ matrix runner (`ts_test_cli` + `jac.test_framework`); legacy shell/Python runners removed.
+**Manual / ad-hoc:** the matrix runner is [tools/test_cli/main.cpp](tools/test_cli/main.cpp) → `ts_test_cli`, with a thin finder at [scripts/ts-test](scripts/ts-test). Params: [tests/test_params.txt](tests/test_params.txt) (`SIZE`, `DISK_TYPE`, selected tests, optional `OS_ID`).
 
 ```bash
-# Using the new C++ CLI (recommended)
-./scripts/ts-test run
+# After ./scripts/Build left a build-seq tree, or from build-manual/
+./scripts/ts-test run --disk ssd
 
-# Or directly from your build directory after `cmake --build .`
-./ts_test_cli run --disk x7k
-
-# Full intensity
-# Set in tests/test_params.txt: SIZE=full, DISK_TYPE=...
-./scripts/ts-test run --disk x7k
+# Or from inside the build directory (required — binaries are cwd-adjacent)
+cd build-manual && ./ts_test_cli run --compiler gcc --disk ssd
 ```
 
-**Key behaviors are implemented in the runner + test sources** (not duplicated here):
-- Progressive sizing (001–004 stay small; 005/006/007 reach 100k records/scenario in full mode)
-- "Only the last run performs persistence" for 005/006/007 (earlier runs are pure hot-path measurement)
-- OS auto-detection + `OS_00n` layout
-- Promotion of lightweight summaries
+Legacy shell/Python runners are removed. One C++ matrix (`ts_test_cli` + `jac.test_framework`).
 
-See `get_test_params()` / `build_scenario_list()` in [modules/jac.test_framework/runner.cpp](modules/jac.test_framework/runner.cpp), plus the `main()` functions in the heavy test sources (e.g. `tests/ts_store_005/`, `tests/ts_store_007/`). Smoke matrix: **113 scenarios per compiler** (001–007 × TS/XS × 4 persist × 2 output modes + `ts_store_flags`); **226** after gcc+clang merge on the same leaf.
+**Matrix shape:** **113 scenarios per compiler** (001–007 × TS/XS × 4 persist × 2 output modes + `ts_store_flags`). Implementation: `get_test_params()` / `build_scenario_list()` in [modules/jac.test_framework/runner.cpp](modules/jac.test_framework/runner.cpp), plus heavy test sources (e.g. [tests/ts_store_005/](tests/ts_store_005/), [tests/ts_store_007/](tests/ts_store_007/)).
 
-### Important current practices
+**Runner behaviors** (not duplicated in test sources):
+- Progressive sizing — 001–004 stay small; 005/006/007 reach 100k manifest records per scenario in full mode
+- 005/006/007 — only the **last** run performs persistence; earlier runs measure hot path only
 
-- `DISK_TYPE` (x7k / 10k / ssd — normalized to exactly 3 characters) keeps results for different storage hardware completely separate.
-- The runner **auto-detects** the OS (via `uname` + `/etc/os-release`) and assigns or re-uses a short padded `OS_001` / `OS_002` ... ID. This produces the nested layout `test-results/OS_001/<compiler>/<DISK_TYPE>/<SIZE_LABEL>/` (SIZE_LABEL = "Smoke" or "xFull"). 
-  - A visible central list is kept in `test-results/OS_MAP.txt` (e.g. `OS_001 = RHEL 9.6`).
-  - Full details for the run (including the assigned ID) are written to `OS_INFO.txt` inside the leaf directory.
-  - You can force a specific ID with `OS_ID=OS_001` in params or `--os-id` on the CLI (override kept for debugging, weird containers/WSL/CI, migration, etc.).
-  This design keeps all directory names short for perfect vertical alignment (padded OS_00n + 3-char disks x7k/10k/ssd + 5-char sizes) while automatically tracking which real OS each result set came from across machines. The promotion script mirrors the structure under `test-summary/`. (Padded form chosen so the framework can scale if it is successful across many OS variants.)
-- `./scripts/Build` promotes after each checklist row. Direct `ts_test_cli run` does **not** promote — run `./scripts/promote_summaries.sh --all` yourself after a manual matrix run.
+### Result layout and OS IDs
 
-View raw logs (example — current nested layout):
+| Piece | Role |
+|-------|------|
+| `#OS_00n` in [FileCheckList.txt](FileCheckList.txt) | `./scripts/Build` sets `OS_ID` for each `[x]` row |
+| `test-results/OS_00n/<compiler>/<disk>/Smoke\|xFull/` | Raw logs + manifest (gitignored) |
+| `test-summary/…` (same path) | Promoted lightweight proof (committed) |
+| `OS_INFO.txt` + manifest `HostInfo` | CPU, RAM, hostname captured at run start |
+
+`DISK_TYPE` is normalized to exactly 3 characters (`x7k`, `10k`, `ssd`) so directory columns align. Override `OS_ID` in params or via CLI for manual runs outside Build.
+
+Direct `ts_test_cli run` does **not** promote — run `./scripts/promote_summaries.sh --all` after a manual matrix.
+
 ```bash
-less -R test-results/OS_003/ssd/Smoke/binary_logs/TS_STORE_TEST_005_TS/gcc_binary_on.log
+# Raw log (gitignored)
+less -R test-results/OS_003/gcc/ssd/Smoke/binary_logs/TS_STORE_TEST_005_TS/gcc_binary_on.log
+
+# Promoted summary (committed)
+less test-summary/OS_003/gcc/ssd/Smoke/README.md
 ```
-
-The corresponding summary is at `test-summary/OS_003/ssd/Smoke/README.md` (linked from `test-summary/README.md`).
-
-`test-results/` is fully ignored in `.gitignore`. Only the promoted summaries under `test-summary/` are intended to be tracked.
 
 ---
 
@@ -362,9 +356,9 @@ See [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md) for diagrams and the full structu
 - [FORWARDING.md](FORWARDING.md) — sequential build design and current checklist status
 - [examples/](examples/) — demos, throughput benchmarks, and persistence examples
 - [tools/jtext_cli/](tools/jtext_cli/) — jText CLI tools (process / retrieve)
-- [tools/test_cli/](tools/test_cli/) — C++ test matrix CLI tool (`ts_test_cli` - the recommended way to drive the full test suite)
+- [tools/test_cli/](tools/test_cli/) — matrix CLI (`ts_test_cli`; invoked by `./scripts/Build`)
 - [vendor/jText/](vendor/jText/) — vendored copy of the jText library
-- [test-summary/](test-summary/) — committed lightweight per-OS/per-disk summaries (under `OS_00n/<disk>/Smoke|xFull/`)
+- [test-summary/](test-summary/) — committed lightweight summaries (`OS_00n/<compiler>/<disk>/Smoke|xFull/`)
 - `test-results/` — raw logs, .jtext/.bin artifacts, .meta files (**git-ignored**, very large)
 
 ---
@@ -374,7 +368,7 @@ See [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md) for diagrams and the full structu
 - `SqlEventSink` exists and is in the stress matrix, but SQL persistence is optional at configure time and less battle-tested than jText/Binary on every OS leaf.
 - No rotation, compaction, or retention policy on the persisted side.
 - Query/aggregation beyond `select(id)` is not implemented at runtime.
-- Smoke matrix on **Linux Mint 22.0 / ssd** is proven for **GCC 15** and **Clang 20**. RHEL rows still need runs on each target host (mark `[x]` on that host only).
+- Smoke + xFull on **Linux Mint 22.0 / ssd** proven for **GCC 15** and **Clang 20**. RHEL rows still need runs on each target host (mark `[x]` on that host only).
 - No automated CI yet — regression proof is manual smoke + promoted `test-summary/` commits.
 
 ---
