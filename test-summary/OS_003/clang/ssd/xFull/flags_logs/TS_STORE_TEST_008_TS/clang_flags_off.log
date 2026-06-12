@@ -3,26 +3,32 @@
 ═══════════════════════════════════════════════════════════════
  Purpose:
    Prove KeeperRecord routes to jText file and DatabaseEntry routes to
-   SQLite while the other 9800 events stay in-memory only on the persist path.
-   Expect higher ops/sec than persisting all 10000 events.
+   SQLite while the other 980000 events stay in-memory only on the persist path.
+   Expect higher ops/sec than persisting all 1000000 events.
 
- Plan: 10000 in-memory events
-   • indices 0..99     → KeeperRecord  (jText file)
-   • indices 100..199 → DatabaseEntry (SQLite)
+ Plan: 1000000 in-memory events × 3 runs
+   • indices 0..9999     → KeeperRecord  (jText file)
+   • indices 10000..19999 → DatabaseEntry (SQLite)
    • remainder           → no persist flags
 
-[VERIFY] ALL 10000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+Flag routing persistence attaches only on the *last* run (previous runs measure clean hot path; final run verifies counts).
+
+[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+Run  3 / 3
+[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+PASS — 597,245 µs → 1,674,355 ops/sec
+
 Persist verification:
-  jText main rows (KeeperRecord):  100 (expected 100)
-  SQLite main rows (DatabaseEntry): 100 (expected 100)
-  PASS — flags honored; only 200 / 10000 events reached durable storage
+  jText main rows (KeeperRecord):  10000 (expected 10000)
+  SQLite main rows (DatabaseEntry): 10000 (expected 10000)
+  PASS — flags honored; only 20000 / 1000000 events reached durable storage
 
 ═══════════════════════════════════════════════════════════════
-               FINAL RESULT — FLAG-SELECTIVE RUN
+               FINAL RESULT — 3-RUN STATISTICS            
 ═══════════════════════════════════════════════════════════════
-  Events in memory   : 10,000
-  Persisted (file)   : 100
-  Persisted (SQL)    : 100
-  Wall time          : 7,843 µs
-  Throughput         : 1,275,022 ops/sec
+  Fastest run        : 123,724 µs  → 8,082,506 ops/sec
+  Slowest run        : 597,245 µs  → 1,674,355 ops/sec
+  Average            : 282,900 µs  → 3,534,818 ops/sec
+  (1,000,000 events per run, flag routing verified on final run)
 ═══════════════════════════════════════════════════════════════

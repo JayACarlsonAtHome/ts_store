@@ -1,10 +1,10 @@
 # Test Results — OS_003 / clang / ssd / xFull
 
-**Run (UTC):** 2026-06-12T04:14:26Z  
+**Run (UTC):** 2026-06-12T04:32:38Z  
 **Compilers:** clang  
 **Scenarios:** 115/115 passed  
 **Manifest:** [run_manifest.jtext](run_manifest.jtext)  
-**Hardware:** 8 cores (1 physical), 31,936 MiB RAM — Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz @ 3,599 MHz max  
+**Hardware:** 8 cores (1 physical), 31,936 MiB RAM — Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz @ 3,600 MHz max  
 **Hostname:** jc313-Laptop001 (Linux Mint 22.3)  
 
 ## Tests

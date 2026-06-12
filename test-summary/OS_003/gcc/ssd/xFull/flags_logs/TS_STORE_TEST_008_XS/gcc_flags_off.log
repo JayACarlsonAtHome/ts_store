@@ -5,19 +5,26 @@
    Same as 008 TS: KeeperRecord → jText, DatabaseEntry → SQLite,
    disjoint index sets, remainder in-memory on the persist path.
 
- Plan: 10000 events, 100 keeper + 100 database flags
+ Plan: 1000000 events × 3 runs, 10000 keeper + 10000 database flags
 
-[VERIFY] ALL 10000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+Flag routing persistence attaches only on the *last* run.
+
+[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+Run  3 / 3
+[VERIFY] ALL 1000000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+PASS — 1,668,176 µs → 599,457 ops/sec
+
 Persist verification:
-  jText main rows:  100 (expected 100)
-  SQLite main rows: 100 (expected 100)
-  PASS — 200 / 10000 persisted
+  jText main rows:  10000 (expected 10000)
+  SQLite main rows: 10000 (expected 10000)
+  PASS — 20000 / 1000000 persisted
 
 ═══════════════════════════════════════════════════════════════
-               FINAL RESULT — FLAG-SELECTIVE RUN
+               FINAL RESULT — 3-RUN STATISTICS            
 ═══════════════════════════════════════════════════════════════
-  Events             : 10,000
-  Persisted total    : 200
-  Wall time          : 21,947 µs
-  Throughput         : 455,643 ops/sec
+  Fastest run        : 387,974 µs  → 2,577,492 ops/sec
+  Slowest run        : 1,668,176 µs  → 599,457 ops/sec
+  Average            : 815,161 µs  → 1,226,751 ops/sec
+  (1,000,000 events per run, flag routing verified on final run)
 ═══════════════════════════════════════════════════════════════
