@@ -10,14 +10,14 @@ Persistence will only be attached on the *last* run (previous runs measure clean
 Run  3 / 3
   sample event 42 (t=0) (0 metrics)
 [VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-PASS — 168,386 µs → 593,874 ops/sec
+PASS — 48,116 µs → 2,078,311 ops/sec
 
 
 ═══════════════════════════════════════════════════════════════
                FINAL RESULT — 3-RUN STATISTICS            
 ═══════════════════════════════════════════════════════════════
-  Fastest run        : 53,744 µs  → 1,860,673 ops/sec
-  Slowest run        : 168,386 µs  → 593,874 ops/sec
-  Average            : 92,853 µs  → 1,076,971 ops/sec
+  Fastest run        : 15,993 µs  → 6,252,736 ops/sec
+  Slowest run        : 48,116 µs  → 2,078,311 ops/sec
+  Average            : 27,045 µs  → 3,697,541 ops/sec
   (100,000 events per run, 100% verified, zero corruption)
 ═══════════════════════════════════════════════════════════════

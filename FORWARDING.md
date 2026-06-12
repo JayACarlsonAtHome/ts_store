@@ -26,10 +26,9 @@ On a given host, mark only the rows for **that** OS/compiler/disk with `[x]`; le
 
 The script **never edits** `FileCheckList.txt` — `[x]` / `[ ]` are user-selected only.
 
-### Legacy / bridge
+### Build trees
 
-- `./scripts/build_dual_compilers.sh` — still works on RHEL; **not** the primary path. See [DUAL_COMPILER_BUILD.md](DUAL_COMPILER_BUILD.md).
-- `build-dual/`, `build-mint/`, `build-local/` — ad-hoc trees from earlier work; gitignored. Sequential builds use transient `build-seq/` (removed after each successful row).
+Sequential builds use transient `build-seq/<platform>-<compiler>/` (removed after each successful `[x]` row). Older ad-hoc dirs (`build-dual/`, etc.) are gitignored and no longer used.
 
 ---
 
@@ -96,7 +95,7 @@ Use `GCC` or `Clang`, platform string (free text), disk (`ssd`, `x7k`, `10k`). M
 
 - **GCC 15 PPA:** `-O3` on module consumers can ICE → `TS_STORE_GNU_RELEASE_O3=OFF` (default).
 - **Clang 20:** `-flto=thin` was compile-only → bitcode `.o` link failures. Fixed: `TS_STORE_CLANG_LTO=OFF` (default); enable only with matching link LTO.
-- **g++-14:** not sufficient for full module matrix on Mint ([test-composer/build_report.txt](test-composer/build_report.txt)).
+- **g++-14:** not sufficient for full module matrix on Mint (use g++-15).
 - **Modules are not for portability.** New machine, CPU, OS, or compiler → **full rebuild of all modules once**, then reuse that build for testing/incremental work on the same host. BMIs must never be copied between environments. `--FullRebuild=On` clears the sequential build dir. See [Doc/ARCHITECTURE.md § Modules are not for portability](Doc/ARCHITECTURE.md#modules-are-not-for-portability).
 
 ---
@@ -118,4 +117,4 @@ Use `GCC` or `Clang`, platform string (free text), disk (`ssd`, `x7k`, `10k`). M
 1. On each target host: mark that host's rows `[x]`, leave others `[ ]`, then `./scripts/Build …`.
 2. Repeat for RHEL 10.2 / other disks when those machines are available.
 3. Optional: additional disks (`10k`) on Mint — add checklist rows.
-4. Eventually retire `build_dual_compilers.sh` once all rows are proven on their target hosts.
+4. Legacy `build_dual_compilers.sh`, `run_all_tests.sh`, and `test-composer/` probes removed — use `./scripts/Build` only.

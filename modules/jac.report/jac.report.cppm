@@ -1,5 +1,6 @@
 module;
 
+#include <cstdint>
 #include <filesystem>
 #include <map>
 #include <string>
@@ -41,6 +42,18 @@ export struct RunResult {
     fs::path log_path;
 };
 
+export struct HostInfo {
+    std::string hostname;
+    std::string os_pretty;
+    std::string cpu_model;
+    int logical_cores   = 0;
+    int physical_cores  = 0;
+    std::uint64_t ram_total_mib = 0;
+    std::uint64_t ram_avail_mib = 0;
+    int cpu_mhz_max     = 0;
+    std::string arch;
+};
+
 export struct RunMeta {
     std::string os_id;
     std::string disk_type;
@@ -50,7 +63,14 @@ export struct RunMeta {
     int total_scenarios = 0;
     int passed          = 0;
     int failed          = 0;
+    HostInfo host;
 };
+
+export HostInfo collect_host_info();
+export bool write_os_info_txt(const fs::path& results_base,
+                              const HostInfo& host,
+                              const std::string& os_id);
+export std::string host_info_summary_line(const HostInfo& host);
 
 export bool scenario_in_manifest_pilot(const Scenario& scen);
 export int scenario_record_count(const Scenario& scen);

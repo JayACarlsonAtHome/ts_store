@@ -1,0 +1,14 @@
+//File:    tests/jtext_includes/run_manifest_hostinfo_fields.jtFlds
+//Date:    2026-06-10
+//Purpose: jText Field List File for ts_store run_manifest HostInfo section
+//Related: type=ts_store table=ts_run_hostinfo
+
+=== Fields ===
+ 1. #/# hostname/String/Nullable
+ 2. #/# os_pretty/String/Nullable
+ 3. #/# cpu_model/String/Nullable
+ 4. #/# logical_cores/Number/Not Null
+ 5. #/# physical_cores/Number/Not Null
+ 6. #/# ram_total_mib/Number/Not Null
+ 7. #/# cpu_mhz_max/Number/Not Null
+ 8. #/# arch/String/Nullable

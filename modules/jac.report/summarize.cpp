@@ -30,6 +30,7 @@ struct LeafMeta {
     int total = 0;
     int passed = 0;
     int failed = 0;
+    HostInfo host;
 };
 
 struct ScenarioRow {
@@ -73,6 +74,18 @@ bool load_manifest(const fs::path& jtext_path, LeafMeta& meta, std::vector<Scena
                 meta.total = std::stoi(f[5]);
                 meta.passed = std::stoi(f[6]);
                 meta.failed = std::stoi(f[7]);
+            }
+        } else if (sec.name == "HostInfo" && !sec.entries.empty()) {
+            auto f = split_fields(sec.entries[0]);
+            if (f.size() >= 8) {
+                meta.host.hostname = f[0];
+                meta.host.os_pretty = f[1];
+                meta.host.cpu_model = f[2];
+                meta.host.logical_cores = std::stoi(f[3]);
+                meta.host.physical_cores = std::stoi(f[4]);
+                meta.host.ram_total_mib = static_cast<std::uint64_t>(std::stoull(f[5]));
+                meta.host.cpu_mhz_max = std::stoi(f[6]);
+                meta.host.arch = f[7];
             }
         } else if (sec.name == "Scenarios") {
             for (const auto& e : sec.entries) {
@@ -190,8 +203,17 @@ void write_leaf_readme(const fs::path& path,
     out << "**Scenarios:** " << meta.passed << "/" << meta.total << " passed";
     if (meta.failed > 0) out << " (**" << meta.failed << " failed**)";
     out << "  \n";
-    out << "**Manifest:** [run_manifest.jtext](run_manifest.jtext)  \n\n";
-    out << "## Tests\n\n";
+    out << "**Manifest:** [run_manifest.jtext](run_manifest.jtext)  \n";
+    const std::string host_line = host_info_summary_line(meta.host);
+    if (!host_line.empty()) {
+        out << "**Hardware:** " << host_line << "  \n";
+    }
+    if (!meta.host.hostname.empty()) {
+        out << "**Hostname:** " << meta.host.hostname;
+        if (!meta.host.os_pretty.empty()) out << " (" << meta.host.os_pretty << ")";
+        out << "  \n";
+    }
+    out << "\n## Tests\n\n";
     out << "| Test | Scenarios | Passed | Failed | Detail |\n";
     out << "|------|-----------|--------|--------|--------|\n";
 
@@ -220,6 +242,7 @@ struct HubLeaf {
     std::string size_label;
     std::string run_utc;
     std::string compilers;
+    std::string hardware;
     int total = 0;
     int passed = 0;
     int failed = 0;
@@ -279,6 +302,7 @@ std::optional<HubLeaf> hub_leaf_from_readme(const fs::path& readme_path,
             h.total = meta.total;
             h.passed = meta.passed;
             h.failed = meta.failed;
+            h.hardware = host_info_summary_line(meta.host);
         }
     }
     return h;
@@ -289,8 +313,8 @@ void write_hub_readme(const fs::path& hub_path, const std::vector<HubLeaf>& leav
     out << "# Test Summary Hub\n\n";
     out << "Committed lightweight results promoted from `test-results/`. "
            "Each leaf links to a per-run README with per-test detail pages under `by_test/`.\n\n";
-    out << "| OS | Compiler | Disk | Size | Scenarios | Run (UTC) | Detail |\n";
-    out << "|----|----------|------|------|-----------|-----------|--------|\n";
+    out << "| OS | Compiler | Disk | Size | Hardware | Scenarios | Run (UTC) | Detail |\n";
+    out << "|----|----------|------|------|----------|-----------|-----------|--------|\n";
 
     for (const auto& h : leaves) {
         std::string scenarios = h.has_manifest
@@ -303,9 +327,10 @@ void write_hub_readme(const fs::path& hub_path, const std::vector<HubLeaf>& leav
         std::string compiler = h.compiler.empty()
             ? (h.compilers.empty() ? "—" : h.compilers)
             : h.compiler;
-        out << std::format("| {} | {} | {} | {} | {} | {} | [README]({}/README.md) |\n",
+        std::string hardware = h.hardware.empty() ? "—" : h.hardware;
+        out << std::format("| {} | {} | {} | {} | {} | {} | {} | [README]({}/README.md) |\n",
                            h.os_id, compiler, h.disk, h.size_label,
-                           scenarios, run_utc, h.rel_path);
+                           hardware, scenarios, run_utc, h.rel_path);
     }
     out << "\n";
     out << "Regenerate: `./scripts/promote_summaries.sh --all` (updates hub automatically).\n";

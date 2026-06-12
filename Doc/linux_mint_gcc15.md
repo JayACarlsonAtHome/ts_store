@@ -136,18 +136,6 @@ Use `-DCMAKE_BUILD_TYPE=Debug` if you prefer debug symbols without Release tunin
 
 ---
 
-## Module probe (optional)
-
-Rebuild one CMake target in isolation:
-
-```bash
-COMPILER=g++-15 ~/git/ts_store/test-composer/build_one.sh jac_ts_store_core
-```
-
-See [test-composer/build_report.txt](../test-composer/build_report.txt) for g++-14 vs g++-15 notes.
-
----
-
 ## Compiler summary
 
 | Compiler | Role on Mint |
@@ -165,5 +153,4 @@ Keep system `g++` unchanged. Pass explicit `-DCMAKE_CXX_COMPILER=...` to CMake.
 - [README.md](../README.md) — project overview
 - [ARCHITECTURE.md](ARCHITECTURE.md) — structure, modules, test matrix
 - [FORWARDING.md](../FORWARDING.md) — sequential checklist workflow
-- [DUAL_COMPILER_BUILD.md](../DUAL_COMPILER_BUILD.md) — legacy dual gcc+clang script (RHEL)
 - [BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md](../BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md) — Ninja, jacQlite drift, CLI cwd

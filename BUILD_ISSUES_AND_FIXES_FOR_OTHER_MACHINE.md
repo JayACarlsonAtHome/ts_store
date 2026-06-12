@@ -1,5 +1,7 @@
 # Build/Test Issues Encountered on This Machine (and Fixes)
 
+> **2026-06 update:** Legacy `build_dual_compilers.sh`, `run_all_tests.sh`, and `test-composer/` are removed. Use `./scripts/Build` + [FileCheckList.txt](FileCheckList.txt) only.
+
 This document explains the problems that occurred when trying to build and run the full test matrix for `ts_store` on the current machine (a different environment from the original development machine where the repo was created and originally built).
 
 The goal is to help someone on the **original machine** (or any other clone) understand:
@@ -12,10 +14,10 @@ The goal is to help someone on the **original machine** (or any other clone) und
 ## 1. Ninja Version Requirement (C++23 Modules)
 
 ### What went wrong
-The first attempt to run the standard dual-compiler build:
+The first attempt to run the standard build (then `build_dual_compilers.sh`, now replaced by `./scripts/Build`):
 
 ```bash
-./scripts/build_dual_compilers.sh
+./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
 ```
 
 failed immediately during CMake configure with errors like:
@@ -28,7 +30,7 @@ Many subsequent errors about modules not being supported by the generator.
 - The project uses **C++23 modules** heavily (`CMAKE_CXX_SCAN_FOR_MODULES ON` in CMakeLists.txt, many `.cppm` files).
 - C++ modules support in Ninja is relatively new and requires **Ninja >= 1.11**.
 - This machine only had the system `ninja` (from `ninja-build-1.10.2-6.el9` package), which was too old.
-- The `build_dual_compilers.sh` script detects `ninja` via `command -v ninja` and falls back to a hardcoded CLion path *only if no ninja is found at all*. It happily picked the old system one.
+- `./scripts/Build` sources [scripts/build_common.sh](scripts/build_common.sh), which prefers `command -v ninja` and can fall back to a CLion-bundled Ninja — but on this machine the system `ninja` (1.10.x) was found first and was too old.
 
 ### What we did
 - Located the modern Ninja bundled with CLion:  
@@ -37,10 +39,10 @@ Many subsequent errors about modules not being supported by the generator.
 
   ```bash
   NINJA=/home/jay/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja \
-    ./scripts/build_dual_compilers.sh
+    ./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
   ```
 
-- The script already supports the `NINJA` environment variable for exactly this situation (see the top of `build_dual_compilers.sh` and `DUAL_COMPILER_BUILD.md`).
+- `build_common.sh` supports the `NINJA` environment variable for exactly this situation (see [README.md](README.md) and [FORWARDING.md](FORWARDING.md)).
 
 ### Recommendation for the original machine
 - If you ever see this error, ensure your `ninja` (or `ninja-build`) is >= 1.11.
@@ -107,7 +109,7 @@ This was a co-development drift between `ts_store` and `jacQlite`.
 - **Vendored** (default): Uses `vendor/jText` and `vendor/jacQlite` (self-contained clone).
 - **Reference** ("local mode"): Uses live siblings at `../jText` and `../jacQlite`. This is what the dev machine uses.
 
-`build_dual_compilers.sh` auto-detects siblings and adds:
+`./scripts/Build` auto-detects siblings and adds:
 ```cmake
 -DTS_STORE_JTEXT_MODE=reference
 -DTS_STORE_JACQLITE_MODE=reference
@@ -116,9 +118,9 @@ This was a co-development drift between `ts_store` and `jacQlite`.
 It also runs `Sync_dependencies.sh --sync-all` at the end (and CMake attaches POST_BUILD sync hooks to many targets when both persist options are enabled).
 
 ### What we did here
-- After the initial dual build into `build-dual/`, the user explicitly requested a rebuild in local/reference mode.
-- We created a clean `build-local/` tree and configured with the reference flags explicitly (plus the good Ninja).
-- This produced `build-local/gcc` and `build-local/clang` built against the live siblings.
+- Early attempts used ad-hoc `build-dual/` and `build-local/` trees (removed workflow).
+- The sequential checklist build (`build-seq/<platform>-<compiler>/`) now configures reference mode automatically when siblings exist.
+- Each `[x]` row produces a transient build tree against the live siblings, runs the matrix, promotes, and deletes the tree.
 
 **Caveat**: Even in reference mode, if `TS_STORE_ENABLE_JTEXT_PERSIST=ON` and `TS_STORE_ENABLE_SQLITE_PERSIST=ON` and the sibling directories exist on disk, CMake still injects the `Sync_dependencies.sh --sync-all` POST_BUILD steps. This is by design (see the bottom of `CMakeLists.txt`).
 
@@ -130,10 +132,10 @@ It also runs `Sync_dependencies.sh --sync-all` at the end (and CMake attaches PO
 When we tried to run smoke tests directly as:
 
 ```bash
-build-local/gcc/ts_test_cli run --disk ssd
+./build-seq/Mint-GCC/ts_test_cli run --disk ssd
 ```
 
-(from the project root), we got hundreds of:
+(from the project root, without `cd` into the build dir), we got hundreds of:
 
 > ERROR: binary not found: "/home/jay/git/ts_store/ts_store_001_TS"
 
@@ -148,15 +150,15 @@ The run completed but reported total failure.
 
 ### What worked
 ```bash
-cd build-local/gcc  && ./ts_test_cli run --disk ssd
-cd build-local/clang && ./ts_test_cli run --disk ssd
+cd build-seq/Mint-GCC   && ./ts_test_cli run --disk ssd
+cd build-seq/Mint-Clang && ./ts_test_cli run --disk ssd
 ```
 
 All 113 scenarios per compiler passed (smoke and later full/xFull).
 
 ### Recommendation
-- Always `cd` into the specific compiler build directory before running `ts_test_cli`.
-- The wrapper `./scripts/ts-test` prefers `build-dual/{gcc,clang}`. For local builds you must run the binary directly from inside its build dir.
+- Always `cd` into the build directory before running `ts_test_cli` (or use `./scripts/ts-test`, which finds `build-seq/*/ts_test_cli` and `cd`s there automatically).
+- After `./scripts/Build`, the transient `build-seq/` tree may already be deleted — re-run Build or keep a manual cmake build dir if you need a long-lived tree.
 
 ---
 
@@ -181,25 +183,24 @@ We did exactly this for both smoke and full on this machine (with `DISK_TYPE=ssd
 1. Make sure you have a good Ninja (>= 1.11). Export `NINJA=...` if the script picks the wrong one.
 2. Keep the indexed bind helpers (`clear_bindings`, `bind_int64`, `bind_double`) in jacQlite's `Statement` (or modernize `SqlEventSink`).
 3. For live development: keep `../jText` + `../jacQlite` next to the repo.
-4. To do a clean local-mode build (avoiding `build-dual`):
+4. For a clean checklist build:
 
    ```bash
-   rm -rf build-local
-   NINJA=/path/to/good/ninja ./scripts/build_dual_compilers.sh   # or manual cmake into build-local/
+   NINJA=/path/to/good/ninja ./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
    ```
 
-   Or manually:
+   Or manually (ad-hoc tree, not deleted automatically):
 
    ```bash
-   mkdir -p build-local/gcc && cd build-local/gcc
+   mkdir -p build-manual && cd build-manual
    scl enable gcc-toolset-15 -- cmake -G Ninja -DCMAKE_MAKE_PROGRAM=... \
      -DTS_STORE_ENABLE_JTEXT_PERSIST=ON -DTS_STORE_ENABLE_SQLITE_PERSIST=ON \
      -DTS_STORE_JTEXT_MODE=reference -DTS_STORE_JACQLITE_MODE=reference \
      ../..
-   ... build the targets ...
+   cmake --build . --target ts_test_cli ts_store_flags -j"$(nproc)"
    ```
 
-5. Always run tests from *inside* the compiler-specific build directory.
+5. Always run tests from *inside* the build directory (`./ts_test_cli run ...`).
 6. Update `SIZE=full` in `tests/test_params.txt` when you want the heavy matrix.
 7. Run promote after any significant matrix run.
 
@@ -209,7 +210,7 @@ We did exactly this for both smoke and full on this machine (with `DISK_TYPE=ssd
 
 ### Current recommended workflow (2026-06-08+)
 
-The primary path is no longer `build_dual_compilers.sh` for every machine. Use [FileCheckList.txt](FileCheckList.txt) and:
+The primary path is [FileCheckList.txt](FileCheckList.txt) and:
 
 ```bash
 ./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
@@ -230,11 +231,10 @@ See [FORWARDING.md](FORWARDING.md) and [Doc/linux_mint_gcc15.md](Doc/linux_mint_
 ## Current State on This Machine (for reference)
 
 - **Checklist build:** `./scripts/Build` proven for Mint GCC + Clang smoke on ssd (`test-summary/OS_003/ssd/Smoke/`).
-- Earlier dual builds in `build-dual/` and `build-local/` still valid as ad-hoc trees.
 - Full smoke and full (`xFull`) matrices run successfully for gcc and clang on SSD.
 - jacQlite sibling was patched for compatibility (`Statement` indexed bind helpers).
 - **Reference** mode when `../jText` + `../jacQlite` exist; Ninja ≥ 1.11 via `scripts/build_common.sh`.
 
 ---
 
-*Updated 2026-06-08 after sequential Build workflow and Mint Clang smoke.*
+*Updated 2026-06-11 after legacy runner removal (`build_dual_compilers.sh`, `run_all_tests.sh`, `test-composer/`).*

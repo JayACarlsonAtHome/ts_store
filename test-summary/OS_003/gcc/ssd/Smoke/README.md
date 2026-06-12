@@ -1,9 +1,11 @@
 # Test Results — OS_003 / gcc / ssd / Smoke
 
-**Run (UTC):** 2026-06-10T01:45:41Z  
+**Run (UTC):** 2026-06-12T03:33:02Z  
 **Compilers:** gcc  
 **Scenarios:** 113/113 passed  
 **Manifest:** [run_manifest.jtext](run_manifest.jtext)  
+**Hardware:** 8 cores (1 physical), 31,936 MiB RAM — Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz @ 3,502 MHz max  
+**Hostname:** jc313-Laptop001 (Linux Mint 22.3)  
 
 ## Tests
 

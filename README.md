@@ -16,7 +16,7 @@ The hot path (`save_event`) is designed to stay as close to pure in-memory speed
 
 ts_store began as a **learning experiment**: C++23, bounded hot-path storage, flags, and persistence sinks explored incrementally. It is growing into a **regression platform** — not finished yet, but aimed at verifying every meaningful change to ts_store before it lands.
 
-The automated matrix (`ts_test_cli`, tests 001–007 TS/XS, flags unit test, dual-compiler smoke) is the proof layer: millions of events, multiple persist modes, per-OS and per-disk result leaves, and promoted summaries under [test-summary/](test-summary/).
+The automated matrix (`ts_test_cli`, tests 001–007 TS/XS, flags unit test, gcc+clang smoke via [FileCheckList.txt](FileCheckList.txt)) is the proof layer: millions of events, multiple persist modes, per-OS and per-disk result leaves, and promoted summaries under [test-summary/](test-summary/).
 
 **C++23 modules** are used throughout tests and examples. They are **not for portability** — they speed up incremental compiles on a **single** machine + compiler combo. The goal is **not** to ship a reusable SDK for other repos. On one fixed toolchain, when you touch flags, a sink, or the core buffer, **only the affected module units recompile**. Tests and examples use `import`; implementation still lives under `include/beman/ts_store/ts_store_headers/` (module `.cppm` files are thin shims — moving bodies into modules is future work).
 
@@ -64,7 +64,7 @@ Link the matching CMake targets (e.g. `jac_ts_store_impl_testing`) — see [CMak
 - **Extensively tested** — All stress tests (001–007 TS/XS + flags) exercise the full double-buffered persistence matrix (binary + jText + SQL + pure in-memory) via **module imports**. See [tests/](tests/) and [scripts/ts-test](scripts/ts-test).
 - **Linux Mint 22.0 (OS_003 / ssd):** smoke matrix passes for **GCC 15** and **Clang 20** (113 scenarios each; 226 combined in manifest). Proof in [test-summary/OS_003/ssd/Smoke/](test-summary/OS_003/ssd/Smoke/).
 - **RHEL rows** in [FileCheckList.txt](FileCheckList.txt) — on each target host, mark that host's rows `[x]` and run `./scripts/Build` (leave other rows `[ ]`).
-- Heavy tests (005/006/007) scale up in `SIZE=full` (50 threads × 2k events; 005/007 × 3 runs) — tuned for ~30 min dual-compiler matrix on x7k. Only the last run performs persistence on 005/007 (see the test sources).
+- Heavy tests (005/006/007) scale up in `SIZE=full` (50 threads × 2k events; 005/007 × 3 runs) — tuned for ~30 min gcc+clang matrix on x7k. Only the last run performs persistence on 005/007 (see the test sources).
 - Per-OS + per-compiler + per-disk separation: results live under `test-results/OS_00n/<compiler>/<disk>/Smoke|xFull/` and lightweight summaries are promoted to the equivalent path under `test-summary/`. GCC and Clang no longer share a leaf directory.
 - `./scripts/Build` promotes summaries automatically after each checklist row; manual runs use [scripts/promote_summaries.sh](scripts/promote_summaries.sh).
 
@@ -193,7 +193,7 @@ cmake -G Ninja -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_C_COMPILER=gcc-15 \
       ..
 ```
 
-Stock **g++-14** alone is not sufficient for the full module matrix on Mint (see [test-composer/build_report.txt](test-composer/build_report.txt)).
+Stock **g++-14** alone is not sufficient for the full module matrix on Mint (use **g++-15**).
 
 | Package | Purpose | Minimum |
 |---------|---------|---------|
@@ -210,14 +210,14 @@ scl enable gcc-toolset-15 -- bash          # interactive shell
 scl enable gcc-toolset-15 -- cmake ...     # one-shot configure/build
 ```
 
-**Ninja:** RHEL’s `ninja-build` package is often **1.10.x**, which CMake rejects for modules. `./scripts/Build` and `./scripts/build_dual_compilers.sh` both source [scripts/build_common.sh](scripts/build_common.sh) to auto-select Ninja ≥ 1.11 (e.g. `~/.local/bin/ninja`, CLion-bundled). Override manually if needed:
+**Ninja:** RHEL’s `ninja-build` package is often **1.10.x**, which CMake rejects for modules. `./scripts/Build` sources [scripts/build_common.sh](scripts/build_common.sh) to auto-select Ninja ≥ 1.11 (e.g. `~/.local/bin/ninja`, CLion-bundled). Override manually if needed:
 
 ```bash
 export NINJA=/path/to/ninja   # must be >= 1.11
 ./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off
 ```
 
-**Repo dependencies (no extra `dnf`):** `vendor/jText` and `vendor/jacQlite` are committed — a plain clone builds in **vendored** mode. For live cross-project work, place `../jText` and `../jacQlite` next to this repo; the dual build script uses **reference** mode when siblings exist.
+**Repo dependencies (no extra `dnf`):** `vendor/jText` and `vendor/jacQlite` are committed — a plain clone builds in **vendored** mode. For live cross-project work, place `../jText` and `../jacQlite` next to this repo; `./scripts/Build` uses **reference** mode when siblings exist.
 
 See [BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md](BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md) for common new-machine pitfalls.
 
@@ -261,14 +261,6 @@ cd build-manual && ./ts_test_cli run --compiler gcc --disk ssd
 
 **CMake options (Mint defaults):** `TS_STORE_GNU_RELEASE_O3=OFF` (avoids GCC 15 module ICE at `-O3`); `TS_STORE_CLANG_LTO=OFF` (avoids broken compile-only LTO links).
 
-### Legacy dual-compiler script (RHEL bridge)
-
-```bash
-./scripts/build_dual_compilers.sh   # → build-dual/gcc, build-dual/clang
-```
-
-Still useful on RHEL for a one-shot gcc+clang pair. Primary workflow is `./scripts/Build`. See [DUAL_COMPILER_BUILD.md](DUAL_COMPILER_BUILD.md).
-
 **Dependency modes** (`TS_STORE_JTEXT_MODE`, `TS_STORE_JACQLITE_MODE`):
 - **`vendored`** (default) — `vendor/jText`, `vendor/jacQlite`
 - **`reference`** — live siblings `../jText`, `../jacQlite` (auto-selected by `scripts/Build` when siblings exist)
@@ -285,7 +277,7 @@ All stress tests are driven by the new **C++ CLI tool**:
 - Wrapper: [scripts/ts-test](scripts/ts-test)
 - [tests/test_params.txt](tests/test_params.txt) — controls `SIZE`, `DISK_TYPE`, selected tests, and optional `OS_ID`
 
-This replaces the previous Python and shell versions for much better error handling, type safety, and consistency with the rest of the C++ project.
+Single C++ matrix runner (`ts_test_cli` + `jac.test_framework`); legacy shell/Python runners removed.
 
 ```bash
 # Using the new C++ CLI (recommended)
@@ -315,7 +307,7 @@ See `get_test_params()` / `build_scenario_list()` in [modules/jac.test_framework
   - Full details for the run (including the assigned ID) are written to `OS_INFO.txt` inside the leaf directory.
   - You can force a specific ID with `OS_ID=OS_001` in params or `--os-id` on the CLI (override kept for debugging, weird containers/WSL/CI, migration, etc.).
   This design keeps all directory names short for perfect vertical alignment (padded OS_00n + 3-char disks x7k/10k/ssd + 5-char sizes) while automatically tracking which real OS each result set came from across machines. The promotion script mirrors the structure under `test-summary/`. (Padded form chosen so the framework can scale if it is successful across many OS variants.)
-- `./scripts/Build` promotes after each checklist row. `./scripts/run_all_tests.sh` (legacy) runs gcc+clang from `build-dual/` and promotes. Direct `ts_test_cli run` does **not** promote — run `./scripts/promote_summaries.sh --all` yourself after a manual matrix run.
+- `./scripts/Build` promotes after each checklist row. Direct `ts_test_cli run` does **not** promote — run `./scripts/promote_summaries.sh --all` yourself after a manual matrix run.
 
 View raw logs (example — current nested layout):
 ```bash
@@ -363,10 +355,9 @@ See [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md) for diagrams and the full structu
 - [tests/ts_store_00N/](tests/) — the numbered stress test suites (001–007 TS/XS + flags unit test)
 - [tests/test_params.txt](tests/test_params.txt) — controls `SIZE` (smoke/full), `DISK_TYPE`, selected tests, and `OS_ID`
 - [scripts/Build](scripts/Build) + [FileCheckList.txt](FileCheckList.txt) — **primary** checklist-driven build + test + promote
-- [scripts/ts-test](scripts/ts-test) — thin wrapper around `ts_test_cli` (searches common build dirs)
+- [scripts/ts-test](scripts/ts-test) — thin wrapper around `ts_test_cli` (finds `build-seq/` trees)
 - [scripts/promote_summaries.sh](scripts/promote_summaries.sh) — `test-results/` → `test-summary/`
 - [scripts/build_common.sh](scripts/build_common.sh) — Ninja ≥ 1.11 resolution
-- Legacy: [scripts/build_dual_compilers.sh](scripts/build_dual_compilers.sh), [scripts/run_all_tests.sh](scripts/run_all_tests.sh)
 - [scripts/Sync_dependencies.sh](scripts/Sync_dependencies.sh) — siblings → `vendor/`
 - [FORWARDING.md](FORWARDING.md) — sequential build design and current checklist status
 - [examples/](examples/) — demos, throughput benchmarks, and persistence examples

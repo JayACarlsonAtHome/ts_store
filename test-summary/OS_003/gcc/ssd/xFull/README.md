@@ -1,9 +1,11 @@
 # Test Results — OS_003 / gcc / ssd / xFull
 
-**Run (UTC):** 2026-06-10T00:40:55Z  
+**Run (UTC):** 2026-06-12T03:37:28Z  
 **Compilers:** gcc  
 **Scenarios:** 113/113 passed  
 **Manifest:** [run_manifest.jtext](run_manifest.jtext)  
+**Hardware:** 8 cores (1 physical), 31,936 MiB RAM — Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz @ 3,599 MHz max  
+**Hostname:** jc313-Laptop001 (Linux Mint 22.3)  
 
 ## Tests
 

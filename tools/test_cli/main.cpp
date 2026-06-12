@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
                     opts.verbosx = true;
                 } else if (arg == "--help" || arg == "-h") {
                     std::cout << "run options: --compiler [gcc|clang|all] --disk <type> --params <file> --dry-run -v\n"
-                              << "  Tip: run directly from a build dir that contains the ts_store_* test binaries (e.g. build-dual/gcc).\n"
+                              << "  Tip: run from a build dir with ts_store_* binaries (e.g. build-seq/<platform>-<compiler>).\n"
                               << "  The CLI will auto-infer --compiler from the dir name when possible.\n";
                     std::exit(0);
                 }
@@ -131,6 +131,9 @@ int main(int argc, char** argv) {
             std::cout << "Results: " << results_base.string() << "\n\n";
             fs::create_directories(results_base);
 
+            HostInfo host_info = collect_host_info();
+            write_os_info_txt(results_base, host_info, params.os_id);
+
             std::vector<RunResult> run_results;
             for (const auto& scen : scenarios) {
                 if (scen.compiler != compiler) continue;
@@ -157,6 +160,7 @@ int main(int argc, char** argv) {
                 if (rr.success) ++run_meta.passed;
             }
             run_meta.failed = run_meta.total_scenarios - run_meta.passed;
+            run_meta.host = host_info;
 
             std::vector<RunResult> manifest_rows;
             for (const auto& rr : run_results) {

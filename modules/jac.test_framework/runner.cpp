@@ -83,7 +83,7 @@ TestScaling get_test_params(const std::string& test_num_str, const std::string& 
         return res;
     }
 
-    // SIZE=full (xFull): progressive scale tuned for ~30 min dual-compiler matrix on x7k.
+    // SIZE=full (xFull): progressive scale tuned for ~30 min gcc+clang matrix on x7k.
     // Heavy 005/006/007: 50×2000 = 100k manifest records; 005/007 use 3 runs (300k events).
     if (tnum == "001") {
         res.threads           = 8;
@@ -296,10 +296,19 @@ std::vector<std::string> infer_compilers(const std::string& compiler_opt,
                                          const std::string& exe_path) {
     if (!compiler_explicit && compiler_opt == "all") {
         std::string p = launch_dir.string() + " " + exe_path;
-        if (p.find("build-dual/gcc") != std::string::npos || launch_dir.filename() == "gcc") {
+        const std::string dir = launch_dir.filename().string();
+        if (p.find("build-seq") != std::string::npos) {
+            if (dir.find("Clang") != std::string::npos || dir.find("clang") != std::string::npos) {
+                return {"clang"};
+            }
+            if (dir.find("GCC") != std::string::npos || dir.find("gcc") != std::string::npos) {
+                return {"gcc"};
+            }
+        }
+        if (launch_dir.filename() == "gcc") {
             return {"gcc"};
         }
-        if (p.find("build-dual/clang") != std::string::npos || launch_dir.filename() == "clang") {
+        if (launch_dir.filename() == "clang") {
             return {"clang"};
         }
         return {"gcc", "clang"};

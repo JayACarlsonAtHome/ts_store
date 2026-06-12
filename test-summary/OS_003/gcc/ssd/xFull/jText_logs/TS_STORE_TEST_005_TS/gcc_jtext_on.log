@@ -4,20 +4,20 @@ Using store.clear() — fastest, most realistic reuse
 Persistence will only be attached on the *last* run (previous runs measure clean hot path; only final run produces persist artifacts).
 
   sample event 42 (t=0) (0 metrics)
-[32m[VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-[0m  sample event 42 (t=0) (0 metrics)
-[32m[VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-[0mRun  3 / 3
+[VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
   sample event 42 (t=0) (0 metrics)
-[32m[VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-[0mPASS — 590,729 µs → 169,282 ops/sec
+[VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+Run  3 / 3
+  sample event 42 (t=0) (0 metrics)
+[VERIFY] ALL 100000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+PASS — 137,962 µs → 724,837 ops/sec
 
 
 ═══════════════════════════════════════════════════════════════
                FINAL RESULT — 3-RUN STATISTICS            
 ═══════════════════════════════════════════════════════════════
-  Fastest run        : 106,718 µs  → 937,049 ops/sec
-  Slowest run        : 590,729 µs  → 169,282 ops/sec
-  Average            : 288,296 µs  → 346,866 ops/sec
+  Fastest run        : 40,996 µs  → 2,439,262 ops/sec
+  Slowest run        : 137,962 µs  → 724,837 ops/sec
+  Average            : 74,833 µs  → 1,336,315 ops/sec
   (100,000 events per run, 100% verified, zero corruption)
 ═══════════════════════════════════════════════════════════════

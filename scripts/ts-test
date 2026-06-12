@@ -1,19 +1,11 @@
 #!/usr/bin/env bash
-# Thin wrapper for the C++ ts_test_cli tool.
-# Runs from the compiler build directory so test binaries are discoverable.
+# Thin wrapper for ts_test_cli — finds a recent build-seq tree from ./scripts/Build.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Try common locations for the built CLI.
-# Prefer build-seq/ (sequential Build), then build-dual/, build-mint/, build-local/.
 for candidate in \
     "${PROJECT_ROOT}"/build-seq/*/ts_test_cli \
-    "${PROJECT_ROOT}"/build-mint/*/ts_test_cli \
-    "${PROJECT_ROOT}/build-dual/gcc/ts_test_cli" \
-    "${PROJECT_ROOT}/build-dual/clang/ts_test_cli" \
-    "${PROJECT_ROOT}/build-local/gcc/ts_test_cli" \
-    "${PROJECT_ROOT}/build-local/clang/ts_test_cli" \
     "${PWD}/ts_test_cli" \
     "$(command -v ts_test_cli 2>/dev/null || true)"
 do
@@ -24,11 +16,9 @@ do
     fi
 done
 
-echo "ts_test_cli not found in common build locations."
-echo "To build and smoke-test (recommended):"
+echo "ts_test_cli not found."
+echo "Build and test (recommended):"
 echo "  ./scripts/Build FileCheckList.txt --FullRebuild=On --SmokeTest=On --FullTest=Off"
-echo "Or legacy dual build:"
-echo "  ./scripts/build_dual_compilers.sh"
-echo "Then re-run this wrapper, or run from a build dir:"
+echo "Or run from an existing build-seq dir:"
 echo "  cd build-seq/<platform>-<compiler> && ./ts_test_cli run --disk ssd"
 exit 1

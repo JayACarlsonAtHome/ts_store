@@ -259,6 +259,6 @@ Details: [FORWARDING.md](../FORWARDING.md) · Mint toolchains: [linux_mint_gcc15
 | [FORWARDING.md](../FORWARDING.md) | Sequential checklist build |
 | [Doc/ts_store_flag_docs.md](ts_store_flag_docs.md) | Flag bit layout |
 | [Doc/linux_mint_gcc15.md](linux_mint_gcc15.md) | Mint GCC 15 + Clang 20 |
-| [DUAL_COMPILER_BUILD.md](../DUAL_COMPILER_BUILD.md) | Legacy dual gcc+clang script |
+
 | [BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md](../BUILD_ISSUES_AND_FIXES_FOR_OTHER_MACHINE.md) | New-machine pitfalls |
 | [test-summary/README.md](../test-summary/README.md) | Promoted run index |

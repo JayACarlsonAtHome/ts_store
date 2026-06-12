@@ -285,6 +285,8 @@ bool write_run_manifest_jtext(const fs::path& results_base,
         inc_rel + "/run_manifest_runmeta_fields.jtFlds";
     const std::string scenarios_fields =
         inc_rel + "/run_manifest_scenarios_fields.jtFlds";
+    const std::string hostinfo_fields =
+        inc_rel + "/run_manifest_hostinfo_fields.jtFlds";
 
     std::ofstream out(jtext_path);
     if (!out) {
@@ -320,6 +322,24 @@ bool write_run_manifest_jtext(const fs::path& results_base,
             std::to_string(passed),
             std::to_string(failed),
         }});
+
+    if (meta.host.logical_cores > 0 || meta.host.ram_total_mib > 0
+        || !meta.host.cpu_model.empty()) {
+        write_manifest_section(
+            out,
+            "HostInfo",
+            hostinfo_fields,
+            {{
+                meta.host.hostname,
+                meta.host.os_pretty,
+                meta.host.cpu_model,
+                std::to_string(meta.host.logical_cores),
+                std::to_string(meta.host.physical_cores),
+                std::to_string(meta.host.ram_total_mib),
+                std::to_string(meta.host.cpu_mhz_max),
+                meta.host.arch,
+            }});
+    }
 
     write_manifest_section(out, "Scenarios", scenarios_fields, scenario_rows);
 

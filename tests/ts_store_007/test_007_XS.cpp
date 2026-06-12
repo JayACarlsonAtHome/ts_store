@@ -4,7 +4,7 @@
 // Full mode sizing from runner (currently 50×2k × 3 runs). Only last run persists.
 // Only the last run performs persistence (previous runs are clean hot-path measurement).
 // Size controlled at runtime via --threads --events-per-thread --runs (or via test_params.txt).
-// See tests/test_params.txt and scripts/run_all_tests.sh .
+// See tests/test_params.txt and ./scripts/Build (FileCheckList.txt).
 
 #include <array>
 #include <atomic>

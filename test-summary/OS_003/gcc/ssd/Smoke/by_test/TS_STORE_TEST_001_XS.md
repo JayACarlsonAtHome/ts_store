@@ -9,5 +9,5 @@
 | gcc | none | off | 100 | 0.01s | PASS | [log](../inmem_logs/TS_STORE_TEST_001_XS/gcc_none_off.log) |
 | gcc | none | on | 100 | 0.01s | PASS | [log](../inmem_logs/TS_STORE_TEST_001_XS/gcc_none_on.log) |
 | gcc | sql | off | 100 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_001_XS/gcc_sql_off.log) |
-| gcc | sql | on | 100 | 0.03s | PASS | [log](../sql_logs/TS_STORE_TEST_001_XS/gcc_sql_on.log) |
+| gcc | sql | on | 100 | 0.01s | PASS | [log](../sql_logs/TS_STORE_TEST_001_XS/gcc_sql_on.log) |
 

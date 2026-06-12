@@ -31,8 +31,8 @@
 #   test-results/OS_001/gcc/x7k/xFull/...
 #   test-results/OS_001/clang/10k/Smoke/...
 #
-# Inside every leaf directory you will also find OS_INFO.txt with the
-# full details of the OS + run.
+# Each test-results leaf also gets OS_INFO.txt + manifest HostInfo (CPU cores,
+# RAM, model, hostname) captured at run start — promoted to test-summary/.
 #
 # SIZE_LABEL is auto-derived:
 #   SIZE=smoke  -> Smoke

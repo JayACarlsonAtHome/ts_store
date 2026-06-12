@@ -1,64 +1,64 @@
-# Log excerpt (736507 bytes in test-results/; full log not committed)
+# Log excerpt (630112 bytes in test-results/; full log not committed)
 Safepay entries: 2560 (expected: 2560)
-Safepay duration: 8693 µs (2220 → 10913)
-Results duration: 8348 µs (2587 → 10935)
+Safepay duration: 1955 µs (581 → 2536)
+Results duration: 1796 µs (746 → 2542)
 
 Total successes: 2560 / 2560  (PASS)
 Null reads (races): 0
 
-[32m[VERIFY] ALL 2560 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
-[0m
+[VERIFY] ALL 2560 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+
 Result store contents:
-[1;37mts_store <[0m
+ts_store <
    Threads    = 32
    Events     = 1
    ValueT     = bounded_string<75> (fixed, max 75 codepoints)
    Time Stamp = On>
-[2m=========================================================================================================================================================[0m
-[1m ID            TIME (µs)   SEVERITY   CATEGORY............   Thread   Event   PAYLOAD....................................................................   
-[36m  0   [33m              2587   [1;35mInfo....   [1;33mSTATS...............   [35m     0   [1;32m   80   [34mRESULT: thread=  0  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m  1   [33m              3408   [1;35mInfo....   [1;33mSTATS...............   [35m     1   [1;32m   80   [34mRESULT: thread=  1  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m  2   [33m              3624   [1;35mInfo....   [1;33mSTATS...............   [35m     3   [1;32m   80   [34mRESULT: thread=  3  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m  3   [33m              4528   [1;35mInfo....   [1;33mSTATS...............   [35m     6   [1;32m   80   [34mRESULT: thread=  6  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m  4   [33m              4627   [1;35mInfo....   [1;33mSTATS...............   [35m     4   [1;32m   80   [34mRESULT: thread=  4  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m  5   [33m              4633   [1;35mInfo....   [1;33mSTATS...............   [35m     2   [1;32m   80   [34mRESULT: thread=  2  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m  6   [33m              4665   [1;35mInfo....   [1;33mSTATS...............   [35m     5   [1;32m   80   [34mRESULT: thread=  5  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m  7   [33m              5218   [1;35mInfo....   [1;33mSTATS...............   [35m     8   [1;32m   80   [34mRESULT: thread=  8  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m  8   [33m              5613   [1;35mInfo....   [1;33mSTATS...............   [35m     7   [1;32m   80   [34mRESULT: thread=  7  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m  9   [33m              5851   [1;35mInfo....   [1;33mSTATS...............   [35m     9   [1;32m   80   [34mRESULT: thread=  9  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 10   [33m              6190   [1;35mInfo....   [1;33mSTATS...............   [35m    10   [1;32m   80   [34mRESULT: thread= 10  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 11   [33m              6346   [1;35mInfo....   [1;33mSTATS...............   [35m    12   [1;32m   80   [34mRESULT: thread= 12  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 12   [33m              6539   [1;35mInfo....   [1;33mSTATS...............   [35m    15   [1;32m   80   [34mRESULT: thread= 15  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 13   [33m              6920   [1;35mInfo....   [1;33mSTATS...............   [35m    18   [1;32m   80   [34mRESULT: thread= 18  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 14   [33m              6990   [1;35mInfo....   [1;33mSTATS...............   [35m    11   [1;32m   80   [34mRESULT: thread= 11  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 15   [33m              7055   [1;35mInfo....   [1;33mSTATS...............   [35m    13   [1;32m   80   [34mRESULT: thread= 13  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 16   [33m              7160   [1;35mInfo....   [1;33mSTATS...............   [35m    14   [1;32m   80   [34mRESULT: thread= 14  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 17   [33m              7250   [1;35mInfo....   [1;33mSTATS...............   [35m    17   [1;32m   80   [34mRESULT: thread= 17  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 18   [33m              7896   [1;35mInfo....   [1;33mSTATS...............   [35m    16   [1;32m   80   [34mRESULT: thread= 16  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 19   [33m              8081   [1;35mInfo....   [1;33mSTATS...............   [35m    20   [1;32m   80   [34mRESULT: thread= 20  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 20   [33m              8816   [1;35mInfo....   [1;33mSTATS...............   [35m    23   [1;32m   80   [34mRESULT: thread= 23  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 21   [33m              9355   [1;35mInfo....   [1;33mSTATS...............   [35m    25   [1;32m   80   [34mRESULT: thread= 25  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 22   [33m              9478   [1;35mInfo....   [1;33mSTATS...............   [35m    21   [1;32m   80   [34mRESULT: thread= 21  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+=========================================================================================================================================================
+ ID            TIME (µs)   SEVERITY   CATEGORY............   Thread   Event   PAYLOAD....................................................................   
+  0                  746   Info....   STATS...............        0      80   RESULT: thread=  0  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+  1                  794   Info....   STATS...............        1      80   RESULT: thread=  1  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+  2                 1061   Info....   STATS...............        2      80   RESULT: thread=  2  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+  3                 1084   Info....   STATS...............        5      80   RESULT: thread=  5  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+  4                 1165   Info....   STATS...............        3      80   RESULT: thread=  3  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+  5                 1219   Info....   STATS...............        6      80   RESULT: thread=  6  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+  6                 1226   Info....   STATS...............        4      80   RESULT: thread=  4  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+  7                 1524   Info....   STATS...............        7      80   RESULT: thread=  7  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+  8                 1574   Info....   STATS...............        9      80   RESULT: thread=  9  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+  9                 1593   Info....   STATS...............        8      80   RESULT: thread=  8  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 10                 1771   Info....   STATS...............       10      80   RESULT: thread= 10  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 11                 1781   Info....   STATS...............       12      80   RESULT: thread= 12  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 12                 1855   Info....   STATS...............       15      80   RESULT: thread= 15  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 13                 1871   Info....   STATS...............       11      80   RESULT: thread= 11  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 14                 1928   Info....   STATS...............       16      80   RESULT: thread= 16  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 15                 2074   Info....   STATS...............       14      80   RESULT: thread= 14  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 16                 2101   Info....   STATS...............       13      80   RESULT: thread= 13  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 17                 2141   Info....   STATS...............       17      80   RESULT: thread= 17  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 18                 2178   Info....   STATS...............       21      80   RESULT: thread= 21  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 19                 2189   Info....   STATS...............       18      80   RESULT: thread= 18  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 20                 2241   Info....   STATS...............       25      80   RESULT: thread= 25  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 21                 2242   Info....   STATS...............       20      80   RESULT: thread= 20  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 22                 2245   Info....   STATS...............       19      80   RESULT: thread= 19  successes=    80  nulls=   0  total_events=    80...... FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
 
 ... [truncated — see test-results/ on the runner host for full log] ...
 
-[36m 2543   [33m             10817   [1;35mFatal...   [1;33mDB..................   [35m    31   [1;32m   63   [34mFatal error in processing notification 💀................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Fatal 
-[36m 2544   [33m             10822   [1;35mNot Set.   [1;33mDB..................   [35m    31   [1;32m   64   [34mNot Set, default payload 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Not Set 
-[36m 2545   [33m             10827   [1;35mTrace...   [1;33mDB..................   [35m    31   [1;32m   65   [34mTrace processing request 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Trace 
-[36m 2546   [33m             10832   [1;35mDebug...   [1;33mDB..................   [35m    31   [1;32m   66   [34mDebug processing request 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Debug 
-[36m 2547   [33m             10837   [1;35mInfo....   [1;33mDB..................   [35m    31   [1;32m   67   [34mInfo processing request 😊...............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 2548   [33m             10843   [1;35mWarn....   [1;33mDB..................   [35m    31   [1;32m   68   [34mWarning in processing notification 😕....................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Warn 
-[36m 2549   [33m             10849   [1;35mError...   [1;33mDB..................   [35m    31   [1;32m   69   [34mError in processing notification 😣......................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Error 
-[36m 2550   [33m             10861   [1;35mCritical   [1;33mDB..................   [35m    31   [1;32m   70   [34mCritical processing request 😣...........................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Critical 
-[36m 2551   [33m             10868   [1;35mFatal...   [1;33mDB..................   [35m    31   [1;32m   71   [34mFatal error in processing notification 💀................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Fatal 
-[36m 2552   [33m             10873   [1;35mNot Set.   [1;33mDB..................   [35m    31   [1;32m   72   [34mNot Set, default payload 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Not Set 
-[36m 2553   [33m             10878   [1;35mTrace...   [1;33mDB..................   [35m    31   [1;32m   73   [34mTrace processing request 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Trace 
-[36m 2554   [33m             10883   [1;35mDebug...   [1;33mDB..................   [35m    31   [1;32m   74   [34mDebug processing request 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Debug 
-[36m 2555   [33m             10889   [1;35mInfo....   [1;33mDB..................   [35m    31   [1;32m   75   [34mInfo processing request 😊...............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
-[36m 2556   [33m             10895   [1;35mWarn....   [1;33mDB..................   [35m    31   [1;32m   76   [34mWarning in processing notification 😕....................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Warn 
-[36m 2557   [33m             10901   [1;35mError...   [1;33mDB..................   [35m    31   [1;32m   77   [34mError in processing notification 😣......................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Error 
-[36m 2558   [33m             10906   [1;35mCritical   [1;33mDB..................   [35m    31   [1;32m   78   [34mCritical processing request 😣...........................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Critical 
-[36m 2559   [33m             10913   [1;35mFatal...   [1;33mDB..................   [35m    31   [1;32m   79   [34mFatal error in processing notification 💀................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Fatal 
-[2m===========================================================================================================================================================[0m
-[2mNote: Output is zero-indexed → last printed entry is ID 2559. Expected last ID = 2559.[0m
-[2mTotal entries stored: 2560 (expected: 2560)[0m
+ 2543                 2517   Not Set.   NET.................       30      72   Not Set, default payload 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 2544                 2518   Fatal...   DB..................       26      71   Fatal error in processing notification 💀................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 2545                 2519   Trace...   NET.................       30      73   Trace processing request 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Trace 
+ 2546                 2519   Not Set.   DB..................       26      72   Not Set, default payload 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Not Set 
+ 2547                 2520   Trace...   DB..................       26      73   Trace processing request 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Trace 
+ 2548                 2521   Debug...   NET.................       30      74   Debug processing request 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Debug 
+ 2549                 2522   Debug...   DB..................       26      74   Debug processing request 😎..............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Debug 
+ 2550                 2522   Info....   NET.................       30      75   Info processing request 😊...............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 2551                 2523   Info....   DB..................       26      75   Info processing request 😊...............................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Info 
+ 2552                 2527   Warn....   NET.................       30      76   Warning in processing notification 😕....................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Warn 
+ 2553                 2528   Warn....   DB..................       26      76   Warning in processing notification 😕....................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Warn 
+ 2554                 2529   Error...   NET.................       30      77   Error in processing notification 😣......................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Error 
+ 2555                 2529   Error...   DB..................       26      77   Error in processing notification 😣......................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Error 
+ 2556                 2531   Critical   DB..................       26      78   Critical processing request 😣...........................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Critical 
+ 2557                 2531   Critical   NET.................       30      78   Critical processing request 😣...........................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Critical 
+ 2558                 2533   Fatal...   DB..................       26      79   Fatal error in processing notification 💀................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Fatal 
+ 2559                 2536   Fatal...   NET.................       30      79   Fatal error in processing notification 💀................................   FLAGS: LogConsole, KeeperRecord, HasData, HasIntData, HasDblData | Severity: Fatal 
+===========================================================================================================================================================
+Note: Output is zero-indexed → last printed entry is ID 2559. Expected last ID = 2559.
+Total entries stored: 2560 (expected: 2560)

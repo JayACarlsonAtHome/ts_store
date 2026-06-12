@@ -1,0 +1,11 @@
+# ts_store host snapshot (captured at run start)
+OS_ID=OS_003
+Hostname=jc313-Laptop001
+OS=Linux Mint 22.3
+Arch=x86_64
+CPU=Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz
+LogicalCores=8
+PhysicalCores=1
+CpuMhzMax=3598
+RamTotalMiB=31936
+RamAvailMiB=3754

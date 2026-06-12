@@ -86,6 +86,7 @@ target_sources(jac_report
         FILES modules/jac.report/jac.report.cppm
     PRIVATE
         modules/jac.report/format.cpp
+        modules/jac.report/host_info.cpp
         modules/jac.report/manifest.cpp
         modules/jac.report/summarize.cpp
 )
@@ -368,7 +369,7 @@ if(TS_STORE_ENABLE_JTEXT_PERSIST)
     )
     target_compile_features(jtext_retrieve PRIVATE cxx_std_23)
 
-    # --- Compiler capability check (dual compiler support) ---
+    # --- Compiler capability check (gcc + clang matrix) ---
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "14")
             message(FATAL_ERROR

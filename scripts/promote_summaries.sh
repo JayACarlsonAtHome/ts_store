@@ -6,7 +6,7 @@
 # (git-ignored) test-results/ tree into test-summary/ for commit.
 #
 # Promoted per leaf (OS_00n/<compiler>/<disk>/<Smoke|xFull>/):
-#   run_manifest.jtext, README.md, by_test/*.md, *_logs/**/*.log
+#   run_manifest.jtext, OS_INFO.txt, README.md, by_test/*.md, *_logs/**/*.log
 #   (logs >64KiB are promoted as head/tail excerpts so xFull leaves stay committable)
 #
 # Then regenerates test-summary/README.md hub index via ts_test_cli summarize-hub.
@@ -16,7 +16,7 @@
 #   ./scripts/promote_summaries.sh --disk 10k
 #   ./scripts/promote_summaries.sh --all           # every leaf under test-results/
 #
-# Called automatically at the end of run_all_tests.sh. Safe to run manually too.
+# Called automatically at the end of ./scripts/Build. Safe to run manually too.
 
 set -euo pipefail
 
@@ -173,6 +173,7 @@ for rel in "${LEAVES[@]}"; do
     fi
     mkdir -p "$dst"
     cp -f "$src"/run_manifest.jtext "$dst/" 2>/dev/null || true
+    cp -f "$src"/OS_INFO.txt "$dst/" 2>/dev/null || true
     cp -f "$src"/README.md "$dst/" 2>/dev/null || true
     if [[ -d "$src/by_test" ]]; then
         mkdir -p "$dst/by_test"
@@ -187,14 +188,10 @@ done
 remove_legacy_summary_files
 prune_stale_summary_tree
 
-# Hub index: prefer sequential build tree, then dual-compiler trees.
+# Hub index: use ts_test_cli from build-seq if present.
 HUB_CLI=""
 for candidate in \
-    "$PROJECT_ROOT"/build-seq/*/ts_test_cli \
-    "$PROJECT_ROOT"/build-mint/*/ts_test_cli \
-    "$PROJECT_ROOT/build-verify/ts_test_cli" \
-    "$PROJECT_ROOT/build-dual/gcc/ts_test_cli" \
-    "$PROJECT_ROOT/build-dual/clang/ts_test_cli"; do
+    "$PROJECT_ROOT"/build-seq/*/ts_test_cli; do
     if [[ -x "$candidate" ]]; then
         HUB_CLI="$candidate"
         break
