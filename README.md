@@ -6,7 +6,7 @@
 
 **High-throughput in-memory event collection with optional durable asynchronous persistence.**
 
-The hot path (`save_event`) is designed to stay as close to pure in-memory speed as possible while a background thread drains to disk via pluggable sinks (Binary or jText split files today).
+The hot path (`save_event`) is designed to stay as close to pure in-memory speed as possible while a background thread drains to disk via pluggable sinks (Binary, jText split files, or SQLite).
 
 **Structure & architecture:** [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md) — system layers, module graph, repo layout, test matrix, and build workflow.
 
@@ -16,7 +16,7 @@ The hot path (`save_event`) is designed to stay as close to pure in-memory speed
 
 ts_store began as a **learning experiment**: C++23, bounded hot-path storage, flags, and persistence sinks explored incrementally. It is growing into a **regression platform** — not finished yet, but aimed at verifying every meaningful change to ts_store before it lands.
 
-The automated matrix (`ts_test_cli`, tests 001–007 TS/XS, flags unit test, checklist-driven via [FileCheckList.txt](FileCheckList.txt)) is the proof layer: millions of events, multiple persist modes, per-OS and per-disk result leaves, and promoted summaries under [test-summary/](test-summary/).
+The automated matrix (`ts_test_cli`, tests 001–008 TS/XS, flags unit test, checklist-driven via [FileCheckList.txt](FileCheckList.txt)) is the proof layer: millions of events, multiple persist modes (binary, jText, SQL, in-memory, and flag-selective routing), per-OS and per-disk result leaves, and promoted summaries under [test-summary/](test-summary/).
 
 **C++23 modules** are used throughout tests and examples. They are **not for portability** — they speed up incremental compiles on a **single** machine + compiler combo. The goal is **not** to ship a reusable SDK for other repos. On one fixed toolchain, when you touch flags, a sink, or the core buffer, **only the affected module units recompile**. Tests and examples use `import`; implementation still lives under `include/beman/ts_store/ts_store_headers/` (module `.cppm` files are thin shims — moving bodies into modules is future work).
 
@@ -61,14 +61,18 @@ Link the matching CMake targets (e.g. `jac_ts_store_impl_testing`) — see [CMak
 
 ## Current Status (mid-2026)
 
-- **Extensively tested** — All stress tests (001–007 TS/XS + flags) exercise the full double-buffered persistence matrix (binary + jText + SQL + pure in-memory) via **module imports**. See [tests/](tests/) and [scripts/Build](scripts/Build).
-- **Linux Mint 22.0 (OS_003 / ssd):** Smoke and xFull pass for **GCC 15** and **Clang 20** (113 scenarios per compiler). Proof: [test-summary/OS_003/gcc/ssd/](test-summary/OS_003/gcc/ssd/) and [test-summary/OS_003/clang/ssd/](test-summary/OS_003/clang/ssd/) — each leaf includes hardware/hostname from `OS_INFO.txt`.
+- **Extensively tested** — Stress tests **001–008** TS/XS plus `ts_store_flags` exercise the double-buffered persistence matrix (binary, jText, SQL, in-memory, and **flag-selective routing**) via **module imports**. See [tests/](tests/) and [scripts/Build](scripts/Build).
+- **Linux Mint 22.0 (OS_003 / ssd):** **Smoke** — **113/113** per compiler (GCC 15 + Clang 20). **xFull** — **115/115** per compiler (adds test 008 flag-routing scenarios). Proof: [test-summary/README.md](test-summary/README.md), [test-summary/OS_003/gcc/ssd/](test-summary/OS_003/gcc/ssd/), [test-summary/OS_003/clang/ssd/](test-summary/OS_003/clang/ssd/) — each leaf includes hardware/hostname from `OS_INFO.txt`.
 - **RHEL rows** in [FileCheckList.txt](FileCheckList.txt) — on each target host, mark that host's rows `[x]` and run `./scripts/Build` (leave other rows `[ ]`).
-- Heavy tests (005/006/007) scale up in `SIZE=full` (50 threads × 2k events; 005/007 × 3 runs) — tuned for ~30 min per compiler on **x7k**; on SSD the same matrix finishes in minutes. Only the last run performs persistence on 005/007 (see the test sources).
+- **xFull scaling** (see [tests/test_params.txt](tests/test_params.txt) and `get_test_params()` in [runner.cpp](modules/jac.test_framework/runner.cpp)):
+  - **005/007** — 50×2k × 3 runs (100k events/run; persist on final run only)
+  - **006** — 50×2k single pass (100k events)
+  - **008** — 50×20k × 3 runs (**1M events/run**; 10k `KeeperRecord` → jText + 10k `DatabaseEntry` → SQLite; persist verified on final run)
+  - Tuned for ~30 min per compiler on **x7k**; on SSD the same matrix finishes in minutes.
 - Results layout: `test-results/OS_00n/<compiler>/<disk>/Smoke|xFull/` → promoted to the same path under `test-summary/`. GCC and Clang are separate leaves.
-- `./scripts/Build` promotes summaries after each checklist row; manual `ts_test_cli` runs use [scripts/promote_summaries.sh](scripts/promote_summaries.sh).
+- **Primary workflow:** `./scripts/Build` + [FileCheckList.txt](FileCheckList.txt). Legacy shell/Python matrix runners are removed. Manual `ts_test_cli` runs use [scripts/promote_summaries.sh](scripts/promote_summaries.sh).
 
-The core in-memory path + `DoubleBufferedWriter` + pluggable sinks (JText, Binary, and SQL via `SqlEventSink`) is the primary delivered capability. Advanced query/aggregation beyond `select(id)` remains future work.
+The core in-memory path + `DoubleBufferedWriter` + pluggable sinks (JText, Binary, SQL, and `FlagRoutingEventSink`) is the primary delivered capability. Advanced query/aggregation beyond `select(id)` remains future work.
 
 ---
 
@@ -93,7 +97,7 @@ ts_store<Config> store(8, 10'000);
 
 - [ts_store_config.hpp](include/beman/ts_store/ts_store_headers/ts_store_config.hpp)
 
-Test-specific runtime sizing (threads, events, runs, and the "progressive difficulty" + "only last run persists" rules for 005/006/007) is controlled by:
+Test-specific runtime sizing (threads, events, runs, and the "progressive difficulty" + "only last run persists" rules for 005/007/008) is controlled by:
 
 - [tests/test_params.txt](tests/test_params.txt)
 - `get_test_params()` in [modules/jac.test_framework/runner.cpp](modules/jac.test_framework/runner.cpp) (invoked by `ts_test_cli`)
@@ -103,7 +107,9 @@ A 0-int / 0-float variant of the heaviest stress test (005) is also maintained f
 
 ### Flags
 
-A single `uint64_t` carries user hints (`KeeperRecord`, `LogConsole`, `SendNetwork`, `IsResult`, severity, etc.) plus automatic `HasData` / `HasIntData` / `HasDblData` bits.
+A single `uint64_t` carries user hints (`KeeperRecord`, `DatabaseEntry`, `LogConsole`, `SendNetwork`, `IsResult`, severity, etc.) plus automatic `HasData` / `HasIntData` / `HasDblData` bits.
+
+`KeeperRecord` and `DatabaseEntry` drive selective persistence: test **008** routes them through `FlagRoutingEventSink` to jText and SQLite respectively while the rest of the events stay in-memory on the persist path.
 
 **Full flag layout and helpers**: [Doc/ts_store_flag_docs.md](Doc/ts_store_flag_docs.md) — module `jac.ts_store.flags`
 
@@ -125,12 +131,13 @@ auto [ok, id] = store.save_event(...);   // returns instantly
 ```
 
 Supported today (modules under `modules/jac.ts_store/`):
-- `jac.ts_store.persistence.jtext` — `JTextEventSink`, split files (main + _Ints + _Floats)
+- `jac.ts_store.persistence.jtext` — `JTextEventSink`, split files (main + _Ints + _Floats); `PersistMode::KeeperOnly` filters to `KeeperRecord`
 - `jac.ts_store.persistence.binary` — `BinaryEventSink`, fast length-prefixed mmap path
-- `jac.ts_store.persistence.sql` — `SqlEventSink` (when SQLite persist is enabled at configure time)
+- `jac.ts_store.persistence.sql` — `SqlEventSink` (when SQLite persist is enabled at configure time); `PersistMode::DatabaseOnly` filters to `DatabaseEntry`
 - `jac.ts_store.persistence.writer` — `DoubleBufferedWriter`
+- `FlagRoutingEventSink` (header) — routes each batch to jText and/or SQL sinks by per-event flags
 
-`KeeperRecord` flag controls what must survive to durable storage.
+Sinks honor user flags: `KeeperRecord` → file path, `DatabaseEntry` → SQL. Test **008** proves this at 1M-event scale.
 
 See [examples/](examples/) — all demos and benchmarks use `import`, not raw ts_store headers.
 
@@ -150,7 +157,7 @@ Typical results from the full stress matrix (see the latest summaries under `tes
 The test framework uses an `OS_00n / compiler / disk / size` layout. Start at the hub:
 
 - [test-summary/README.md](test-summary/README.md) — index of all promoted runs (`{OS}/{compiler}/{disk}/{Smoke|xFull}`)
-- Example leaf: [test-summary/OS_003/gcc/ssd/Smoke/README.md](test-summary/OS_003/gcc/ssd/Smoke/README.md) — per-test links under `by_test/`
+- Example leaves: [test-summary/OS_003/gcc/ssd/Smoke/README.md](test-summary/OS_003/gcc/ssd/Smoke/README.md) (113 scenarios), [test-summary/OS_003/gcc/ssd/xFull/README.md](test-summary/OS_003/gcc/ssd/xFull/README.md) (115 scenarios) — per-test links under `by_test/`
 
 Each leaf includes `run_manifest.jtext` (machine-readable matrix in jText **standard profile**: `//` + `#` headers, `--` sections, `# Fields:` includes — see [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md)), `OS_INFO.txt` (host snapshot), `README.md` (navigation), and `by_test/*.md` (per-binary detail).
 
@@ -285,11 +292,17 @@ cd build-manual && ./ts_test_cli run --compiler gcc --disk ssd
 
 Legacy shell/Python runners are removed. One C++ matrix (`ts_test_cli` + `jac.test_framework`).
 
-**Matrix shape:** **113 scenarios per compiler** (001–007 × TS/XS × 4 persist × 2 output modes + `ts_store_flags`). Implementation: `get_test_params()` / `build_scenario_list()` in [modules/jac.test_framework/runner.cpp](modules/jac.test_framework/runner.cpp), plus heavy test sources (e.g. [tests/ts_store_005/](tests/ts_store_005/), [tests/ts_store_007/](tests/ts_store_007/)).
+**Key behaviors** (runner + test sources):
+- Progressive sizing — 001–004 stay small; 005/006/007 reach 100k events/run in xFull; **008 reaches 1M events/run**
+- 005/007/008 — only the **last** run performs persistence; earlier runs measure hot path only
+- Test **008** uses `persist=flags` only (2 scenarios/compiler: `008_TS` + `008_XS` in `flags_logs/`)
 
-**Runner behaviors** (not duplicated in test sources):
-- Progressive sizing — 001–004 stay small; 005/006/007 reach 100k manifest records per scenario in full mode
-- 005/006/007 — only the **last** run performs persistence; earlier runs measure hot path only
+See `get_test_params()` / `build_scenario_list()` in [modules/jac.test_framework/runner.cpp](modules/jac.test_framework/runner.cpp), plus heavy test sources (e.g. [tests/ts_store_005/](tests/ts_store_005/), [tests/ts_store_007/](tests/ts_store_007/), [tests/ts_store_008/](tests/ts_store_008/)).
+
+| Matrix | Scenarios / compiler | Notes |
+|--------|---------------------|-------|
+| **Smoke** | **113** | 001–007 × TS/XS × 4 persist × 2 output modes + `ts_store_flags` |
+| **xFull** | **115** | Same + test 008 × TS/XS (`flags` persist) |
 
 ### Result layout and OS IDs
 
@@ -305,12 +318,15 @@ Legacy shell/Python runners are removed. One C++ matrix (`ts_test_cli` + `jac.te
 Direct `ts_test_cli run` does **not** promote — run `./scripts/promote_summaries.sh --all` after a manual matrix.
 
 ```bash
-# Raw log (gitignored)
+# Raw logs (gitignored)
+less -R test-results/OS_003/gcc/ssd/xFull/flags_logs/TS_STORE_TEST_008_TS/gcc_flags_off.log
 less -R test-results/OS_003/gcc/ssd/Smoke/binary_logs/TS_STORE_TEST_005_TS/gcc_binary_on.log
 
 # Promoted summary (committed)
 less test-summary/OS_003/gcc/ssd/Smoke/README.md
 ```
+
+Summaries live under `test-summary/OS_003/<compiler>/ssd/{Smoke,xFull}/` (hub: [test-summary/README.md](test-summary/README.md)). `test-results/` is gitignored; only `test-summary/` is committed.
 
 ---
 
@@ -335,7 +351,7 @@ Located in `examples/` (many are only built when `TS_STORE_ENABLE_JTEXT_PERSIST=
 **Utilities**
 - `slurp_jtext_to_sqlite.cpp` — example of loading jText output into SQLite
 
-Pure binary (no jText) examples and benchmarks are always available even without the jText option. Many of the heavy stress tests (especially 005/007) are excellent real-world usage examples.
+Pure binary (no jText) examples and benchmarks are always available even without the jText option. The heavy stress tests (005/007 throughput, **008** flag-selective routing) are the best real-world usage references.
 
 ---
 
@@ -346,7 +362,7 @@ See [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md) for diagrams and the full structu
 - [modules/jac.ts_store/](modules/jac.ts_store/) — C++23 modules (`config`, `flags`, `ansi`, `core`, `impl.testing`, `test_options`, `persistence.{common,binary,jtext,sql,writer}`)
 - [modules/jac.test_framework/](modules/jac.test_framework/) + [modules/jac.report/](modules/jac.report/) — matrix runner and summarization
 - [include/beman/ts_store/ts_store_headers/](include/beman/ts_store/ts_store_headers/) — implementation headers (included by module units; prefer `import` in application code)
-- [tests/ts_store_00N/](tests/) — the numbered stress test suites (001–007 TS/XS + flags unit test)
+- [tests/ts_store_00N/](tests/) — numbered stress suites (001–008 TS/XS + `ts_store_flags` unit test)
 - [tests/test_params.txt](tests/test_params.txt) — controls `SIZE` (smoke/full), `DISK_TYPE`, selected tests, and `OS_ID`
 - [scripts/Build](scripts/Build) + [FileCheckList.txt](FileCheckList.txt) — **primary** checklist-driven build + test + promote
 - [scripts/ts-test](scripts/ts-test) — thin wrapper around `ts_test_cli` (finds `build-seq/` trees)
@@ -368,7 +384,7 @@ See [Doc/ARCHITECTURE.md](Doc/ARCHITECTURE.md) for diagrams and the full structu
 - `SqlEventSink` exists and is in the stress matrix, but SQL persistence is optional at configure time and less battle-tested than jText/Binary on every OS leaf.
 - No rotation, compaction, or retention policy on the persisted side.
 - Query/aggregation beyond `select(id)` is not implemented at runtime.
-- Smoke + xFull on **Linux Mint 22.0 / ssd** proven for **GCC 15** and **Clang 20**. RHEL rows still need runs on each target host (mark `[x]` on that host only).
+- **Linux Mint 22.0 / ssd (OS_003):** Smoke **113/113** and xFull **115/115** proven for **GCC 15** and **Clang 20**. RHEL rows still need runs on each target host (mark `[x]` on that host only).
 - No automated CI yet — regression proof is manual smoke + promoted `test-summary/` commits.
 
 ---
