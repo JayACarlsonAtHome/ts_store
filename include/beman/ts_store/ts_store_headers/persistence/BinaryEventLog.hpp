@@ -105,6 +105,8 @@ public:
         if (mode_ == PersistMode::KeeperOnly) {
             constexpr uint64_t KEEPER_BIT = 1ULL << 1;
             if ((raw_flags & KEEPER_BIT) == 0) return;
+        } else if (mode_ == PersistMode::DatabaseOnly) {
+            return;
         }
 
         size_t record_size = sizeof(uint64_t) * 5

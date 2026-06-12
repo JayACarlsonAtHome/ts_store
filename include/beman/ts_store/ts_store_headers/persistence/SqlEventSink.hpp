@@ -23,7 +23,7 @@ class SqlEventSink : public IEventSink {
 public:
     // base_name: used for "base.db" (the SQLite DB) and "base.sql" (debug insert statements file, if enabled)
     // int_count, dbl_count: number of metric columns (determines schema for _ints / _floats tables)
-    // mode: All or KeeperOnly
+    // mode: All, KeeperOnly (bit 1), or DatabaseOnly (bit 2)
     // write_debug_sql: if true, also emit textual INSERT statements to base.sql for debugging/replay
     SqlEventSink(std::string_view base_name,
                  size_t int_count,
@@ -38,6 +38,8 @@ public:
     void finalize() override;
 
     std::string_view name() const override { return "SqlEventSink"; }
+
+    [[nodiscard]] size_t main_row_count() const { return main_rows_inserted_; }
 
 private:
     void ensure_tables_and_prepare();
@@ -61,6 +63,7 @@ private:
     std::unique_ptr<Sqlite::Statement> stmt_dbls_;
 
     bool finalized_ = false;
+    size_t main_rows_inserted_ = 0;
 };
 
 } // namespace jac::ts_store::inline_v001

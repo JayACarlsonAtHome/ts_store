@@ -46,13 +46,14 @@ public:
     }
 
     void finalize() override {
-        if (impl_) {
-            impl_->finalize();
-            impl_.reset();
-        }
+        if (impl_) impl_->finalize();
     }
 
     std::string_view name() const override { return "JTextEventSink"; }
+
+    [[nodiscard]] size_t main_row_count() const {
+        return impl_ ? impl_->stats().main_rows : 0;
+    }
 
 private:
     std::unique_ptr<JTextSplitEventLog> impl_;

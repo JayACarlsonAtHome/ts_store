@@ -115,6 +115,8 @@ void JTextSplitEventLog::append_event(
     if (i.mode == PersistMode::KeeperOnly) {
         constexpr uint64_t KEEPER_MASK = 1ULL << 1;
         if ((raw_flags & KEEPER_MASK) == 0) return;
+    } else if (i.mode == PersistMode::DatabaseOnly) {
+        return;
     }
 
     // Main record

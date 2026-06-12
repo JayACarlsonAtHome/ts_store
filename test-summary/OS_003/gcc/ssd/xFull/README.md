@@ -1,10 +1,10 @@
 # Test Results — OS_003 / gcc / ssd / xFull
 
-**Run (UTC):** 2026-06-12T03:37:28Z  
+**Run (UTC):** 2026-06-12T04:13:12Z  
 **Compilers:** gcc  
-**Scenarios:** 113/113 passed  
+**Scenarios:** 115/115 passed  
 **Manifest:** [run_manifest.jtext](run_manifest.jtext)  
-**Hardware:** 8 cores (1 physical), 31,936 MiB RAM — Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz @ 3,599 MHz max  
+**Hardware:** 8 cores (1 physical), 31,936 MiB RAM — Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz @ 3,663 MHz max  
 **Hostname:** jc313-Laptop001 (Linux Mint 22.3)  
 
 ## Tests
@@ -25,6 +25,8 @@
 | TS_STORE_TEST_006_XS | 8 | 8 | 0 | [by_test/TS_STORE_TEST_006_XS.md](by_test/TS_STORE_TEST_006_XS.md) |
 | TS_STORE_TEST_007_TS | 8 | 8 | 0 | [by_test/TS_STORE_TEST_007_TS.md](by_test/TS_STORE_TEST_007_TS.md) |
 | TS_STORE_TEST_007_XS | 8 | 8 | 0 | [by_test/TS_STORE_TEST_007_XS.md](by_test/TS_STORE_TEST_007_XS.md) |
+| TS_STORE_TEST_008_TS | 1 | 1 | 0 | [by_test/TS_STORE_TEST_008_TS.md](by_test/TS_STORE_TEST_008_TS.md) |
+| TS_STORE_TEST_008_XS | 1 | 1 | 0 | [by_test/TS_STORE_TEST_008_XS.md](by_test/TS_STORE_TEST_008_XS.md) |
 | TS_STORE_TEST_flags | 1 | 1 | 0 | [by_test/TS_STORE_TEST_flags.md](by_test/TS_STORE_TEST_flags.md) |
 
 Raw logs live under `test-results/OS_003/gcc/ssd/xFull/` (gitignored).

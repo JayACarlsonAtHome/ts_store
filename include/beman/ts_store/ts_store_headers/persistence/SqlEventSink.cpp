@@ -7,7 +7,8 @@
 namespace fs = std::filesystem;
 namespace jac::ts_store::inline_v001 {
 
-static constexpr uint64_t KEEPER_MASK = 1ULL << 1;
+static constexpr uint64_t KEEPER_MASK    = 1ULL << 1;
+static constexpr uint64_t DATABASE_MASK = 1ULL << 2;
 
 SqlEventSink::SqlEventSink(std::string_view base_name,
                            size_t int_count,
@@ -136,6 +137,8 @@ void SqlEventSink::write_batch(std::span<const PersistedEvent> batch) {
     for (const auto& e : batch) {
         if (mode_ == PersistMode::KeeperOnly) {
             if ((e.flags & KEEPER_MASK) == 0) continue;
+        } else if (mode_ == PersistMode::DatabaseOnly) {
+            if ((e.flags & DATABASE_MASK) == 0) continue;
         }
         insert_event(e);
     }
@@ -156,6 +159,7 @@ void SqlEventSink::insert_event(const PersistedEvent& e) {
     );
     while (stmt_main_->step()) {}
     stmt_main_->reset();
+    ++main_rows_inserted_;
 
     write_debug_insert(e);
 

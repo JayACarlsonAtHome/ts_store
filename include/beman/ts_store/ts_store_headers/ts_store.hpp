@@ -81,6 +81,13 @@ public:
         persistence_writer_ = std::move(writer);
     }
 
+    /// Drain and finalize the background persistence worker (for tests that inspect sink output).
+    void finalize_persistence() {
+        if (persistence_writer_) {
+            persistence_writer_->finalize();
+        }
+    }
+
     explicit ts_store(size_t max_threads, size_t events_per_thread)
         : max_threads_(max_threads)
         , events_per_thread_(events_per_thread)

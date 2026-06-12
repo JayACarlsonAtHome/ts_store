@@ -298,6 +298,7 @@ MATRIX_TARGETS=(
   ts_store_005_TS ts_store_005_XS
   ts_store_006_TS ts_store_006_XS
   ts_store_007_TS ts_store_007_XS
+  ts_store_008_TS ts_store_008_XS
   ts_store_flags
   ts_store_jtext_high_throughput_test
   ts_store_jtext_split_demo
