@@ -254,7 +254,7 @@ target_include_directories(ts_test_cli PRIVATE ${TS_STORE_INCLUDE_DIR})
 target_link_libraries(ts_test_cli PRIVATE jac_test_framework)
 endif() # TS_STORE_BUILD_TEST_MATRIX
 
-set(TEST_NUMBERS 001 002 003 004 005 006 007)
+set(TEST_NUMBERS 001 002 003 004 005 006 007 008)
 
 foreach(num IN LISTS TEST_NUMBERS)
     # TS version

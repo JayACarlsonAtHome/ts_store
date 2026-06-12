@@ -1,0 +1,28 @@
+═══════════════════════════════════════════════════════════════
+ TEST 008 TS — Flag-selective persistence
+═══════════════════════════════════════════════════════════════
+ Purpose:
+   Prove KeeperRecord routes to jText file and DatabaseEntry routes to
+   SQLite while the other 9800 events stay in-memory only on the persist path.
+   Expect higher ops/sec than persisting all 10000 events.
+
+ Plan: 10000 in-memory events
+   • indices 0..99     → KeeperRecord  (jText file)
+   • indices 100..199 → DatabaseEntry (SQLite)
+   • remainder           → no persist flags
+
+[VERIFY] ALL 10000 ENTRIES STRUCTURALLY PERFECT — UNIQUE PAIRS, FULL COVERAGE
+Persist verification:
+  jText main rows (KeeperRecord):  100 (expected 100)
+  SQLite main rows (DatabaseEntry): 100 (expected 100)
+  PASS — flags honored; only 200 / 10000 events reached durable storage
+
+═══════════════════════════════════════════════════════════════
+               FINAL RESULT — FLAG-SELECTIVE RUN
+═══════════════════════════════════════════════════════════════
+  Events in memory   : 10,000
+  Persisted (file)   : 100
+  Persisted (SQL)    : 100
+  Wall time          : 7,843 µs
+  Throughput         : 1,275,022 ops/sec
+═══════════════════════════════════════════════════════════════

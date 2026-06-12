@@ -75,7 +75,7 @@ TestScaling get_test_params(const std::string& test_num_str, const std::string& 
     while (tnum.size() < 3) tnum = "0" + tnum;
 
     if (!is_full) {
-        if (tnum == "005" || tnum == "006" || tnum == "007") {
+        if (tnum == "005" || tnum == "006" || tnum == "007" || tnum == "008") {
             res.threads           = 10;
             res.events_per_thread = 100;
             res.runs              = 1;
@@ -115,6 +115,10 @@ TestScaling get_test_params(const std::string& test_num_str, const std::string& 
         res.runs              = 3;
         res.writer_threads    = 50;
         res.ops_per_thread    = 2000;
+    } else if (tnum == "008") {
+        res.threads           = 10;
+        res.events_per_thread = 1000;
+        res.runs              = 1;
     } else {
         res.threads           = 50;
         res.events_per_thread = 2000;
@@ -139,6 +143,7 @@ std::string persist_log_dir_name(const std::string& persist) {
     if (persist == "sql")   return "sql_logs";
     if (persist == "none")  return "inmem_logs";
     if (persist == "unit")  return "unit_logs";
+    if (persist == "flags") return "flags_logs";
     return "binary_logs";
 }
 
@@ -199,6 +204,25 @@ std::vector<Scenario> build_scenario_list(const std::vector<std::string>& select
                 s.events_per_thread = 1;
                 s.runs              = 1;
                 scenarios.push_back(s);
+            }
+            continue;
+        }
+
+        if (test_base == "008") {
+            for (const auto& tsxs : std::vector<std::string>{"TS", "XS"}) {
+                std::string test = "ts_store_008_" + tsxs;
+                TestScaling scaling = get_test_params("008", size);
+                for (const auto& compiler : compilers) {
+                    Scenario s;
+                    s.test              = test;
+                    s.persist           = "flags";
+                    s.output_mode       = "off";
+                    s.compiler          = compiler;
+                    s.threads           = scaling.threads;
+                    s.events_per_thread = scaling.events_per_thread;
+                    s.runs              = scaling.runs;
+                    scenarios.push_back(s);
+                }
             }
             continue;
         }
@@ -321,7 +345,7 @@ std::vector<std::string> infer_compilers(const std::string& compiler_opt,
 
 std::vector<std::string> get_selected_tests(const TestParams& params) {
     std::vector<std::string> sel;
-    for (int i = 1; i <= 7; ++i) {
+    for (int i = 1; i <= 8; ++i) {
         std::string key = std::format("{:03d}", i);
         if (params.selected_tests.count(key) && params.selected_tests.at(key)) {
             sel.push_back(key);
@@ -331,7 +355,7 @@ std::vector<std::string> get_selected_tests(const TestParams& params) {
         sel.push_back("flags");
     }
     if (sel.empty()) {
-        for (int i = 1; i <= 7; ++i) sel.push_back(std::format("{:03d}", i));
+        for (int i = 1; i <= 8; ++i) sel.push_back(std::format("{:03d}", i));
         sel.push_back("flags");
     }
     return sel;

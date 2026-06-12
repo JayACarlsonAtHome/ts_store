@@ -75,7 +75,11 @@ public:
 private:
     void swap_and_signal() {
         // Must be called under buffer_mutex_
-        active_buffer_.swap(drain_buffer_);
+        // Append (do not swap): if drain still holds an unconsumed batch, swapping would
+        // move that batch into active and clear() would drop those events.
+        drain_buffer_.insert(drain_buffer_.end(),
+                             std::make_move_iterator(active_buffer_.begin()),
+                             std::make_move_iterator(active_buffer_.end()));
         active_buffer_.clear();
         cv_.notify_one();
     }
@@ -119,6 +123,9 @@ private:
 
         {
             std::lock_guard<std::mutex> lock(buffer_mutex_);
+            if (!active_buffer_.empty()) {
+                swap_and_signal();
+            }
             stop_requested_.store(true, std::memory_order_relaxed);
         }
         cv_.notify_one();

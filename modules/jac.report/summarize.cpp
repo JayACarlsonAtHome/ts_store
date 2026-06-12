@@ -165,12 +165,33 @@ void slurp_to_sqlite(const fs::path& db_path, const LeafMeta& meta, const std::v
     )");
 }
 
+namespace {
+
+std::string test_purpose_blurb(const std::string& test_name) {
+    if (test_name == "TS_STORE_TEST_008_TS") {
+        return "Flag-selective persistence at scale: 10,000 in-memory events, 100 with "
+               "`KeeperRecord` (jText file) and 100 with `DatabaseEntry` (SQLite) on "
+               "disjoint indices — proves sinks honor flags and measures throughput when "
+               "most events skip durable I/O.";
+    }
+    if (test_name == "TS_STORE_TEST_008_XS") {
+        return "Smoke-scale flag routing: 1,000 events, 10 `KeeperRecord` + 10 `DatabaseEntry` "
+               "on disjoint indices — same verification as 008 TS at smaller N.";
+    }
+    return {};
+}
+
+} // namespace
+
 void write_test_page(const fs::path& path,
                      const std::string& test_name,
                      const std::vector<ScenarioRow>& rows,
                      const fs::path& results_base) {
     std::ofstream out(path);
     out << "# " << test_name << "\n\n";
+    if (const std::string purpose = test_purpose_blurb(test_name); !purpose.empty()) {
+        out << "**Purpose:** " << purpose << "\n\n";
+    }
     out << "| Compiler | Persist | Output | Records | Duration | Status | Log |\n";
     out << "|----------|---------|--------|---------|----------|--------|-----|\n";
 
