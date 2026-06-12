@@ -12,6 +12,7 @@
 #   003-004 : medium (~1.5k–2.5k records)
 #   005/007 : heavy (50 threads × 2000 events × 3 runs = 300k events; 100k records in manifest)
 #   006     : tail-reader stress (50 × 2000 = 100k events, single pass)
+#   008     : flag routing (50×20k×3 = 3M; 1M/run; 10k Keeper + 10k DB flags; final run persists)
 #
 # This prevents "test 001 taking an hour" when you want full stress on the big tests.
 # The old blunt global override has been replaced by per-test scaling in the runner.

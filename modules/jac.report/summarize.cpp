@@ -169,14 +169,15 @@ namespace {
 
 std::string test_purpose_blurb(const std::string& test_name) {
     if (test_name == "TS_STORE_TEST_008_TS") {
-        return "Flag-selective persistence at scale: 10,000 in-memory events, 100 with "
-               "`KeeperRecord` (jText file) and 100 with `DatabaseEntry` (SQLite) on "
-               "disjoint indices — proves sinks honor flags and measures throughput when "
-               "most events skip durable I/O.";
+        return "Flag-selective persistence at scale: 1,000,000 in-memory events × 3 runs "
+               "(persist on final run only), 10,000 `KeeperRecord` → jText and 10,000 "
+               "`DatabaseEntry` → SQLite on disjoint indices (1% each) — proves sinks "
+               "honor flags and measures hot-path throughput when most events skip durable I/O.";
     }
     if (test_name == "TS_STORE_TEST_008_XS") {
-        return "Smoke-scale flag routing: 1,000 events, 10 `KeeperRecord` + 10 `DatabaseEntry` "
-               "on disjoint indices — same verification as 008 TS at smaller N.";
+        return "Flag routing at xFull scale (1M events/run × 3 runs, persist on final run): "
+               "`KeeperRecord` → jText, `DatabaseEntry` → SQLite on disjoint indices — "
+               "same verification as 008 TS.";
     }
     return {};
 }

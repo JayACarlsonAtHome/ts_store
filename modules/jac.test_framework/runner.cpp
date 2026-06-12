@@ -84,7 +84,7 @@ TestScaling get_test_params(const std::string& test_num_str, const std::string& 
     }
 
     // SIZE=full (xFull): progressive scale tuned for ~30 min gcc+clang matrix on x7k.
-    // Heavy 005/006/007: 50×2000 = 100k manifest records; 005/007 use 3 runs (300k events).
+    // Heavy 005/006/007: 50×2000 = 100k; 008: 50×20k = 1M per run (×3 runs).
     if (tnum == "001") {
         res.threads           = 8;
         res.events_per_thread = 64;
@@ -116,9 +116,9 @@ TestScaling get_test_params(const std::string& test_num_str, const std::string& 
         res.writer_threads    = 50;
         res.ops_per_thread    = 2000;
     } else if (tnum == "008") {
-        res.threads           = 10;
-        res.events_per_thread = 1000;
-        res.runs              = 1;
+        res.threads           = 50;
+        res.events_per_thread = 20000;
+        res.runs              = 3;
     } else {
         res.threads           = 50;
         res.events_per_thread = 2000;
